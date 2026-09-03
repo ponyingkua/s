@@ -28,9 +28,9 @@ class BinanceFuturesClient:
 
     async def __aenter__(self) -> "BinanceFuturesClient":
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            self._session = aiohttp.ClientSession(headers=headers)
         return self
-
     async def __aexit__(self, *exc):
         if self._owns_session and self._session:
             await self._session.close()
