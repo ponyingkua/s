@@ -38,5 +38,45 @@
   "BTRUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-03T22:10:25.621067+00:00"
+  },
+  "TRXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:25.794713+00:00"
+  },
+  "XLMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:26.598161+00:00"
+  },
+  "ATOMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:27.401704+00:00"
+  },
+  "ALGOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:28.096575+00:00"
+  },
+  "EGLDUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:28.929369+00:00"
+  },
+  "NEARUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:29.712290+00:00"
+  },
+  "PEOPLEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:30.754005+00:00"
+  },
+  "APTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:31.614890+00:00"
+  },
+  "MINAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:32.324339+00:00"
+  },
+  "1000FLOKIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:37:33.112479+00:00"
   }
 }
