@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import aiohttp
 import pandas as pd
 
-BASE_URL = "https://fapi.binance.com"
+BASE_URL = "https://www.binance.com"
 
 
 @dataclass
