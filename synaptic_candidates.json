@@ -1,0 +1,115 @@
+[
+  {
+    "symbol": "LTCUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 51.78,
+    "sl": 51.494906,
+    "tp": 52.207641
+  },
+  {
+    "symbol": "EGLDUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 4.709,
+    "sl": 4.626006,
+    "tp": 4.833491
+  },
+  {
+    "symbol": "COTIUSDT",
+    "direction": "LONG",
+    "score": 70.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Volume spike terdeteksi"
+    ],
+    "entry": 0.013231,
+    "sl": 0.013114,
+    "tp": 0.013407
+  },
+  {
+    "symbol": "ARUSDT",
+    "direction": "LONG",
+    "score": 80.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Volume spike terdeteksi"
+    ],
+    "entry": 2.702,
+    "sl": 2.654834,
+    "tp": 2.77275
+  },
+  {
+    "symbol": "JASMYUSDT",
+    "direction": "LONG",
+    "score": 70.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Volume spike terdeteksi"
+    ],
+    "entry": 0.004867,
+    "sl": 0.004806,
+    "tp": 0.004959
+  },
+  {
+    "symbol": "ICPUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 2.555,
+    "sl": 2.532879,
+    "tp": 2.588182
+  },
+  {
+    "symbol": "APTUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 0.6109,
+    "sl": 0.604333,
+    "tp": 0.620751
+  },
+  {
+    "symbol": "TUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 0.004514,
+    "sl": 0.004448,
+    "tp": 0.004613
+  },
+  {
+    "symbol": "ARBUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 0.14139,
+    "sl": 0.13717,
+    "tp": 0.14772
+  },
+  {
+    "symbol": "PYTHUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)"
+    ],
+    "entry": 0.05616,
+    "sl": 0.055513,
+    "tp": 0.057131
+  }
+]
