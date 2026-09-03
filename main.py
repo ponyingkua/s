@@ -10,6 +10,7 @@ import yaml
 from vsynapse.data.binance_client import BinanceFuturesClient
 from vsynapse.notify.telegram import format_signal_message, send_telegram_message
 from vsynapse.risk.management import passes_risk_filter
+from vsynapse.state.store import is_in_cooldown, load_state, mark_signaled, save_state
 from vsynapse.strategy.scoring import score_symbol
 
 
@@ -20,10 +21,14 @@ def load_config(path: str = "config.yaml") -> dict:
 
 async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     results = []
+    scan_cfg = cfg.get("scanning", {})
+    state_path = scan_cfg.get("state_path", "signal_state.json")
+    cooldown_hours = scan_cfg.get("cooldown_hours", 4)
+    state = load_state(state_path)
+
     async with BinanceFuturesClient() as client:
         symbols = await client.get_active_symbols(cfg["exchange"]["quote_asset"])
 
-        # Filter volume dulu biar nggak buang waktu analisis coin sepi
         volumes = await asyncio.gather(*(client.get_24h_volume(s) for s in symbols))
         min_vol = cfg["exchange"]["min_volume_usdt_24h"]
         active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
@@ -37,12 +42,17 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 continue
             if not passes_risk_filter(signal, cfg):
                 continue
+            if is_in_cooldown(state, kline.symbol, signal.direction, cooldown_hours):
+                continue
 
             results.append(signal.__dict__)
+            mark_signaled(state, kline.symbol, signal.direction)
             await send_telegram_message(format_signal_message(signal), cfg)
 
             if len(results) >= cfg["risk"]["max_signals_per_run"]:
                 break
+
+    save_state(state_path, state)
 
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
