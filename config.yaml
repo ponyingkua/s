@@ -44,5 +44,12 @@ notify:
     bot_token_env: "TELEGRAM_BOT_TOKEN"
     chat_id_env: "TELEGRAM_CHAT_ID"
 
+scanning:
+  cooldown_hours: 4   # jangan kirim ulang sinyal simbol+arah yang sama dalam N jam
+  state_path: "signal_state.json"
+
+backtest:
+  fee_round_trip_pct: 0.001   # 0.1% total (taker in+out) — sesuaikan dgn tier VIP-mu
+
 storage:
   db_path: "data/vsynapse.db"
