@@ -28,6 +28,6 @@ jobs:
         run: |
           git config user.name "vsynapse-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add synaptic_candidates.json
+          git add synaptic_candidates.json signal_state.json
           git diff --quiet --cached || git commit -m "chore: update scan results"
           git push
