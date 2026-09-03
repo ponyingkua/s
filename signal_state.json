@@ -1,0 +1,42 @@
+{
+  "DOGEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:17.646229+00:00"
+  },
+  "UNIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:18.342767+00:00"
+  },
+  "ANKRUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:20.214045+00:00"
+  },
+  "ONGUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:21.430136+00:00"
+  },
+  "ONDOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:21.979846+00:00"
+  },
+  "LISTAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:22.642746+00:00"
+  },
+  "TUTUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-03T22:10:23.742245+00:00"
+  },
+  "HUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:24.477233+00:00"
+  },
+  "WLFIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T22:10:25.137570+00:00"
+  },
+  "BTRUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-03T22:10:25.621067+00:00"
+  }
+}
