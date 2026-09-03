@@ -1,6 +1,6 @@
 [
   {
-    "symbol": "TRXUSDT",
+    "symbol": "SUSHIUSDT",
     "direction": "LONG",
     "score": 70.0,
     "reasons": [
@@ -9,94 +9,25 @@
       "Volume spike terdeteksi (menguatkan sinyal)",
       "RSI netral (47)"
     ],
-    "entry": 0.33058,
-    "sl": 0.329924,
-    "tp": 0.331564
+    "entry": 0.2004,
+    "sl": 0.197772,
+    "tp": 0.204342
   },
   {
-    "symbol": "XLMUSDT",
-    "direction": "LONG",
-    "score": 80.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI oversold (39), potensi rebound"
-    ],
-    "entry": 0.18387,
-    "sl": 0.18214,
-    "tp": 0.186466
-  },
-  {
-    "symbol": "ATOMUSDT",
-    "direction": "LONG",
-    "score": 80.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI oversold (38), potensi rebound"
-    ],
-    "entry": 1.506,
-    "sl": 1.495798,
-    "tp": 1.521304
-  },
-  {
-    "symbol": "ALGOUSDT",
+    "symbol": "DUSKUSDT",
     "direction": "LONG",
     "score": 65.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "Supertrend menunjukkan uptrend",
-      "RSI oversold (38), potensi rebound"
+      "RSI oversold (36), potensi rebound"
     ],
-    "entry": 0.09283,
-    "sl": 0.091909,
-    "tp": 0.094212
+    "entry": 0.07189,
+    "sl": 0.071107,
+    "tp": 0.073065
   },
   {
-    "symbol": "EGLDUSDT",
-    "direction": "LONG",
-    "score": 75.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI netral (41)"
-    ],
-    "entry": 4.67,
-    "sl": 4.599732,
-    "tp": 4.775402
-  },
-  {
-    "symbol": "NEARUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "Supertrend menunjukkan uptrend",
-      "RSI oversold (38), potensi rebound"
-    ],
-    "entry": 1.949,
-    "sl": 1.926347,
-    "tp": 1.98298
-  },
-  {
-    "symbol": "PEOPLEUSDT",
-    "direction": "LONG",
-    "score": 80.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI oversold (26), potensi rebound"
-    ],
-    "entry": 0.00814,
-    "sl": 0.008033,
-    "tp": 0.008301
-  },
-  {
-    "symbol": "APTUSDT",
+    "symbol": "OPUSDT",
     "direction": "LONG",
     "score": 65.0,
     "reasons": [
@@ -104,12 +35,12 @@
       "Supertrend menunjukkan uptrend",
       "RSI oversold (39), potensi rebound"
     ],
-    "entry": 0.6028,
-    "sl": 0.596449,
-    "tp": 0.612327
+    "entry": 0.10132,
+    "sl": 0.100056,
+    "tp": 0.103216
   },
   {
-    "symbol": "MINAUSDT",
+    "symbol": "INJUSDT",
     "direction": "LONG",
     "score": 65.0,
     "reasons": [
@@ -117,22 +48,88 @@
       "Supertrend menunjukkan uptrend",
       "RSI oversold (37), potensi rebound"
     ],
-    "entry": 0.07203,
-    "sl": 0.07115,
-    "tp": 0.07335
+    "entry": 4.975,
+    "sl": 4.928374,
+    "tp": 5.044939
   },
   {
-    "symbol": "1000FLOKIUSDT",
+    "symbol": "FETUSDT",
     "direction": "LONG",
-    "score": 80.0,
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Supertrend menunjukkan uptrend",
+      "RSI oversold (36), potensi rebound"
+    ],
+    "entry": 0.1563,
+    "sl": 0.154778,
+    "tp": 0.158584
+  },
+  {
+    "symbol": "PENDLEUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend"
+    ],
+    "entry": 1.9733,
+    "sl": 1.95147,
+    "tp": 2.006046
+  },
+  {
+    "symbol": "ORDIUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Supertrend menunjukkan uptrend",
+      "RSI oversold (36), potensi rebound"
+    ],
+    "entry": 4.134,
+    "sl": 4.077393,
+    "tp": 4.218911
+  },
+  {
+    "symbol": "TAOUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Supertrend menunjukkan uptrend",
+      "RSI oversold (38), potensi rebound"
+    ],
+    "entry": 225.52,
+    "sl": 223.308945,
+    "tp": 228.836583
+  },
+  {
+    "symbol": "RENDERUSDT",
+    "direction": "LONG",
+    "score": 70.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI oversold (39), potensi rebound"
+      "RSI netral (42)"
     ],
-    "entry": 0.02545,
-    "sl": 0.025147,
-    "tp": 0.025905
+    "entry": 1.466,
+    "sl": 1.454298,
+    "tp": 1.483553
+  },
+  {
+    "symbol": "POLUSDT",
+    "direction": "LONG",
+    "score": 70.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)",
+      "RSI netral (43)"
+    ],
+    "entry": 0.09405,
+    "sl": 0.093356,
+    "tp": 0.095091
   }
 ]
