@@ -1,0 +1,48 @@
+exchange:
+  name: binance_futures
+  quote_asset: USDT
+  min_volume_usdt_24h: 5000000   # filter coin yang terlalu sepi
+
+timeframes:
+  - "15m"
+  - "1h"
+  - "4h"
+
+indicators:
+  ema:
+    period: 200
+  macd:
+    fast: 12
+    slow: 26
+    signal: 9
+  supertrend:
+    period: 10
+    multiplier: 3
+  rsi:
+    period: 14
+  atr:
+    period: 14
+
+scoring:
+  # bobot tiap sinyal indikator, total tidak harus 100
+  weights:
+    ema_trend: 20
+    macd_cross: 20
+    supertrend: 25
+    volume_spike: 15
+    rsi_confluence: 20
+  min_score_to_trigger: 65   # dari 100
+
+risk:
+  atr_multiplier_sl: 1.5
+  risk_reward_min: 1.5       # tolak sinyal kalau R:R di bawah ini
+  max_signals_per_run: 10
+
+notify:
+  telegram:
+    enabled: false
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    chat_id_env: "TELEGRAM_CHAT_ID"
+
+storage:
+  db_path: "data/vsynapse.db"
