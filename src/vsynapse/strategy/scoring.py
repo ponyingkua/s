@@ -46,52 +46,64 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
     price = close.iloc[last]
 
     long_score, short_score = 0.0, 0.0
-    reasons: list[str] = []
+    long_reasons: list[str] = []
+    short_reasons: list[str] = []
 
     # Trend (EMA200)
     if price > ema200.iloc[last]:
         long_score += w["ema_trend"]
-        reasons.append("Harga di atas EMA200 (uptrend)")
+        long_reasons.append("Harga di atas EMA200 (uptrend)")
     else:
         short_score += w["ema_trend"]
-        reasons.append("Harga di bawah EMA200 (downtrend)")
+        short_reasons.append("Harga di bawah EMA200 (downtrend)")
 
     # MACD cross
     if macd_line.iloc[last] > signal_line.iloc[last]:
         long_score += w["macd_cross"]
+        long_reasons.append("MACD line di atas signal line (momentum naik)")
     else:
         short_score += w["macd_cross"]
+        short_reasons.append("MACD line di bawah signal line (momentum turun)")
 
     # Supertrend
     if st.iloc[last] == 1:
         long_score += w["supertrend"]
+        long_reasons.append("Supertrend menunjukkan uptrend")
     else:
         short_score += w["supertrend"]
+        short_reasons.append("Supertrend menunjukkan downtrend")
 
     # Volume spike (menguatkan arah dominan, bukan penentu arah)
-    if bool(vol_spike.iloc[last]):
-        reasons.append("Volume spike terdeteksi")
+    has_volume_spike = bool(vol_spike.iloc[last])
+    if has_volume_spike:
         if long_score >= short_score:
             long_score += w["volume_spike"]
+            long_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
         else:
             short_score += w["volume_spike"]
+            short_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
 
     # RSI confluence: hindari entry di zona overbought/oversold ekstrem
     r = rsi_val.iloc[last]
     if 40 <= r <= 60:
         long_score += w["rsi_confluence"] / 2
         short_score += w["rsi_confluence"] / 2
+        long_reasons.append(f"RSI netral ({r:.0f})")
+        short_reasons.append(f"RSI netral ({r:.0f})")
     elif r < 40:
         long_score += w["rsi_confluence"]
+        long_reasons.append(f"RSI oversold ({r:.0f}), potensi rebound")
     elif r > 60:
         short_score += w["rsi_confluence"]
+        short_reasons.append(f"RSI overbought ({r:.0f}), potensi koreksi")
 
     direction = "NONE"
     final_score = 0.0
+    reasons: list[str] = []
     if long_score >= short_score:
-        direction, final_score = "LONG", long_score
+        direction, final_score, reasons = "LONG", long_score, long_reasons
     else:
-        direction, final_score = "SHORT", short_score
+        direction, final_score, reasons = "SHORT", short_score, short_reasons
 
     if final_score < cfg["scoring"]["min_score_to_trigger"]:
         return SignalResult(symbol=symbol, direction="NONE", score=final_score, reasons=reasons)
