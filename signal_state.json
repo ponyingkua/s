@@ -118,5 +118,45 @@
   "POLUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-03T23:09:38.595320+00:00"
+  },
+  "TUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:04.755615+00:00"
+  },
+  "BOMEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:06.155499+00:00"
+  },
+  "BRUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:07.711653+00:00"
+  },
+  "HYPEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:08.439194+00:00"
+  },
+  "PUMPUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-03T23:38:09.162112+00:00"
+  },
+  "AIOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:09.762027+00:00"
+  },
+  "USELESSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:10.254988+00:00"
+  },
+  "UBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:10.950585+00:00"
+  },
+  "TRADOORUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-03T23:38:11.539863+00:00"
+  },
+  "COAIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-03T23:38:12.063069+00:00"
   }
 }
