@@ -121,15 +121,22 @@ MAX_CANDLES_BY_TF = {
 # untuk hitung struktur.
 STRUCTURE_CONTEXT = 30
 
-# Maks jumlah event BOS yang ditandai di chart, supaya tidak berisik
-# kalau harga banyak choppy/sideways.
-MAX_BOS_EVENTS = 4
+# Maks jumlah event BOS yang ditandai di chart — cukup 1 (yang paling
+# baru/relevan), supaya chart tidak berisik oleh banyak BOS lama dan
+# arrow arah target juga otomatis cuma 1 (mengikuti BOS terakhir).
+MAX_BOS_EVENTS = 1
 
 # Jarak antar-candle minimum antar dua event BOS yang ditampilkan
 # (dalam jumlah candle relatif thd total candle yang tampil), supaya
 # label BOS/Demand/Supply/arrow tidak numpuk berdempetan saat market
 # lagi trending kuat & banyak structure break beruntun.
 MIN_BOS_GAP_FRACTION = 0.10
+
+# Jarak antar-candle minimum antar dua label struktur (HH/HL/LH/LL)
+# yang ditampilkan, supaya label yang saling berdekatan tidak numpuk.
+# Kalau ada beberapa swing point yang jaraknya kepentokan, cuma yang
+# paling baru yang dipertahankan.
+MIN_LABEL_GAP_FRACTION = 0.07
 
 
 def get_candles_shown(timeframe: str, cfg: dict) -> int:
@@ -525,6 +532,21 @@ def _draw_target_arrows(ax, bos_events: list, zones: list, offset: int,
         )
 
 
+def _declutter_labels(labeled_points: list, min_gap: int) -> list:
+    """Buang label struktur (HH/HL/LH/LL) yang jaraknya kepentokan
+    dekat satu sama lain (index candle), supaya tidak numpuk. Diproses
+    dari yang PALING BARU mundur, jadi swing point yang lebih baru
+    selalu diprioritaskan dipertahankan."""
+    kept = []
+    last_kept_idx = None
+    for pt in sorted(labeled_points, key=lambda p: p["index"], reverse=True):
+        if last_kept_idx is None or (last_kept_idx - pt["index"]) >= min_gap:
+            kept.append(pt)
+            last_kept_idx = pt["index"]
+    kept.sort(key=lambda p: p["index"])
+    return kept
+
+
 def _compute_structure(work_df: pd.DataFrame) -> dict:
     """Jalankan seluruh pipeline markup struktur di atas `work_df`
     (candle + konteks tambahan di kiri) dan kembalikan semua elemen
@@ -546,6 +568,11 @@ def _compute_structure(work_df: pd.DataFrame) -> dict:
         for i in (ev["idx"], ev["origin"]):
             occupied.update(range(i - 2, i + 3))
     labeled_points = [p for p in labeled_points if p["index"] not in occupied]
+
+    # Declutter: kalau ada beberapa label struktur yang saling
+    # berdekatan, cukup pertahankan yang paling baru.
+    min_label_gap = max(3, int(len(work_df) * MIN_LABEL_GAP_FRACTION))
+    labeled_points = _declutter_labels(labeled_points, min_label_gap)
 
     return {
         "labeled_points": labeled_points,
