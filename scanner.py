@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import json
 import os
+import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -395,6 +396,55 @@ async def send_telegram_photo(photo_path: str, caption: str, cfg: dict) -> None:
                 await resp.read()
 
 
+async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> None:
+    """Kirim 1 file (misal .zip berisi kumpulan chart) sebagai dokumen Telegram."""
+    tg_cfg = cfg["notify"]["telegram"]
+    if not tg_cfg.get("enabled"):
+        return
+
+    token = os.environ.get(tg_cfg["bot_token_env"])
+    chat_id = os.environ.get(tg_cfg["chat_id_env"])
+    if not token or not chat_id:
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendDocument"
+    # Caption Telegram dibatasi ~1024 karakter untuk dokumen.
+    safe_caption = caption[:1024]
+    with open(file_path, "rb") as doc_file:
+        data = aiohttp.FormData()
+        data.add_field("chat_id", str(chat_id))
+        data.add_field("caption", safe_caption)
+        data.add_field("parse_mode", "Markdown")
+        data.add_field(
+            "document",
+            doc_file,
+            filename=os.path.basename(file_path),
+            content_type="application/zip",
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=data) as resp:
+                await resp.read()
+
+
+def zip_charts(chart_paths: list[str], out_dir: str = "charts") -> str | None:
+    """Kumpulkan semua chart hasil scan ke dalam 1 file .zip. Return path zip,
+    atau None kalau tidak ada chart untuk di-zip."""
+    if not chart_paths:
+        return None
+
+    os.makedirs(out_dir, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    zip_path = os.path.join(out_dir, f"scan_{timestamp}.zip")
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for chart_path in chart_paths:
+            if os.path.exists(chart_path):
+                zf.write(chart_path, arcname=os.path.basename(chart_path))
+
+    return zip_path
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -406,10 +456,15 @@ def load_config(path: str = "config.yaml") -> dict:
 
 async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     results = []
+    captions: list[str] = []
+    chart_paths: list[str] = []
+
     scan_cfg = cfg.get("scanning", {})
     state_path = scan_cfg.get("state_path", "signal_state.json")
     cooldown_hours = scan_cfg.get("cooldown_hours", 4)
     state = load_state(state_path)
+
+    auto_generate_charts = cfg.get("chart", {}).get("auto_generate", True)
 
     async with BinanceFuturesClient() as client:
         symbols = await client.get_active_symbols(cfg["exchange"]["quote_asset"])
@@ -433,9 +488,9 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             results.append(signal.__dict__)
             mark_signaled(state, kline.symbol, signal.direction)
 
-            caption = format_signal_message(signal)
+            captions.append(format_signal_message(signal))
 
-            if cfg.get("chart", {}).get("auto_generate", True):
+            if auto_generate_charts:
                 import chart as chart_module  # lazy import, hindari circular import
 
                 os.makedirs("charts", exist_ok=True)
@@ -448,9 +503,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     cfg,
                     chart_path,
                 )
-                await send_telegram_photo(chart_path, caption, cfg)
-            else:
-                await send_telegram_message(caption, cfg)
+                chart_paths.append(chart_path)
 
             if len(results) >= cfg["risk"]["max_signals_per_run"]:
                 break
@@ -459,6 +512,20 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
+
+    # --- Kirim ke Telegram: 1x per scan, bukan per-sinyal ---
+    if captions:
+        summary = f"*Scan selesai — {len(results)} sinyal ditemukan*\n\n" + "\n\n".join(captions)
+        await send_telegram_message(summary, cfg)
+
+    if auto_generate_charts and chart_paths:
+        zip_path = zip_charts(chart_paths)
+        if zip_path:
+            await send_telegram_document(
+                zip_path,
+                caption=f"{len(chart_paths)} chart sinyal (lihat detail di pesan sebelumnya)",
+                cfg=cfg,
+            )
 
     return results
 
