@@ -34,12 +34,12 @@ from scanner import (
 # STYLE
 # ============================================================
 
-BG = "#0f1115"
-PANEL = "#0f1115"
-GRID = "#3a3a40"
-TEXT = "#e8e8ec"
-AXIS = "#9a9aa3"
-SPINE = "#4d4d55"
+BG = "#f5f5f7"
+PANEL = "#f5f5f7"
+GRID = "#d8d8dc"
+TEXT = "#1a1a1e"
+AXIS = "#5a5a63"
+SPINE = "#c0c0c6"
 
 UP = "#26a69a"
 DOWN = "#ef5350"
