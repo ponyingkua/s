@@ -69,7 +69,7 @@
   },
   "NEARUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:59.722440+00:00"
+    "timestamp": "2026-09-04T19:49:06.561861+00:00"
   },
   "AAVEUSDT": {
     "direction": "SHORT",
@@ -214,5 +214,41 @@
   "BROCCOLI714USDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T19:36:24.861752+00:00"
+  },
+  "BOMEUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T19:49:11.607486+00:00"
+  },
+  "POLUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:14.772866+00:00"
+  },
+  "BMTUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T19:49:18.390030+00:00"
+  },
+  "MUBARAKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:21.311744+00:00"
+  },
+  "SIGNUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:23.823660+00:00"
+  },
+  "HEMIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:26.612079+00:00"
+  },
+  "ZKCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:28.985587+00:00"
+  },
+  "4USDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:31.754203+00:00"
+  },
+  "GIGGLEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:49:33.956136+00:00"
   }
 }
