@@ -539,7 +539,7 @@ def build_chart(
 
     gap_from_candle = 4.0
     label_width_est = 13.0
-    gap_from_edge = 1.8
+    gap_from_edge = 0.4
     extra_margin = gap_from_candle + label_width_est + gap_from_edge
     label_x = last_x + gap_from_candle
 
