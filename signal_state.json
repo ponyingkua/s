@@ -278,5 +278,45 @@
   "ZROUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T01:08:56.187423+00:00"
+  },
+  "LTCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:47.193958+00:00"
+  },
+  "ETCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:47.829832+00:00"
+  },
+  "SOLUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:48.737300+00:00"
+  },
+  "AXSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:49.372369+00:00"
+  },
+  "HBARUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:50.001304+00:00"
+  },
+  "SUIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:50.933563+00:00"
+  },
+  "XVGUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:51.520946+00:00"
+  },
+  "BICOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:52.188887+00:00"
+  },
+  "STRKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:53.053950+00:00"
+  },
+  "AEROUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:38:53.876594+00:00"
   }
 }
