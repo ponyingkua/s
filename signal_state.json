@@ -78,5 +78,45 @@
   "AXSUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T08:27:02.938995+00:00"
+  },
+  "BTCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:56:58.595281+00:00"
+  },
+  "XRPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:02.536724+00:00"
+  },
+  "EGLDUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:04.852209+00:00"
+  },
+  "SANDUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:06.867390+00:00"
+  },
+  "ANKRUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:08.885068+00:00"
+  },
+  "HBARUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:10.489017+00:00"
+  },
+  "1000SHIBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:11.977602+00:00"
+  },
+  "ENSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:13.553927+00:00"
+  },
+  "OPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:15.690697+00:00"
+  },
+  "INJUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T11:57:17.202143+00:00"
   }
 }
