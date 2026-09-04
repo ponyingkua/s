@@ -472,6 +472,7 @@ def build_chart(
     width_px = chart_cfg.get("width_px", 2000)
     height_ratio = chart_cfg.get("height_ratio", 0.4)  # 2000 x 800 = 5:2
     dpi = 150
+    output_scale = 2  # output final 2x (~4000x1600px), layout/proporsi tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
@@ -587,7 +588,7 @@ def build_chart(
     fig.text(0.96, 0.02, "Not financial advice",
               fontsize=7, color=AXIS, ha="right", va="bottom")
 
-    fig.savefig(out_path, facecolor=fig.get_facecolor())
+    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * output_scale)
     plt.close(fig)
     return out_path
 
