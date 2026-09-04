@@ -1,6 +1,20 @@
 [
   {
-    "symbol": "BCHUSDT",
+    "symbol": "ATOMUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (47)"
+    ],
+    "entry": 1.493,
+    "sl": 1.503404,
+    "tp": 1.477393
+  },
+  {
+    "symbol": "TRBUSDT",
     "direction": "SHORT",
     "score": 75.0,
     "reasons": [
@@ -9,51 +23,40 @@
       "Supertrend menunjukkan downtrend",
       "RSI netral (45)"
     ],
-    "entry": 251.98,
-    "sl": 253.516633,
-    "tp": 249.67505
+    "entry": 17.071,
+    "sl": 17.202633,
+    "tp": 16.87355
   },
   {
-    "symbol": "ALGOUSDT",
+    "symbol": "SANDUSDT",
     "direction": "SHORT",
-    "score": 65.0,
+    "score": 75.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend"
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (44)"
     ],
-    "entry": 0.08992,
-    "sl": 0.090404,
-    "tp": 0.089194
+    "entry": 0.03877,
+    "sl": 0.038993,
+    "tp": 0.038435
   },
   {
-    "symbol": "SUSHIUSDT",
+    "symbol": "INJUSDT",
     "direction": "SHORT",
-    "score": 65.0,
+    "score": 75.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend"
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (49)"
     ],
-    "entry": 0.1887,
-    "sl": 0.190165,
-    "tp": 0.186502
+    "entry": 4.756,
+    "sl": 4.797625,
+    "tp": 4.693562
   },
   {
-    "symbol": "UNIUSDT",
-    "direction": "SHORT",
-    "score": 65.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend"
-    ],
-    "entry": 6.096,
-    "sl": 6.175804,
-    "tp": 5.976294
-  },
-  {
-    "symbol": "AVAXUSDT",
+    "symbol": "ICPUSDT",
     "direction": "SHORT",
     "score": 75.0,
     "reasons": [
@@ -62,12 +65,12 @@
       "Supertrend menunjukkan downtrend",
       "RSI netral (41)"
     ],
-    "entry": 7.347,
-    "sl": 7.379254,
-    "tp": 7.298619
+    "entry": 2.458,
+    "sl": 2.478108,
+    "tp": 2.427838
   },
   {
-    "symbol": "CHZUSDT",
+    "symbol": "1000PEPEUSDT",
     "direction": "SHORT",
     "score": 65.0,
     "reasons": [
@@ -75,53 +78,12 @@
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend"
     ],
-    "entry": 0.01331,
-    "sl": 0.013392,
-    "tp": 0.013187
+    "entry": 0.003509,
+    "sl": 0.003543,
+    "tp": 0.003457
   },
   {
-    "symbol": "APTUSDT",
-    "direction": "SHORT",
-    "score": 75.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (41)"
-    ],
-    "entry": 0.5766,
-    "sl": 0.581266,
-    "tp": 0.569601
-  },
-  {
-    "symbol": "SUIUSDT",
-    "direction": "SHORT",
-    "score": 75.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (43)"
-    ],
-    "entry": 0.7529,
-    "sl": 0.758179,
-    "tp": 0.744981
-  },
-  {
-    "symbol": "XVGUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 0.002811,
-    "sl": 0.002751,
-    "tp": 0.002901
-  },
-  {
-    "symbol": "SEIUSDT",
+    "symbol": "TIAUSDT",
     "direction": "SHORT",
     "score": 65.0,
     "reasons": [
@@ -129,8 +91,50 @@
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend"
     ],
-    "entry": 0.04667,
-    "sl": 0.046962,
-    "tp": 0.046232
+    "entry": 0.3492,
+    "sl": 0.351991,
+    "tp": 0.345013
+  },
+  {
+    "symbol": "ORDIUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (42)"
+    ],
+    "entry": 3.965,
+    "sl": 3.992975,
+    "tp": 3.923037
+  },
+  {
+    "symbol": "PYTHUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (55)"
+    ],
+    "entry": 0.05477,
+    "sl": 0.055282,
+    "tp": 0.054002
+  },
+  {
+    "symbol": "JUPUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (46)"
+    ],
+    "entry": 0.2162,
+    "sl": 0.21817,
+    "tp": 0.213245
   }
 ]
