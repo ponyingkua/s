@@ -13,7 +13,7 @@
   },
   "XMRUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T08:03:54.144435+00:00"
+    "timestamp": "2026-09-04T19:07:17.576502+00:00"
   },
   "ZECUSDT": {
     "direction": "LONG",
@@ -146,5 +146,41 @@
   "CAKEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T18:27:41.166351+00:00"
+  },
+  "COTIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:21.912848+00:00"
+  },
+  "1000FLOKIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:25.112973+00:00"
+  },
+  "BICOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:28.058904+00:00"
+  },
+  "ETHFIUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T19:07:30.711707+00:00"
+  },
+  "LISTAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:38.602519+00:00"
+  },
+  "SPXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:41.130577+00:00"
+  },
+  "VANAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:43.884333+00:00"
+  },
+  "HIVEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:46.138342+00:00"
+  },
+  "PROMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T19:07:48.438436+00:00"
   }
 }
