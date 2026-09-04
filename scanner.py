@@ -427,10 +427,16 @@ async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> Non
                 await resp.read()
 
 
-def zip_charts(chart_paths: list[str], out_dir: str = "charts") -> str | None:
-    """Kumpulkan semua chart hasil scan ke dalam 1 file .zip. Return path zip,
-    atau None kalau tidak ada chart untuk di-zip."""
-    if not chart_paths:
+def zip_charts(
+    chart_paths: list[str],
+    summary_text: str | None = None,
+    out_dir: str = "charts",
+) -> str | None:
+    """Kumpulkan semua chart hasil scan ke dalam 1 file .zip, plus file teks
+    ringkasan.txt berisi detail tiap sinyal di dalam zip yang sama. Return
+    path zip, atau None kalau tidak ada apa pun (chart maupun ringkasan)
+    untuk di-zip."""
+    if not chart_paths and not summary_text:
         return None
 
     os.makedirs(out_dir, exist_ok=True)
@@ -441,6 +447,8 @@ def zip_charts(chart_paths: list[str], out_dir: str = "charts") -> str | None:
         for chart_path in chart_paths:
             if os.path.exists(chart_path):
                 zf.write(chart_path, arcname=os.path.basename(chart_path))
+        if summary_text:
+            zf.writestr("ringkasan.txt", summary_text)
 
     return zip_path
 
@@ -513,19 +521,20 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
-    # --- Kirim ke Telegram: 1x per scan, bukan per-sinyal ---
+    # --- Kirim ke Telegram: cukup 1 file zip per scan, tanpa pesan teks terpisah ---
+    summary = None
     if captions:
-        summary = f"*Scan selesai — {len(results)} sinyal ditemukan*\n\n" + "\n\n".join(captions)
-        await send_telegram_message(summary, cfg)
+        summary = f"Scan selesai — {len(results)} sinyal ditemukan\n\n" + "\n\n".join(captions)
 
-    if auto_generate_charts and chart_paths:
-        zip_path = zip_charts(chart_paths)
-        if zip_path:
-            await send_telegram_document(
-                zip_path,
-                caption=f"{len(chart_paths)} chart sinyal (lihat detail di pesan sebelumnya)",
-                cfg=cfg,
-            )
+    zip_path = zip_charts(chart_paths, summary_text=summary)
+    if zip_path:
+        n_chart = len(chart_paths)
+        caption = (
+            f"{n_chart} chart sinyal (detail lengkap ada di ringkasan.txt dalam zip)"
+            if n_chart
+            else "Ringkasan sinyal (lihat ringkasan.txt dalam zip)"
+        )
+        await send_telegram_document(zip_path, caption=caption, cfg=cfg)
 
     return results
 
