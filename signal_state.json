@@ -198,5 +198,45 @@
   "ALLOUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T00:16:11.226585+00:00"
+  },
+  "BNBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:21.518391+00:00"
+  },
+  "VETUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:22.017404+00:00"
+  },
+  "CRVUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:22.573488+00:00"
+  },
+  "FILUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:23.211756+00:00"
+  },
+  "LPTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:23.876518+00:00"
+  },
+  "ICPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:24.492691+00:00"
+  },
+  "CATIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:25.773046+00:00"
+  },
+  "VIRTUALUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:26.323107+00:00"
+  },
+  "SPXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:26.799771+00:00"
+  },
+  "HIVEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:43:27.315980+00:00"
   }
 }
