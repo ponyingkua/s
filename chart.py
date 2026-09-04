@@ -36,7 +36,7 @@ from scanner import (
 
 BG = "#f5f5f7"
 PANEL = "#f5f5f7"
-GRID = "#d8d8dc"
+GRID = "#b8b8c0"
 TEXT = "#1a1a1e"
 AXIS = "#5a5a63"
 SPINE = "#c0c0c6"
@@ -486,7 +486,7 @@ def build_chart(
 
     for ax in (ax_price, ax_vol):
         ax.set_facecolor(PANEL)
-        ax.grid(True, linestyle="-", alpha=0.14, color=GRID, linewidth=0.5)
+        ax.grid(True, linestyle="-", alpha=0.6, color=GRID, linewidth=0.5)
         ax.set_axisbelow(True)
         ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
         for side in ("top", "right"):
