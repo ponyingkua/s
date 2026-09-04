@@ -44,8 +44,8 @@
     "timestamp": "2026-09-04T08:26:41.039877+00:00"
   },
   "LINKUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:47.464936+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:46.818171+00:00"
   },
   "DOGEUSDT": {
     "direction": "LONG",
@@ -73,7 +73,7 @@
   },
   "AAVEUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T18:27:26.460720+00:00"
+    "timestamp": "2026-09-04T22:46:53.217320+00:00"
   },
   "AXSUSDT": {
     "direction": "LONG",
@@ -121,7 +121,7 @@
   },
   "DASHUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T18:27:19.026541+00:00"
+    "timestamp": "2026-09-04T22:46:52.372363+00:00"
   },
   "ZENUSDT": {
     "direction": "LONG",
@@ -374,5 +374,33 @@
   "JUPUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-04T22:20:55.589942+00:00"
+  },
+  "ADAUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:51.918752+00:00"
+  },
+  "ENAUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:54.612226+00:00"
+  },
+  "TAOUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:55.062594+00:00"
+  },
+  "ZROUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:55.615130+00:00"
+  },
+  "VIRTUALUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:46:56.215372+00:00"
+  },
+  "HEIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T22:46:56.901811+00:00"
+  },
+  "SYRUPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T22:46:57.562218+00:00"
   }
 }
