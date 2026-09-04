@@ -1,8 +1,8 @@
 name: vSynapse Scan
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"   # tiap 30 menit — sesuaikan kebutuhan
+  # schedule:
+  #   - cron: "*/30 * * * *"
   workflow_dispatch: {}
 
 jobs:
