@@ -238,5 +238,45 @@
   "HIVEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T00:43:27.315980+00:00"
+  },
+  "DOTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:48.401279+00:00"
+  },
+  "COTIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:49.578961+00:00"
+  },
+  "1000SHIBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:50.289171+00:00"
+  },
+  "GALAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:50.953554+00:00"
+  },
+  "ENSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:51.683829+00:00"
+  },
+  "ARBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:52.730780+00:00"
+  },
+  "TWTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:53.701750+00:00"
+  },
+  "1000BONKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:54.407610+00:00"
+  },
+  "JUPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:55.265583+00:00"
+  },
+  "ZROUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T01:08:56.187423+00:00"
   }
 }
