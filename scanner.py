@@ -367,6 +367,34 @@ async def send_telegram_message(text: str, cfg: dict) -> None:
         await resp.read()
 
 
+async def send_telegram_photo(photo_path: str, caption: str, cfg: dict) -> None:
+    tg_cfg = cfg["notify"]["telegram"]
+    if not tg_cfg.get("enabled"):
+        return
+
+    token = os.environ.get(tg_cfg["bot_token_env"])
+    chat_id = os.environ.get(tg_cfg["chat_id_env"])
+    if not token or not chat_id:
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    with open(photo_path, "rb") as photo_file:
+        data = aiohttp.FormData()
+        data.add_field("chat_id", str(chat_id))
+        data.add_field("caption", caption)
+        data.add_field("parse_mode", "Markdown")
+        data.add_field(
+            "photo",
+            photo_file,
+            filename=os.path.basename(photo_path),
+            content_type="image/png",
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=data) as resp:
+                await resp.read()
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -404,7 +432,23 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
             results.append(signal.__dict__)
             mark_signaled(state, kline.symbol, signal.direction)
-            await send_telegram_message(format_signal_message(signal), cfg)
+
+            caption = format_signal_message(signal)
+
+            if cfg.get("chart", {}).get("auto_generate", True):
+                import chart as chart_module  # lazy import, hindari circular import
+
+                os.makedirs("charts", exist_ok=True)
+                chart_path = f"charts/{kline.symbol}_{primary_tf}.png"
+                chart_module.build_chart(
+                    kline.df,
+                    kline.symbol,
+                    primary_tf,
+                    signal,
+                )
+                await send_telegram_photo(chart_path, caption, cfg)
+            else:
+                await send_telegram_message(caption, cfg)
 
             if len(results) >= cfg["risk"]["max_signals_per_run"]:
                 break
