@@ -1,6 +1,6 @@
 """vSynapse v3 — chart generator, 1 file.
 
-Chart candlestick gaya vSch.py (rasio 5:2): EMA, Supertrend, volume +
+Chart candlestick gaya vSch.py (rasio 3549:1600 ≈ 2.218:1): EMA, Supertrend, volume +
 volume MA, level Entry/SL/TP, dan markup market structure (HH/HL/LH/LL,
 zona Demand/Supply, BOS, confirmation candle, arrow target ke TP).
 
@@ -466,9 +466,10 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
-    height_ratio = chart_cfg.get("height_ratio", 0.4)  # 2000 x 800 = 5:2
+    # Rasio output 3549:1600 (≈ 2.218:1). height_ratio = tinggi/lebar.
+    height_ratio = chart_cfg.get("height_ratio", 1600 / 3549)  # 2000 x 902 ≈ 3549:1600
     dpi = 150
-    output_scale = 2  # output final 2x (~4000x1600px), layout/proporsi tidak berubah
+    output_scale = 2  # output final 2x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
