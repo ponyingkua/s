@@ -445,6 +445,8 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     kline.symbol,
                     primary_tf,
                     signal,
+                    cfg,
+                    chart_path,
                 )
                 await send_telegram_photo(chart_path, caption, cfg)
             else:
