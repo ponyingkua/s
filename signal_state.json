@@ -61,7 +61,7 @@
   },
   "NEARUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:29.712290+00:00"
+    "timestamp": "2026-09-04T05:10:16.168596+00:00"
   },
   "PEOPLEUSDT": {
     "direction": "LONG",
@@ -201,19 +201,19 @@
   },
   "BNBUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:43:21.518391+00:00"
+    "timestamp": "2026-09-04T05:10:13.928103+00:00"
   },
   "VETUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:43:22.017404+00:00"
+    "timestamp": "2026-09-04T05:10:14.438691+00:00"
   },
   "CRVUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:43:22.573488+00:00"
+    "timestamp": "2026-09-04T05:10:15.507476+00:00"
   },
   "FILUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:43:23.211756+00:00"
+    "timestamp": "2026-09-04T05:10:16.717430+00:00"
   },
   "LPTUSDT": {
     "direction": "LONG",
@@ -241,7 +241,7 @@
   },
   "DOTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T01:08:48.401279+00:00"
+    "timestamp": "2026-09-04T05:10:15.023591+00:00"
   },
   "COTIUSDT": {
     "direction": "LONG",
@@ -249,7 +249,7 @@
   },
   "1000SHIBUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T01:08:50.289171+00:00"
+    "timestamp": "2026-09-04T05:10:17.392933+00:00"
   },
   "GALAUSDT": {
     "direction": "LONG",
@@ -474,5 +474,17 @@
   "CYSUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-04T04:40:36.717191+00:00"
+  },
+  "BTCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T05:10:12.001119+00:00"
+  },
+  "ETHUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T05:10:12.563904+00:00"
+  },
+  "BCHUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T05:10:13.118744+00:00"
   }
 }
