@@ -1,0 +1,49 @@
+name: Backtest (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "single (1 simbol) atau batch (banyak simbol)"
+        type: choice
+        options: ["single", "batch"]
+        default: "single"
+      symbol:
+        description: "Simbol untuk mode single, mis. BTCUSDT"
+        default: "BTCUSDT"
+      symbols:
+        description: "Simbol dipisah koma untuk mode batch (kosongkan = 10 default)"
+        default: ""
+      timeframe:
+        description: "Timeframe, mis. 15m / 1h / 4h"
+        default: "1h"
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Jalankan backtest
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "batch" ]; then
+            if [ -z "${{ github.event.inputs.symbols }}" ]; then
+              python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}"
+            else
+              python backtest.py --batch --symbols "${{ github.event.inputs.symbols }}" --timeframe "${{ github.event.inputs.timeframe }}"
+            fi
+          else
+            python backtest.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}"
+          fi
+      - name: Commit hasil backtest
+        run: |
+          git config user.name "vsynapse-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add backtest_result.md backtest_batch_result.md 2>/dev/null || true
+          git diff --quiet --cached || git commit -m "chore: backtest ${{ github.event.inputs.mode }} ${{ github.event.inputs.timeframe }}"
+          git push
