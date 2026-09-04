@@ -468,10 +468,10 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
-    # Rasio output 3549:1600 (≈ 2.218:1). height_ratio = tinggi/lebar.
-    height_ratio = chart_cfg.get("height_ratio", 1600 / 3549)  # 2000 x 902 ≈ 3549:1600
+    # Rasio output 16:9. height_ratio = tinggi/lebar.
+    height_ratio = chart_cfg.get("height_ratio", 9 / 16)  # 2000 x 1125 = 16:9
     dpi = 150
-    output_scale = 2  # output final 2x, layout/proporsi tidak berubah
+    output_scale = 1  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
