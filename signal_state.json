@@ -21,11 +21,11 @@
   },
   "LISTAUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T02:10:41.758551+00:00"
+    "timestamp": "2026-09-04T06:13:58.133960+00:00"
   },
   "TUTUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-03T22:10:23.742245+00:00"
+    "timestamp": "2026-09-04T06:14:00.866392+00:00"
   },
   "HUSDT": {
     "direction": "LONG",
@@ -165,7 +165,7 @@
   },
   "CAKEUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:16:03.324378+00:00"
+    "timestamp": "2026-09-04T06:13:57.225177+00:00"
   },
   "PORTALUSDT": {
     "direction": "LONG",
@@ -181,7 +181,7 @@
   },
   "SYRUPUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:16:07.463982+00:00"
+    "timestamp": "2026-09-04T06:14:01.578530+00:00"
   },
   "SKYAIUSDT": {
     "direction": "LONG",
@@ -281,7 +281,7 @@
   },
   "LTCUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T01:38:47.193958+00:00"
+    "timestamp": "2026-09-04T06:13:54.375547+00:00"
   },
   "ETCUSDT": {
     "direction": "LONG",
@@ -309,7 +309,7 @@
   },
   "BICOUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T01:38:52.188887+00:00"
+    "timestamp": "2026-09-04T06:13:56.658480+00:00"
   },
   "STRKUSDT": {
     "direction": "LONG",
@@ -317,7 +317,7 @@
   },
   "AEROUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T01:38:53.876594+00:00"
+    "timestamp": "2026-09-04T06:13:58.821851+00:00"
   },
   "XMRUSDT": {
     "direction": "SHORT",
@@ -325,7 +325,7 @@
   },
   "TRBUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T02:10:38.575932+00:00"
+    "timestamp": "2026-09-04T06:13:55.304897+00:00"
   },
   "SEIUSDT": {
     "direction": "LONG",
@@ -337,7 +337,7 @@
   },
   "BIOUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T02:10:42.559126+00:00"
+    "timestamp": "2026-09-04T06:13:59.538577+00:00"
   },
   "HEIUSDT": {
     "direction": "LONG",
@@ -494,5 +494,9 @@
   "ZKUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T05:39:41.230613+00:00"
+  },
+  "VVVUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T06:14:00.155403+00:00"
   }
 }
