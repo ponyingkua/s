@@ -1,34 +1,34 @@
 [
   {
-    "symbol": "BCHUSDT",
+    "symbol": "ETCUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (52)"
+      "RSI netral (56)"
     ],
-    "entry": 256.35,
-    "sl": 254.463767,
-    "tp": 259.179349
+    "entry": 7.602,
+    "sl": 7.555072,
+    "tp": 7.672392
   },
   {
-    "symbol": "LTCUSDT",
+    "symbol": "LINKUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (54)"
+      "RSI netral (60)"
     ],
-    "entry": 51.16,
-    "sl": 50.956969,
-    "tp": 51.464547
+    "entry": 11.972,
+    "sl": 11.881205,
+    "tp": 12.108193
   },
   {
-    "symbol": "XLMUSDT",
+    "symbol": "DOGEUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
@@ -37,51 +37,53 @@
       "Supertrend menunjukkan uptrend",
       "RSI netral (49)"
     ],
-    "entry": 0.18336,
-    "sl": 0.182225,
-    "tp": 0.185063
+    "entry": 0.08711,
+    "sl": 0.086564,
+    "tp": 0.08793
   },
   {
-    "symbol": "XMRUSDT",
+    "symbol": "DOTUSDT",
     "direction": "LONG",
-    "score": 65.0,
+    "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 543.9,
-    "sl": 533.951724,
-    "tp": 558.822414
-  },
-  {
-    "symbol": "ZECUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 968.29,
-    "sl": 955.888328,
-    "tp": 986.892508
-  },
-  {
-    "symbol": "BNBUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
       "Supertrend menunjukkan uptrend",
-      "RSI oversold (29), potensi rebound"
+      "RSI netral (51)"
     ],
-    "entry": 714.88,
-    "sl": 711.541617,
-    "tp": 719.887575
+    "entry": 0.8768,
+    "sl": 0.871021,
+    "tp": 0.885469
   },
   {
-    "symbol": "ATOMUSDT",
+    "symbol": "CRVUSDT",
+    "direction": "LONG",
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend"
+    ],
+    "entry": 0.3743,
+    "sl": 0.369568,
+    "tp": 0.381398
+  },
+  {
+    "symbol": "SOLUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI netral (52)"
+    ],
+    "entry": 103.83,
+    "sl": 103.261991,
+    "tp": 104.682014
+  },
+  {
+    "symbol": "UNIUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
@@ -90,50 +92,48 @@
       "Supertrend menunjukkan uptrend",
       "RSI netral (55)"
     ],
-    "entry": 1.516,
-    "sl": 1.506701,
-    "tp": 1.529949
+    "entry": 6.353,
+    "sl": 6.240676,
+    "tp": 6.521486
   },
   {
-    "symbol": "ALGOUSDT",
+    "symbol": "NEARUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (46)"
+      "RSI netral (59)"
     ],
-    "entry": 0.09227,
-    "sl": 0.091534,
-    "tp": 0.093374
+    "entry": 1.969,
+    "sl": 1.947053,
+    "tp": 2.001921
   },
   {
-    "symbol": "TRBUSDT",
+    "symbol": "AAVEUSDT",
     "direction": "LONG",
-    "score": 75.0,
+    "score": 65.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI netral (41)"
+      "Supertrend menunjukkan uptrend"
     ],
-    "entry": 17.494,
-    "sl": 17.348574,
-    "tp": 17.712139
+    "entry": 134.69,
+    "sl": 133.510764,
+    "tp": 136.458854
   },
   {
-    "symbol": "AVAXUSDT",
+    "symbol": "AXSUSDT",
     "direction": "LONG",
-    "score": 75.0,
+    "score": 65.0,
     "reasons": [
-      "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (48)"
+      "RSI oversold (39), potensi rebound"
     ],
-    "entry": 7.478,
-    "sl": 7.441644,
-    "tp": 7.532535
+    "entry": 0.9317,
+    "sl": 0.926721,
+    "tp": 0.939169
   }
 ]
