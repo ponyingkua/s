@@ -1,12 +1,18 @@
 """vSynapse v3 — chart generator, 1 file.
 
-Bikin gambar chart candlestick gaya profesional (dark UI, rasio 5:2) lengkap
-dengan EMA200, Supertrend, MACD, volume, dan mark Entry/SL/TP + zone box
-transparan — buat posting ke Binance Square atau sosial media lain.
+Bikin gambar chart candlestick bergaya vSch.py (rasio 5:2) lengkap dengan
+EMA, Supertrend, volume + volume MA, dan mark Entry/SL/TP — buat posting
+ke Binance Square atau sosial media lain.
 
-Layout dibagi 3 panel vertikal (harga besar di atas, volume, MACD di bawah)
-supaya nggak ada elemen yang numpuk. Semua label harga (entry/SL/TP)
-ditaruh di kolom terpisah di sisi kanan chart, di luar area candle.
+Layout 2 panel vertikal (harga besar di atas, volume di bawah) — persis
+seperti vSch.py. Label Entry/SL/TP ditaruh langsung di sisi kanan chart
+(kotak warna solid + teks putih, seperti vSch), bukan di kolom terpisah.
+Panel MACD sudah dihilangkan.
+
+Palet warna diambil langsung dari vSch.py, KECUALI warna background/panel
+(tetap hitam, bukan putih seperti vSch aslinya) dan warna teks/axis yang
+disesuaikan sedikit lebih terang supaya tetap kebaca di atas background
+gelap (vSch aslinya didesain untuk background putih).
 
 Contoh:
   python chart.py --symbol BTCUSDT --timeframe 1h
@@ -20,7 +26,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.transforms
+import numpy as np
 import pandas as pd
 import yaml
 from matplotlib.gridspec import GridSpec
@@ -30,87 +36,141 @@ from scanner import (
     BinanceFuturesClient,
     atr,
     ema,
-    macd,
     score_symbol,
     supertrend,
 )
 
+# ============================================================
+# STYLE — palet warna dari vSch.py.
+#
+# Pengecualian (background tetap hitam, bukan putih seperti vSch):
+#   BG, PANEL   -> tetap gelap
+#   TEXT, AXIS  -> dinaikkan kecerahannya (versi vSch: "#212121"/"#555555"
+#                  didesain buat background putih, jadi nyaris tak
+#                  kelihatan kalau dipakai apa adanya di atas hitam)
+# Semua warna lain (candle, EMA, Supertrend, level, grid, spine, volume
+# MA) persis nilai hex yang sama seperti di vSch.py.
+# ============================================================
 
-def _draw_decluttered_labels(ax_labels, level_defs: list, ymin: float, ymax: float, theme: dict,
-                              min_gap_frac: float = 0.16) -> None:
-    """Taruh label Entry/SL/TP di kolom terpisah dengan jarak minimum antar
-    label (dalam fraksi tinggi chart), supaya tidak saling timpa walau
-    harganya berdekatan. Tiap label tetap ditarik garis tipis ke posisi
-    harga aslinya biar jelas keterkaitannya."""
-    if not level_defs or ymax <= ymin:
-        return
+BG = "#0d0d0f"
+PANEL = "#0d0d0f"
+GRID = "#9e9e9e"
+TEXT = "#e8e8ec"
+AXIS = "#9e9e9e"
+SPINE = "#9e9e9e"
 
-    items = sorted(level_defs, key=lambda t: t[1])  # urut naik berdasarkan harga
-    fracs = [(value - ymin) / (ymax - ymin) for _, value, _ in items]
+UP = "#26a69a"
+DOWN = "#ef5350"
 
-    # dorong ke atas kalau terlalu rapat
-    for i in range(1, len(fracs)):
-        if fracs[i] - fracs[i - 1] < min_gap_frac:
-            fracs[i] = fracs[i - 1] + min_gap_frac
-    # kalau meluber di atas 1.0, geser semua turun secukupnya
-    if fracs[-1] > 0.95:
-        shift = fracs[-1] - 0.95
-        fracs = [max(0.05, f - shift) for f in fracs]
+EMA_COLOR = "#1565c0"
 
-    trans = matplotlib.transforms.blended_transform_factory(ax_labels.transAxes, ax_labels.transAxes)
+ST_UP = "#2e7d32"
+ST_DOWN = "#c62828"
 
-    for (label, value, color), frac in zip(items, fracs):
-        real_frac = (value - ymin) / (ymax - ymin)
+ENTRY = "#1565c0"
+TP1 = "#00897b"
+SL = "#c62828"
 
-        # garis penghubung tipis dari posisi harga asli ke posisi label yang digeser
-        ax_labels.plot([0, 0.1], [real_frac, frac], transform=trans, color=color, linewidth=0.8, alpha=0.7)
+VOLUME_MA = "#e65100"
 
-        ax_labels.annotate(
-            f"{label}\n{value:.6g}",
-            xy=(0.12, frac), xycoords="axes fraction",
-            va="center", ha="left", fontsize=8, color=color,
-            bbox=dict(boxstyle="round,pad=0.25", facecolor=theme.get("background", "#0d0d0f"),
-                      edgecolor=color, linewidth=0.8),
+CANDLE_WIDTH = 0.72
+
+
+# ============================================================
+# HELPERS (gaya format & label persis seperti vSch.py)
+# ============================================================
+
+def decimals_from_price(price: float) -> int:
+    p = abs(float(price))
+    if p < 0.0001:
+        return 8
+    if p < 0.001:
+        return 7
+    if p < 0.01:
+        return 6
+    if p < 0.1:
+        return 5
+    if p < 1:
+        return 5
+    if p < 10:
+        return 4
+    if p < 100:
+        return 3
+    return 2
+
+
+def format_price(value: float, decimals: int) -> str:
+    return f"{float(value):.{int(decimals)}f}"
+
+
+def _place_level_labels(ax, levels: list, label_x: float) -> None:
+    """Kotak label solid warna + teks putih, ditaruh langsung di sumbu
+    harga (bukan kolom terpisah) — persis gaya vSch.py."""
+    for item in levels:
+        ax.text(
+            label_x, item["level"], f" {item['text']} ",
+            color="#ffffff",
+            bbox=dict(facecolor=item["color"], edgecolor="none",
+                      boxstyle="round,pad=0.32", alpha=0.95),
+            va="center", ha="left", fontweight="bold", fontsize=8,
+            zorder=8, clip_on=False,
         )
 
 
-def _draw_candles(ax, df: pd.DataFrame, theme: dict) -> None:
-    width = 0.6
-    for idx, row in df.iterrows():
-        color = theme["bull"] if row["close"] >= row["open"] else theme["bear"]
-        # sumbu (high-low)
-        ax.plot([idx, idx], [row["low"], row["high"]], color=color, linewidth=1, zorder=2)
-        # badan (open-close)
-        lower = min(row["open"], row["close"])
-        height = abs(row["close"] - row["open"]) or (row["high"] - row["low"]) * 0.01
-        ax.add_patch(
-            Rectangle(
-                (idx - width / 2, lower), width, height,
-                facecolor=color, edgecolor=color, zorder=3,
-            )
-        )
-
-
-def _draw_supertrend(ax, df: pd.DataFrame, st: pd.Series, theme: dict) -> None:
-    """Gambar supertrend sebagai segmen warna beda per arah, tanpa garis
-    penghubung palsu saat arah berubah (biar tidak menyesatkan secara visual)."""
-    hl2 = (df["high"] + df["low"]) / 2
-    atr_val = atr(df, 10)
-    upper = hl2 + 3 * atr_val
-    lower = hl2 - 3 * atr_val
-
-    seg_x, seg_y, seg_color = [], [], None
+def _draw_candles(ax, df: pd.DataFrame) -> list:
+    """Gambar candlestick gaya vSch (badan alpha 0.92, sumbu rounded-cap).
+    Mengembalikan warna tiap candle supaya bisa dipakai ulang di panel volume."""
+    colors = []
     for i in range(len(df)):
-        level = lower.iloc[i] if st.iloc[i] == 1 else upper.iloc[i]
-        color = theme["supertrend_up"] if st.iloc[i] == 1 else theme["supertrend_down"]
-        if seg_color is not None and color != seg_color:
-            ax.plot(seg_x, seg_y, color=seg_color, linewidth=1.6, zorder=4)
-            seg_x, seg_y = [], []
-        seg_x.append(df.index[i])
-        seg_y.append(level)
-        seg_color = color
-    if seg_x:
-        ax.plot(seg_x, seg_y, color=seg_color, linewidth=1.6, zorder=4)
+        row = df.iloc[i]
+        open_p, close_p = float(row["open"]), float(row["close"])
+        high_p, low_p = float(row["high"]), float(row["low"])
+        color = UP if close_p >= open_p else DOWN
+        colors.append(color)
+
+        ax.plot([i, i], [low_p, high_p], color=color, linewidth=1.3,
+                 solid_capstyle="round", zorder=5)
+
+        body_bottom = min(open_p, close_p)
+        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.012)
+        ax.add_patch(Rectangle(
+            (i - CANDLE_WIDTH / 2, body_bottom), CANDLE_WIDTH, body_height,
+            facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=6,
+        ))
+    return colors
+
+
+def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
+    """Bar volume + garis volume MA(20) — persis gaya vSch."""
+    for i in range(len(df)):
+        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.30,
+               width=CANDLE_WIDTH, linewidth=0, zorder=2)
+
+    vol_ma = df["volume"].rolling(20, min_periods=1).mean()
+    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
+             alpha=0.70, zorder=3)
+
+
+def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
+                      period: int, multiplier) -> None:
+    """Garis Supertrend dipecah per arah pakai masking (bukan loop segmen
+    manual) — persis pendekatan vSch — tanpa garis penghubung palsu saat
+    arah berubah.
+
+    Level (upper/lower band) dihitung pakai formula & parameter yang SAMA
+    persis dengan scanner.supertrend() (hl2 +/- multiplier * atr(df, period)),
+    supaya posisi garis selalu sinkron dengan arah (st_dir) yang dihasilkan
+    scanner — bukan nilai default 10/3 yang di-hardcode terpisah."""
+    hl2 = (df["high"] + df["low"]) / 2
+    atr_val = atr(df, period)
+    upper = hl2 + multiplier * atr_val
+    lower = hl2 - multiplier * atr_val
+    level = lower.where(st_dir == 1, upper)
+
+    x = range(len(df))
+    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.4,
+             label=f"Supertrend {period} / {multiplier}", zorder=3)
+    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.4, zorder=3)
 
 
 def build_chart(
@@ -122,114 +182,131 @@ def build_chart(
     out_path: str,
 ) -> str:
     chart_cfg = cfg.get("chart", {})
-    theme = chart_cfg.get("theme", {})
     n_show = chart_cfg.get("candles_shown", 120)
 
     plot_df = df.tail(n_show).reset_index(drop=True)
 
-    ema200_full = ema(df["close"], cfg["indicators"]["ema"]["period"]).tail(n_show).reset_index(drop=True)
-    st_full = supertrend(
-        df, cfg["indicators"]["supertrend"]["period"], cfg["indicators"]["supertrend"]["multiplier"]
-    ).tail(n_show).reset_index(drop=True)
-    macd_line_full, signal_line_full, hist_full = macd(
-        df["close"], cfg["indicators"]["macd"]["fast"], cfg["indicators"]["macd"]["slow"],
-        cfg["indicators"]["macd"]["signal"],
-    )
-    macd_line = macd_line_full.tail(n_show).reset_index(drop=True)
-    signal_line = signal_line_full.tail(n_show).reset_index(drop=True)
-    hist = hist_full.tail(n_show).reset_index(drop=True)
+    ema_period = cfg["indicators"]["ema"]["period"]
+    st_period = cfg["indicators"]["supertrend"]["period"]
+    st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
+    ema_full = ema(df["close"], ema_period).tail(n_show).reset_index(drop=True)
+    st_dir_full = supertrend(df, st_period, st_mult).tail(n_show).reset_index(drop=True)
+
+    # --- Ukuran figure: rasio 5:2 (tidak berubah dari sebelumnya) ---
     width_px = chart_cfg.get("width_px", 2000)
-    height_ratio = chart_cfg.get("height_ratio", 0.4)
+    height_ratio = chart_cfg.get("height_ratio", 0.4)  # 2000 x 800 = 5:2
     dpi = 150
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
     fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
-    fig.patch.set_facecolor(theme.get("background", "#0d0d0f"))
+    fig.patch.set_facecolor(BG)
 
-    # 4 kolom: [panel utama lebar] [kolom label harga sempit]
-    # 3 baris: harga (besar) / volume (kecil) / macd (kecil)
+    # 2 baris: harga (besar) / volume (kecil) — panel MACD dihilangkan.
     gs = GridSpec(
-        3, 2, figure=fig,
-        width_ratios=[9, 1.4],
-        height_ratios=[3.4, 1, 1],
-        hspace=0.08, wspace=0.02,
-        left=0.05, right=0.97, top=0.90, bottom=0.09,
+        2, 1, figure=fig,
+        height_ratios=[4.2, 0.75],
+        hspace=0.06,
+        left=0.07, right=0.96, top=0.87, bottom=0.11,
     )
-
     ax_price = fig.add_subplot(gs[0, 0])
-    ax_labels = fig.add_subplot(gs[0, 1], sharey=ax_price)
     ax_vol = fig.add_subplot(gs[1, 0], sharex=ax_price)
-    ax_macd = fig.add_subplot(gs[2, 0], sharex=ax_price)
 
-    for ax in (ax_price, ax_vol, ax_macd, ax_labels):
-        ax.set_facecolor(theme.get("background", "#0d0d0f"))
-        for spine in ax.spines.values():
-            spine.set_color(theme.get("grid", "#1c1c22"))
-        ax.tick_params(colors=theme.get("text", "#d8d8e0"), labelsize=8)
+    for ax in (ax_price, ax_vol):
+        ax.set_facecolor(PANEL)
+        ax.grid(True, linestyle="-", alpha=0.35, color=GRID)
+        ax.set_axisbelow(True)
+        ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        for side in ("left", "bottom"):
+            ax.spines[side].set_color(SPINE)
+            ax.spines[side].set_linewidth(0.8)
 
-    ax_price.grid(True, color=theme.get("grid", "#1c1c22"), linewidth=0.5, alpha=0.6)
+    ax_price.tick_params(labelbottom=False)
 
-    # --- Panel harga ---
-    _draw_candles(ax_price, plot_df, theme)
-    ax_price.plot(range(len(plot_df)), ema200_full, color=theme.get("ema", "#f5c542"),
-                  linewidth=1.3, label="EMA200", zorder=5)
-    ax_price.plot([], [], color=theme.get("supertrend_up", "#2ecc71"), linewidth=1.6, label="Supertrend")
-    _draw_supertrend(ax_price, plot_df, st_full, theme)
+    # --- Panel harga: candle + EMA + Supertrend ---
+    colors = _draw_candles(ax_price, plot_df)
+    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.4,
+                  label=f"EMA {ema_period}", zorder=4)
+    _draw_supertrend(ax_price, plot_df, st_dir_full, st_period, st_mult)
 
-    # Zone box transparan: area antara entry dan SL (zona risiko)
-    if signal.entry is not None and signal.sl is not None:
-        lo, hi = sorted([signal.entry, signal.sl])
-        ax_price.axhspan(lo, hi, color=theme.get("zone_fill", "#3498db"),
-                          alpha=theme.get("zone_alpha", 0.12), zorder=1)
+    last_x = len(plot_df) - 1
 
-    # Garis Entry / SL / TP + label di kolom terpisah (tidak numpuk di atas candle)
-    level_defs = []
+    # --- Level Entry / SL / TP (garis putus-putus + kotak label) ---
+    ref_price = signal.entry if signal.entry is not None else (
+        signal.sl if signal.sl is not None else float(plot_df["close"].iloc[-1])
+    )
+    dec = decimals_from_price(ref_price)
+
+    levels = []
     if signal.entry is not None:
-        level_defs.append(("Entry", signal.entry, theme.get("entry", "#3498db")))
-    if signal.sl is not None:
-        level_defs.append(("SL", signal.sl, theme.get("sl", "#e74c3c")))
+        levels.append({"level": signal.entry, "color": ENTRY,
+                        "text": f"ENTRY  {format_price(signal.entry, dec)}"})
     if signal.tp is not None:
-        level_defs.append(("TP", signal.tp, theme.get("tp", "#2ecc71")))
+        levels.append({"level": signal.tp, "color": TP1,
+                        "text": f"TP  {format_price(signal.tp, dec)}"})
+    if signal.sl is not None:
+        levels.append({"level": signal.sl, "color": SL,
+                        "text": f"SL  {format_price(signal.sl, dec)}"})
 
-    for label, level, color in level_defs:
-        ax_price.axhline(level, color=color, linewidth=1, linestyle="--", alpha=0.8, zorder=4)
+    for item in levels:
+        ax_price.axhline(y=item["level"], color=item["color"], linestyle="--",
+                          linewidth=1.0, alpha=0.70, zorder=2)
 
-    ax_labels.axis("off")
-    ymin, ymax = ax_price.get_ylim()
-    _draw_decluttered_labels(ax_labels, level_defs, ymin, ymax, theme)
+    # --- Y-limit harga: ikut sertakan level Entry/SL/TP + padding 16% ---
+    level_values = [item["level"] for item in levels]
+    y_low = min([float(plot_df["low"].min())] + level_values)
+    y_high = max([float(plot_df["high"].max())] + level_values)
+    y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
+    y_padding = y_span * 0.16
+    ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
 
-    ax_price.legend(loc="upper left", fontsize=8, facecolor=theme.get("background", "#0d0d0f"),
-                     edgecolor=theme.get("grid", "#1c1c22"), labelcolor=theme.get("text", "#d8d8e0"))
+    # --- Margin ekstra di kanan buat kolom label (bukan subplot terpisah) ---
+    gap_from_candle = 4.0
+    label_width_est = 13.0
+    gap_from_edge = 1.8
+    extra_margin = gap_from_candle + label_width_est + gap_from_edge
+    label_x = last_x + gap_from_candle
 
-    title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  Score {signal.score}"
-    ax_price.set_title(title, color=theme.get("text", "#d8d8e0"), fontsize=13, loc="left", pad=10)
-    ax_price.set_xticklabels([])
-    ax_price.set_xlim(-1, len(plot_df))
+    ax_price.set_xlim(-0.6, last_x + extra_margin)
+    ax_vol.set_xlim(-0.6, last_x + extra_margin)
+
+    _place_level_labels(ax_price, levels, label_x)
 
     # --- Panel volume ---
-    vol_colors = [
-        theme.get("bull", "#2ecc71") if row["close"] >= row["open"] else theme.get("bear", "#e74c3c")
-        for _, row in plot_df.iterrows()
-    ]
-    ax_vol.bar(range(len(plot_df)), plot_df["volume"], color=vol_colors, width=0.6, zorder=2)
-    ax_vol.set_xticklabels([])
-    ax_vol.set_ylabel("Vol", color=theme.get("text", "#d8d8e0"), fontsize=8)
-    ax_vol.grid(True, color=theme.get("grid", "#1c1c22"), linewidth=0.4, alpha=0.4)
+    _draw_volume(ax_vol, plot_df, colors)
+    ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
+    ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
 
-    # --- Panel MACD ---
-    hist_colors = [theme.get("bull", "#2ecc71") if v >= 0 else theme.get("bear", "#e74c3c") for v in hist]
-    ax_macd.bar(range(len(plot_df)), hist, color=hist_colors, width=0.6, alpha=0.6, zorder=2)
-    ax_macd.plot(range(len(plot_df)), macd_line, color=theme.get("ema", "#f5c542"), linewidth=1, zorder=3)
-    ax_macd.plot(range(len(plot_df)), signal_line, color=theme.get("text", "#d8d8e0"), linewidth=1, zorder=3)
-    ax_macd.set_ylabel("MACD", color=theme.get("text", "#d8d8e0"), fontsize=8)
-    ax_macd.grid(True, color=theme.get("grid", "#1c1c22"), linewidth=0.4, alpha=0.4)
+    # --- Tanggal di sumbu-x bawah, dari kolom open_time (persis gaya vSch) ---
+    if "open_time" in plot_df.columns and len(plot_df):
+        tick_count = min(6, len(plot_df))
+        ticks_idx = (
+            np.linspace(0, last_x, tick_count, dtype=int) if tick_count > 1 else [0]
+        )
+        ax_vol.set_xticks(ticks_idx)
+        tick_labels = []
+        for t in ticks_idx:
+            ts = plot_df["open_time"].iloc[int(t)]
+            tick_labels.append(ts.strftime("%d %b  %H:%M") if pd.notna(ts) else str(t))
+        ax_vol.set_xticklabels(tick_labels, fontsize=7.5, color=AXIS)
 
-    # kolom label kosong di baris volume & macd biar grid tetap rapi (tanpa isi)
-    for row in (1, 2):
-        ax_empty = fig.add_subplot(gs[row, 1])
-        ax_empty.axis("off")
+    legend = ax_price.legend(
+        loc="upper left", fontsize=7.5, framealpha=0.95,
+        facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
+    )
+    legend.get_frame().set_linewidth(0.7)
+
+    # --- Header & footer teks (gaya fig.text seperti vSch) ---
+    fig.text(0.07, 0.965,
+              f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  Score {signal.score}",
+              fontsize=13, fontweight="bold", color=TEXT, ha="left", va="top")
+    fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
+              fontsize=7, color=AXIS, ha="left", va="bottom")
+    fig.text(0.96, 0.02, "Not financial advice",
+              fontsize=7, color=AXIS, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor())
     plt.close(fig)
