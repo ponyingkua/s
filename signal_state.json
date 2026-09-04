@@ -96,8 +96,8 @@
     "timestamp": "2026-09-04T11:57:06.867390+00:00"
   },
   "ANKRUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T11:57:08.885068+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:22.602252+00:00"
   },
   "HBARUSDT": {
     "direction": "LONG",
@@ -290,5 +290,41 @@
   "USELESSUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T20:11:18.660474+00:00"
+  },
+  "ZKUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:27.782389+00:00"
+  },
+  "FARTCOINUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:30.423333+00:00"
+  },
+  "KAITOUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:32.872901+00:00"
+  },
+  "HOMEUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:35.028259+00:00"
+  },
+  "KITEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:18:38.021795+00:00"
+  },
+  "MMTUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:18:39.746109+00:00"
+  },
+  "NIGHTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:18:41.757880+00:00"
+  },
+  "GWEIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:18:43.750825+00:00"
+  },
+  "AMZNUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:18:45.910400+00:00"
   }
 }
