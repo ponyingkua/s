@@ -17,7 +17,7 @@
   },
   "ONDOUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:10:21.979846+00:00"
+    "timestamp": "2026-09-04T04:40:32.442785+00:00"
   },
   "LISTAUSDT": {
     "direction": "LONG",
@@ -105,7 +105,7 @@
   },
   "ORDIUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T23:09:36.793296+00:00"
+    "timestamp": "2026-09-04T04:40:31.338482+00:00"
   },
   "TAOUSDT": {
     "direction": "LONG",
@@ -121,7 +121,7 @@
   },
   "TUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T23:38:04.755615+00:00"
+    "timestamp": "2026-09-04T04:40:30.551230+00:00"
   },
   "BOMEUSDT": {
     "direction": "LONG",
@@ -173,7 +173,7 @@
   },
   "PENGUUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T00:16:05.536752+00:00"
+    "timestamp": "2026-09-04T04:40:33.361433+00:00"
   },
   "PAXGUSDT": {
     "direction": "LONG",
@@ -450,5 +450,29 @@
   "XPLUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T04:11:21.357288+00:00"
+  },
+  "AVAXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:40:29.498102+00:00"
+  },
+  "ACEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:40:31.919846+00:00"
+  },
+  "QUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:40:34.779775+00:00"
+  },
+  "FFUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:40:35.457018+00:00"
+  },
+  "NIGHTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:40:36.210934+00:00"
+  },
+  "CYSUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T04:40:36.717191+00:00"
   }
 }
