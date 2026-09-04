@@ -1,342 +1,477 @@
-"""vSynapse v3 — chart generator, 1 file.
+"""vSynapse v3 — Binance Futures scanner, 1 file.
 
-Bikin gambar chart candlestick (rasio 5:2) lengkap dengan
-EMA, Supertrend, volume + volume MA, dan mark Entry/SL/TP — buat posting
-ke Binance Square atau sosial media lain.
+Isi: fetch data (async), indikator teknikal, confluence scoring,
+risk filter, cooldown/dedup, notifikasi Telegram, dan entry point CLI.
 
-Layout 2 panel vertikal (harga besar di atas, volume di bawah) — persis
-seperti vSch.py. Label Entry/SL/TP ditaruh langsung di sisi kanan chart
-(kotak warna solid + teks putih, seperti vSch), bukan di kolom terpisah.
-Panel MACD sudah dihilangkan.
-
-Palet warna diambil langsung dari vSch.py, KECUALI warna background/panel
-(tetap hitam, bukan putih seperti vSch aslinya) dan warna teks/axis yang
-disesuaikan sedikit lebih terang supaya tetap kebaca di atas background
-gelap (vSch aslinya didesain untuk background putih).
-
-Contoh:
-  python chart.py --symbol BTCUSDT --timeframe 1h
+Dijalankan lewat: python scanner.py --out synaptic_candidates.json
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
+import aiohttp
 import pandas as pd
 import yaml
-from matplotlib.gridspec import GridSpec
-from matplotlib.patches import Rectangle
 
-from scanner import (
-    BinanceFuturesClient,
-    atr,
-    ema,
-    score_symbol,
-    supertrend,
-)
-
-# ============================================================
-# STYLE — palet warna dari vSch.py.
-#
-# Pengecualian (background tetap hitam, bukan putih seperti vSch):
-#   BG, PANEL   -> tetap gelap
-#   TEXT, AXIS  -> dinaikkan kecerahannya (versi vSch: "#212121"/"#555555"
-#                  didesain buat background putih, jadi nyaris tak
-#                  kelihatan kalau dipakai apa adanya di atas hitam)
-# Semua warna lain (candle, EMA, Supertrend, level, grid, spine, volume
-# MA) persis nilai hex yang sama seperti di vSch.py.
-# ============================================================
-
-BG = "#0d0d0f"
-PANEL = "#0d0d0f"
-GRID = "#9e9e9e"
-TEXT = "#e8e8ec"
-AXIS = "#9e9e9e"
-SPINE = "#9e9e9e"
-
-UP = "#26a69a"
-DOWN = "#ef5350"
-
-EMA_COLOR = "#1565c0"
-
-ST_UP = "#2e7d32"
-ST_DOWN = "#c62828"
-
-ENTRY = "#1565c0"
-TP1 = "#00897b"
-SL = "#c62828"
-
-VOLUME_MA = "#e65100"
-
-CANDLE_WIDTH = 0.72
+BASE_URL = "https://www.binance.com"  # fapi.binance.com sering diblokir IP datacenter
 
 
-# ============================================================
-# HELPERS (gaya format & label persis seperti vSch.py)
-# ============================================================
+# ---------------------------------------------------------------------------
+# Data client
+# ---------------------------------------------------------------------------
 
-def decimals_from_price(price: float) -> int:
-    p = abs(float(price))
-    if p < 0.0001:
-        return 8
-    if p < 0.001:
-        return 7
-    if p < 0.01:
-        return 6
-    if p < 0.1:
-        return 5
-    if p < 1:
-        return 5
-    if p < 10:
-        return 4
-    if p < 100:
-        return 3
-    return 2
+@dataclass
+class Kline:
+    symbol: str
+    timeframe: str
+    df: pd.DataFrame
 
 
-def format_price(value: float, decimals: int) -> str:
-    return f"{float(value):.{int(decimals)}f}"
+class BinanceFuturesClient:
+    def __init__(self, session: aiohttp.ClientSession | None = None):
+        self._session = session
+        self._owns_session = session is None
 
+    async def __aenter__(self) -> "BinanceFuturesClient":
+        if self._session is None:
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            self._session = aiohttp.ClientSession(headers=headers)
+        return self
 
-def _place_level_labels(ax, levels: list, label_x: float) -> None:
-    """Kotak label solid warna + teks putih, ditaruh langsung di sumbu
-    harga (bukan kolom terpisah) — persis gaya vSch.py."""
-    for item in levels:
-        ax.text(
-            label_x, item["level"], f" {item['text']} ",
-            color="#ffffff",
-            bbox=dict(facecolor=item["color"], edgecolor="none",
-                      boxstyle="round,pad=0.32", alpha=0.95),
-            va="center", ha="left", fontweight="bold", fontsize=8,
-            zorder=8, clip_on=False,
+    async def __aexit__(self, *exc):
+        if self._owns_session and self._session:
+            await self._session.close()
+
+    async def get_active_symbols(self, quote_asset: str = "USDT") -> list[str]:
+        url = f"{BASE_URL}/fapi/v1/exchangeInfo"
+        async with self._session.get(url) as resp:
+            data = await resp.json()
+        if "symbols" not in data:
+            raise RuntimeError(
+                f"Binance API tidak mengembalikan data yang diharapkan. "
+                f"Status: {resp.status}, Response: {data}"
+            )
+        return [
+            s["symbol"]
+            for s in data["symbols"]
+            if s["quoteAsset"] == quote_asset and s["status"] == "TRADING"
+        ]
+
+    async def get_24h_volume(self, symbol: str) -> float:
+        url = f"{BASE_URL}/fapi/v1/ticker/24hr"
+        async with self._session.get(url, params={"symbol": symbol}) as resp:
+            data = await resp.json()
+        return float(data.get("quoteVolume", 0))
+
+    async def get_klines(self, symbol: str, interval: str, limit: int = 300) -> Kline:
+        url = f"{BASE_URL}/fapi/v1/klines"
+        params = {"symbol": symbol, "interval": interval, "limit": limit}
+        async with self._session.get(url, params=params) as resp:
+            raw = await resp.json()
+
+        df = pd.DataFrame(
+            raw,
+            columns=[
+                "open_time", "open", "high", "low", "close", "volume",
+                "close_time", "quote_volume", "trades",
+                "taker_buy_base", "taker_buy_quote", "ignore",
+            ],
         )
+        for col in ("open", "high", "low", "close", "volume"):
+            df[col] = df[col].astype(float)
+        df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
+        return Kline(symbol=symbol, timeframe=interval, df=df)
+
+    async def get_klines_many(
+        self, symbols: list[str], interval: str, limit: int = 300
+    ) -> list[Kline]:
+        tasks = [self.get_klines(s, interval, limit) for s in symbols]
+        return await asyncio.gather(*tasks, return_exceptions=False)
 
 
-def _draw_candles(ax, df: pd.DataFrame) -> list:
-    """Gambar candlestick gaya vSch (badan alpha 0.92, sumbu rounded-cap).
-    Mengembalikan warna tiap candle supaya bisa dipakai ulang di panel volume."""
-    colors = []
-    for i in range(len(df)):
-        row = df.iloc[i]
-        open_p, close_p = float(row["open"]), float(row["close"])
-        high_p, low_p = float(row["high"]), float(row["low"])
-        color = UP if close_p >= open_p else DOWN
-        colors.append(color)
+# ---------------------------------------------------------------------------
+# Indikator teknikal
+# ---------------------------------------------------------------------------
 
-        ax.plot([i, i], [low_p, high_p], color=color, linewidth=1.3,
-                 solid_capstyle="round", zorder=5)
-
-        body_bottom = min(open_p, close_p)
-        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.012)
-        ax.add_patch(Rectangle(
-            (i - CANDLE_WIDTH / 2, body_bottom), CANDLE_WIDTH, body_height,
-            facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=6,
-        ))
-    return colors
+def ema(series: pd.Series, period: int) -> pd.Series:
+    return series.ewm(span=period, adjust=False).mean()
 
 
-def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
-    """Bar volume + garis volume MA(20) — persis gaya vSch."""
-    for i in range(len(df)):
-        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.30,
-               width=CANDLE_WIDTH, linewidth=0, zorder=2)
+def rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean()
 
-    vol_ma = df["volume"].rolling(20, min_periods=1).mean()
-    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
-             alpha=0.70, zorder=3)
+    result = pd.Series(index=series.index, dtype=float)
+    no_loss = avg_loss == 0
+    no_gain = avg_gain == 0
+    normal = ~no_loss & ~no_gain
+
+    rs = avg_gain[normal] / avg_loss[normal]
+    result[normal] = 100 - (100 / (1 + rs))
+    result[no_loss & ~no_gain] = 100.0
+    result[no_gain & ~no_loss] = 0.0
+    result[no_gain & no_loss] = 50.0
+    return result
 
 
-def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
-                      period: int, multiplier) -> None:
-    """Garis Supertrend dipecah per arah pakai masking (bukan loop segmen
-    manual) — persis pendekatan vSch — tanpa garis penghubung palsu saat
-    arah berubah.
+def macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    ema_fast = ema(series, fast)
+    ema_slow = ema(series, slow)
+    macd_line = ema_fast - ema_slow
+    signal_line = ema(macd_line, signal)
+    histogram = macd_line - signal_line
+    return macd_line, signal_line, histogram
 
-    Level (upper/lower band) dihitung pakai formula & parameter yang SAMA
-    persis dengan scanner.supertrend() (hl2 +/- multiplier * atr(df, period)),
-    supaya posisi garis selalu sinkron dengan arah (st_dir) yang dihasilkan
-    scanner — bukan nilai default 10/3 yang di-hardcode terpisah."""
+
+def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    high, low, close = df["high"], df["low"], df["close"]
+    prev_close = close.shift(1)
+    tr = pd.concat(
+        [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+    ).max(axis=1)
+    return tr.ewm(alpha=1 / period, adjust=False).mean()
+
+
+def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 3.0) -> pd.Series:
     hl2 = (df["high"] + df["low"]) / 2
     atr_val = atr(df, period)
-    upper = hl2 + multiplier * atr_val
-    lower = hl2 - multiplier * atr_val
-    level = lower.where(st_dir == 1, upper)
+    upper_band = hl2 + multiplier * atr_val
+    lower_band = hl2 - multiplier * atr_val
 
-    x = range(len(df))
-    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.4,
-             label=f"Supertrend {period} / {multiplier}", zorder=3)
-    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.4, zorder=3)
+    trend = pd.Series(index=df.index, dtype=int)
+    trend.iloc[0] = 1
+    for i in range(1, len(df)):
+        if df["close"].iloc[i] > upper_band.iloc[i - 1]:
+            trend.iloc[i] = 1
+        elif df["close"].iloc[i] < lower_band.iloc[i - 1]:
+            trend.iloc[i] = -1
+        else:
+            trend.iloc[i] = trend.iloc[i - 1]
+    return trend
 
 
-def build_chart(
-    df: pd.DataFrame,
-    symbol: str,
-    timeframe: str,
-    signal,
-    cfg: dict,
-    out_path: str,
-) -> str:
-    chart_cfg = cfg.get("chart", {})
-    n_show = chart_cfg.get("candles_shown", 120)
+def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.5) -> pd.Series:
+    avg = volume.rolling(lookback).mean()
+    return volume > (avg * factor)
 
-    plot_df = df.tail(n_show).reset_index(drop=True)
 
-    ema_period = cfg["indicators"]["ema"]["period"]
-    st_period = cfg["indicators"]["supertrend"]["period"]
-    st_mult = cfg["indicators"]["supertrend"]["multiplier"]
+# ---------------------------------------------------------------------------
+# Confluence scoring
+# ---------------------------------------------------------------------------
 
-    ema_full = ema(df["close"], ema_period).tail(n_show).reset_index(drop=True)
-    st_dir_full = supertrend(df, st_period, st_mult).tail(n_show).reset_index(drop=True)
+@dataclass
+class SignalResult:
+    symbol: str
+    direction: str  # "LONG" | "SHORT" | "NONE"
+    score: float
+    reasons: list[str] = field(default_factory=list)
+    entry: float | None = None
+    sl: float | None = None
+    tp: float | None = None
 
-    # --- Ukuran figure: rasio 5:2 (tidak berubah dari sebelumnya) ---
-    width_px = chart_cfg.get("width_px", 2000)
-    height_ratio = chart_cfg.get("height_ratio", 0.4)  # 2000 x 800 = 5:2
-    dpi = 150
-    fig_w = width_px / dpi
-    fig_h = (width_px * height_ratio) / dpi
 
-    fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
-    fig.patch.set_facecolor(BG)
+def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
+    w = cfg["scoring"]["weights"]
+    close = df["close"]
 
-    # 2 baris: harga (besar) / volume (kecil) — panel MACD dihilangkan.
-    gs = GridSpec(
-        2, 1, figure=fig,
-        height_ratios=[4.2, 0.75],
-        hspace=0.06,
-        left=0.07, right=0.96, top=0.87, bottom=0.11,
+    ema200 = ema(close, cfg["indicators"]["ema"]["period"])
+    macd_line, signal_line, _ = macd(
+        close,
+        cfg["indicators"]["macd"]["fast"],
+        cfg["indicators"]["macd"]["slow"],
+        cfg["indicators"]["macd"]["signal"],
     )
-    ax_price = fig.add_subplot(gs[0, 0])
-    ax_vol = fig.add_subplot(gs[1, 0], sharex=ax_price)
-
-    for ax in (ax_price, ax_vol):
-        ax.set_facecolor(PANEL)
-        ax.grid(True, linestyle="-", alpha=0.35, color=GRID)
-        ax.set_axisbelow(True)
-        ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
-        for side in ("top", "right"):
-            ax.spines[side].set_visible(False)
-        for side in ("left", "bottom"):
-            ax.spines[side].set_color(SPINE)
-            ax.spines[side].set_linewidth(0.8)
-
-    ax_price.tick_params(labelbottom=False)
-
-    # --- Panel harga: candle + EMA + Supertrend ---
-    colors = _draw_candles(ax_price, plot_df)
-    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.4,
-                  label=f"EMA {ema_period}", zorder=4)
-    _draw_supertrend(ax_price, plot_df, st_dir_full, st_period, st_mult)
-
-    last_x = len(plot_df) - 1
-
-    # --- Level Entry / SL / TP (garis putus-putus + kotak label) ---
-    ref_price = signal.entry if signal.entry is not None else (
-        signal.sl if signal.sl is not None else float(plot_df["close"].iloc[-1])
+    st = supertrend(
+        df,
+        cfg["indicators"]["supertrend"]["period"],
+        cfg["indicators"]["supertrend"]["multiplier"],
     )
-    dec = decimals_from_price(ref_price)
+    rsi_val = rsi(close, cfg["indicators"]["rsi"]["period"])
+    vol_spike = volume_spike(df["volume"])
+    atr_val = atr(df, cfg["indicators"]["atr"]["period"])
 
-    levels = []
-    if signal.entry is not None:
-        levels.append({"level": signal.entry, "color": ENTRY,
-                        "text": f"ENTRY  {format_price(signal.entry, dec)}"})
-    if signal.tp is not None:
-        levels.append({"level": signal.tp, "color": TP1,
-                        "text": f"TP  {format_price(signal.tp, dec)}"})
-    if signal.sl is not None:
-        levels.append({"level": signal.sl, "color": SL,
-                        "text": f"SL  {format_price(signal.sl, dec)}"})
+    last = -1
+    price = close.iloc[last]
 
-    for item in levels:
-        ax_price.axhline(y=item["level"], color=item["color"], linestyle="--",
-                          linewidth=1.0, alpha=0.70, zorder=2)
+    long_score, short_score = 0.0, 0.0
+    long_reasons: list[str] = []
+    short_reasons: list[str] = []
 
-    # --- Y-limit harga: ikut sertakan level Entry/SL/TP + padding 16% ---
-    level_values = [item["level"] for item in levels]
-    y_low = min([float(plot_df["low"].min())] + level_values)
-    y_high = max([float(plot_df["high"].max())] + level_values)
-    y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
-    y_padding = y_span * 0.16
-    ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
+    if price > ema200.iloc[last]:
+        long_score += w["ema_trend"]
+        long_reasons.append("Harga di atas EMA200 (uptrend)")
+    else:
+        short_score += w["ema_trend"]
+        short_reasons.append("Harga di bawah EMA200 (downtrend)")
 
-    # --- Margin ekstra di kanan buat kolom label (bukan subplot terpisah) ---
-    gap_from_candle = 4.0
-    label_width_est = 13.0
-    gap_from_edge = 1.8
-    extra_margin = gap_from_candle + label_width_est + gap_from_edge
-    label_x = last_x + gap_from_candle
+    if macd_line.iloc[last] > signal_line.iloc[last]:
+        long_score += w["macd_cross"]
+        long_reasons.append("MACD line di atas signal line (momentum naik)")
+    else:
+        short_score += w["macd_cross"]
+        short_reasons.append("MACD line di bawah signal line (momentum turun)")
 
-    ax_price.set_xlim(-0.6, last_x + extra_margin)
-    ax_vol.set_xlim(-0.6, last_x + extra_margin)
+    if st.iloc[last] == 1:
+        long_score += w["supertrend"]
+        long_reasons.append("Supertrend menunjukkan uptrend")
+    else:
+        short_score += w["supertrend"]
+        short_reasons.append("Supertrend menunjukkan downtrend")
 
-    _place_level_labels(ax_price, levels, label_x)
+    has_volume_spike = bool(vol_spike.iloc[last])
+    if has_volume_spike:
+        if long_score >= short_score:
+            long_score += w["volume_spike"]
+            long_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
+        else:
+            short_score += w["volume_spike"]
+            short_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
 
-    # --- Panel volume ---
-    _draw_volume(ax_vol, plot_df, colors)
-    ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
-    ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
+    r = rsi_val.iloc[last]
+    if 40 <= r <= 60:
+        long_score += w["rsi_confluence"] / 2
+        short_score += w["rsi_confluence"] / 2
+        long_reasons.append(f"RSI netral ({r:.0f})")
+        short_reasons.append(f"RSI netral ({r:.0f})")
+    elif r < 40:
+        long_score += w["rsi_confluence"]
+        long_reasons.append(f"RSI oversold ({r:.0f}), potensi rebound")
+    elif r > 60:
+        short_score += w["rsi_confluence"]
+        short_reasons.append(f"RSI overbought ({r:.0f}), potensi koreksi")
 
-    # --- Tanggal di sumbu-x bawah, dari kolom open_time (persis gaya vSch) ---
-    if "open_time" in plot_df.columns and len(plot_df):
-        tick_count = min(6, len(plot_df))
-        ticks_idx = (
-            np.linspace(0, last_x, tick_count, dtype=int) if tick_count > 1 else [0]
+    if long_score >= short_score:
+        direction, final_score, reasons = "LONG", long_score, long_reasons
+    else:
+        direction, final_score, reasons = "SHORT", short_score, short_reasons
+
+    if final_score < cfg["scoring"]["min_score_to_trigger"]:
+        return SignalResult(symbol=symbol, direction="NONE", score=final_score, reasons=reasons)
+
+    sl_dist = atr_val.iloc[last] * cfg["risk"]["atr_multiplier_sl"]
+    if direction == "LONG":
+        sl = price - sl_dist
+        tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
+    else:
+        sl = price + sl_dist
+        tp = price - sl_dist * cfg["risk"]["risk_reward_min"]
+
+    return SignalResult(
+        symbol=symbol,
+        direction=direction,
+        score=round(final_score, 1),
+        reasons=reasons,
+        entry=round(price, 6),
+        sl=round(sl, 6),
+        tp=round(tp, 6),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Risk filter
+# ---------------------------------------------------------------------------
+
+def passes_risk_filter(signal: SignalResult, cfg: dict) -> bool:
+    if signal.direction == "NONE" or signal.entry is None:
+        return False
+
+    risk = abs(signal.entry - signal.sl)
+    reward = abs(signal.tp - signal.entry)
+    if risk == 0:
+        return False
+
+    rr = reward / risk
+    return rr >= cfg["risk"]["risk_reward_min"] - 1e-6  # toleransi pembulatan
+
+
+def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> float:
+    risk_amount = equity * risk_pct
+    per_unit_risk = abs(entry - sl)
+    if per_unit_risk == 0:
+        return 0.0
+    return risk_amount / per_unit_risk
+
+
+# ---------------------------------------------------------------------------
+# Cooldown / dedup state
+# ---------------------------------------------------------------------------
+
+def load_state(path: str) -> dict:
+    if not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+
+
+def save_state(path: str, state: dict) -> None:
+    with open(path, "w") as f:
+        json.dump(state, f, indent=2)
+
+
+def is_in_cooldown(state: dict, symbol: str, direction: str, cooldown_hours: float) -> bool:
+    entry = state.get(symbol)
+    if not entry or entry.get("direction") != direction:
+        return False
+    last_time = datetime.fromisoformat(entry["timestamp"])
+    return datetime.now(timezone.utc) - last_time < timedelta(hours=cooldown_hours)
+
+
+def mark_signaled(state: dict, symbol: str, direction: str) -> None:
+    state[symbol] = {
+        "direction": direction,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Notifikasi Telegram
+# ---------------------------------------------------------------------------
+
+def format_signal_message(signal: SignalResult) -> str:
+    lines = [
+        f"*{signal.symbol}* — {signal.direction} (score {signal.score})",
+        f"Entry: `{signal.entry}`",
+        f"SL: `{signal.sl}`",
+        f"TP: `{signal.tp}`",
+    ]
+    if signal.reasons:
+        lines.append("Alasan: " + "; ".join(signal.reasons))
+    return "\n".join(lines)
+
+
+async def send_telegram_message(text: str, cfg: dict) -> None:
+    tg_cfg = cfg["notify"]["telegram"]
+    if not tg_cfg.get("enabled"):
+        return
+
+    token = os.environ.get(tg_cfg["bot_token_env"])
+    chat_id = os.environ.get(tg_cfg["chat_id_env"])
+    if not token or not chat_id:
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+
+    async with aiohttp.ClientSession() as session, session.post(url, json=payload) as resp:
+        await resp.read()
+
+
+async def send_telegram_photo(photo_path: str, caption: str, cfg: dict) -> None:
+    tg_cfg = cfg["notify"]["telegram"]
+    if not tg_cfg.get("enabled"):
+        return
+
+    token = os.environ.get(tg_cfg["bot_token_env"])
+    chat_id = os.environ.get(tg_cfg["chat_id_env"])
+    if not token or not chat_id:
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    with open(photo_path, "rb") as photo_file:
+        data = aiohttp.FormData()
+        data.add_field("chat_id", str(chat_id))
+        data.add_field("caption", caption)
+        data.add_field("parse_mode", "Markdown")
+        data.add_field(
+            "photo",
+            photo_file,
+            filename=os.path.basename(photo_path),
+            content_type="image/png",
         )
-        ax_vol.set_xticks(ticks_idx)
-        tick_labels = []
-        for t in ticks_idx:
-            ts = plot_df["open_time"].iloc[int(t)]
-            tick_labels.append(ts.strftime("%d %b  %H:%M") if pd.notna(ts) else str(t))
-        ax_vol.set_xticklabels(tick_labels, fontsize=7.5, color=AXIS)
 
-    legend = ax_price.legend(
-        loc="upper left", fontsize=7.5, framealpha=0.95,
-        facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
-    )
-    legend.get_frame().set_linewidth(0.7)
-
-    # --- Header & footer teks (gaya fig.text seperti vSch) ---
-    fig.text(0.07, 0.965,
-              f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  Score {signal.score}",
-              fontsize=13, fontweight="bold", color=TEXT, ha="left", va="top")
-    fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
-              fontsize=7, color=AXIS, ha="left", va="bottom")
-    fig.text(0.96, 0.02, "Not financial advice",
-              fontsize=7, color=AXIS, ha="right", va="bottom")
-
-    fig.savefig(out_path, facecolor=fig.get_facecolor())
-    plt.close(fig)
-    return out_path
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=data) as resp:
+                await resp.read()
 
 
-async def _fetch_and_build(symbol: str, timeframe: str, cfg: dict, out_path: str) -> str:
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+def load_config(path: str = "config.yaml") -> dict:
+    with open(path) as f:
+        return yaml.safe_load(f)
+
+
+async def run_scan(cfg: dict, out_path: str) -> list[dict]:
+    results = []
+    scan_cfg = cfg.get("scanning", {})
+    state_path = scan_cfg.get("state_path", "signal_state.json")
+    cooldown_hours = scan_cfg.get("cooldown_hours", 4)
+    state = load_state(state_path)
+
     async with BinanceFuturesClient() as client:
-        limit = max(400, cfg.get("chart", {}).get("candles_shown", 120) + 250)
-        kline = await client.get_klines(symbol, timeframe, limit=limit)
-    signal = score_symbol(kline.df, symbol, cfg)
-    return build_chart(kline.df, symbol, timeframe, signal, cfg, out_path)
+        symbols = await client.get_active_symbols(cfg["exchange"]["quote_asset"])
+
+        volumes = await asyncio.gather(*(client.get_24h_volume(s) for s in symbols))
+        min_vol = cfg["exchange"]["min_volume_usdt_24h"]
+        active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
+
+        primary_tf = cfg["timeframes"][0]
+        klines = await client.get_klines_many(active_symbols, primary_tf)
+
+        for kline in klines:
+            signal = score_symbol(kline.df, kline.symbol, cfg)
+            if signal.direction == "NONE":
+                continue
+            if not passes_risk_filter(signal, cfg):
+                continue
+            if is_in_cooldown(state, kline.symbol, signal.direction, cooldown_hours):
+                continue
+
+            results.append(signal.__dict__)
+            mark_signaled(state, kline.symbol, signal.direction)
+
+            caption = format_signal_message(signal)
+
+            if cfg.get("chart", {}).get("auto_generate", True):
+                import chart as chart_module  # lazy import, hindari circular import
+
+                os.makedirs("charts", exist_ok=True)
+                chart_path = f"charts/{kline.symbol}_{primary_tf}.png"
+                chart_module.build_chart(
+                    kline.df,
+                    kline.symbol,
+                    primary_tf,
+                    signal,
+                    cfg,
+                    chart_path,
+                )
+                await send_telegram_photo(chart_path, caption, cfg)
+            else:
+                await send_telegram_message(caption, cfg)
+
+            if len(results) >= cfg["risk"]["max_signals_per_run"]:
+                break
+
+    save_state(state_path, state)
+
+    with open(out_path, "w") as f:
+        json.dump(results, f, indent=2, default=str)
+
+    return results
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--symbol", default="BTCUSDT")
-    parser.add_argument("--timeframe", default="1h")
+    parser = argparse.ArgumentParser(description="vSynapse v3 scanner")
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--out", default=None)
+    parser.add_argument("--out", default="synaptic_candidates.json")
     args = parser.parse_args()
 
-    with open(args.config) as f:
-        cfg = yaml.safe_load(f)
-
-    out_path = args.out or f"charts/{args.symbol.upper()}_{args.timeframe}.png"
-    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-
-    result_path = asyncio.run(_fetch_and_build(args.symbol.upper(), args.timeframe, cfg, out_path))
-    print(f"Chart disimpan ke {result_path}")
+    cfg = load_config(args.config)
+    results = asyncio.run(run_scan(cfg, args.out))
+    print(f"Ditemukan {len(results)} sinyal. Disimpan ke {args.out}")
 
 
 if __name__ == "__main__":
