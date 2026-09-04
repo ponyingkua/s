@@ -1,0 +1,73 @@
+exchange:
+  name: binance_futures
+  quote_asset: USDT
+  min_volume_usdt_24h: 5000000
+
+timeframes:
+  - "15m"
+  - "1h"
+  - "4h"
+
+indicators:
+  ema:
+    period: 200
+  macd:
+    fast: 12
+    slow: 26
+    signal: 9
+  supertrend:
+    period: 10
+    multiplier: 3
+  rsi:
+    period: 14
+  atr:
+    period: 14
+
+scoring:
+  weights:
+    ema_trend: 20
+    macd_cross: 20
+    supertrend: 25
+    volume_spike: 15
+    rsi_confluence: 20
+  min_score_to_trigger: 65
+
+risk:
+  atr_multiplier_sl: 1.5
+  risk_reward_min: 1.5
+  max_signals_per_run: 10
+
+notify:
+  telegram:
+    enabled: true
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    chat_id_env: "TELEGRAM_CHAT_ID"
+
+scanning:
+  cooldown_hours: 4
+  state_path: "signal_state.json"
+
+backtest:
+  fee_round_trip_pct: 0.001
+
+chart:
+  width_px: 2000
+  height_ratio: 0.4        # tinggi = width * ratio → 2000x800 (rasio 5:2)
+  candles_shown: 120       # jumlah candle terakhir yang ditampilkan di chart
+  theme:
+    background: "#0d0d0f"
+    grid: "#1c1c22"
+    text: "#d8d8e0"
+    bull: "#2ecc71"
+    bear: "#e74c3c"
+    ema: "#f5c542"
+    supertrend_up: "#2ecc71"
+    supertrend_down: "#e74c3c"
+    entry: "#3498db"
+    sl: "#e74c3c"
+    tp: "#2ecc71"
+    zone_fill: "#3498db"
+    zone_alpha: 0.12
+
+storage:
+  db_path: "data/vsynapse.db"
