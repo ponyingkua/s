@@ -1,0 +1,32 @@
+name: Chart Generator (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Simbol, mis. BTCUSDT"
+        default: "BTCUSDT"
+      timeframe:
+        description: "Timeframe, mis. 15m / 1h / 4h"
+        default: "1h"
+
+jobs:
+  chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Generate chart
+        run: python chart.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}"
+      - name: Commit chart
+        run: |
+          git config user.name "vsynapse-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add charts/
+          git diff --quiet --cached || git commit -m "chore: generate chart ${{ github.event.inputs.symbol }} ${{ github.event.inputs.timeframe }}"
+          git push
