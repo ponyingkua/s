@@ -21,9 +21,9 @@ sederhana (fractal) langsung di file ini — TIDAK menambah indikator baru
 di luar yang diminta, murni derivasi dari price action yang sudah ada.
 
 Palet warna diambil langsung dari vSch.py, KECUALI warna background/panel
-(dibuat hitam pekat, bukan putih seperti vSch aslinya, supaya menyatu
+(dibuat dark charcoal, bukan putih seperti vSch aslinya, supaya menyatu
 dengan UI background gelap) dan warna teks/axis/grid yang disesuaikan
-supaya tetap kebaca tanpa terlalu terang/berisik di atas hitam pekat.
+supaya tetap kebaca tanpa terlalu terang/berisik di atas dark charcoal.
 
 Contoh:
   python chart.py --symbol BTCUSDT --timeframe 1h
@@ -52,23 +52,14 @@ from scanner import (
 )
 
 # ============================================================
-# STYLE — palet warna dari vSch.py, disesuaikan buat background hitam
-# pekat.
-#
-# Pengecualian dari vSch.py asli (background tetap hitam, bukan putih):
-#   BG, PANEL         -> hitam pekat murni, menyatu dgn UI
-#   TEXT, AXIS, GRID,
-#   SPINE             -> diredupkan/dinaikkan supaya kontras pas: cukup
-#                        kebaca tapi tidak berisik/menabrak markup
-#                        struktur (vSch aslinya didesain buat background
-#                        putih)
-# Candle, EMA, Supertrend, level Entry/SL/TP, volume MA -> nilai hex
-# sama persis seperti di vSch.py.
+# STYLE — palet warna dari vSch.py, disesuaikan buat background dark
+# charcoal, clean & profesional (kontras rendah, tiap elemen tetap
+# gampang dibedakan tanpa berisik).
 # ============================================================
 
-BG = "#000000"
-PANEL = "#000000"
-GRID = "#4d4d55"
+BG = "#1a1a1c"
+PANEL = "#1a1a1c"
+GRID = "#3a3a40"
 TEXT = "#e8e8ec"
 AXIS = "#9a9aa3"
 SPINE = "#4d4d55"
@@ -88,15 +79,16 @@ SL = "#c62828"
 VOLUME_MA = "#e65100"
 
 # --- Warna khusus markup struktur (HH/HL/LH/LL, Demand/Supply, BOS,
-# confirmation candle, arrow target). Sengaja pakai hue biru-cyan
-# (bullish) / oranye (bearish) yang berbeda dari candle & Supertrend
-# (hijau/merah) supaya tiap elemen tetap gampang dibedakan biar tidak
-# tumpang tindih secara visual maupun makna. ---
-STRUCT_TEXT = "#d4d4dc"
-DEMAND_FILL = "#1b8a5a"
-DEMAND_EDGE = "#3ddc97"
-SUPPLY_FILL = "#a33636"
-SUPPLY_EDGE = "#ff7a68"
+# confirmation candle, arrow target). Demand/Supply sengaja diselaraskan
+# dengan hue candle (UP/DOWN) supaya terasa satu keluarga warna, tapi
+# BOS/confirmation/arrow tetap pakai hue biru-cyan (bullish) / oranye
+# (bearish) yang berbeda dari candle & Supertrend supaya tiap elemen
+# tetap gampang dibedakan dan tidak tumpang tindih secara visual. ---
+STRUCT_TEXT = "#c9c9d1"
+DEMAND_FILL = "#1e7a52"
+DEMAND_EDGE = "#26a69a"
+SUPPLY_FILL = "#7a2626"
+SUPPLY_EDGE = "#ef5350"
 BOS_BULL = "#4fc3f7"
 BOS_BEAR = "#ffab40"
 CONFIRM_BULL = "#4fc3f7"
@@ -241,10 +233,10 @@ def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
     level = lower.where(st_dir == 1, upper)
 
     x = range(len(df))
-    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.3,
+    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.1,
              drawstyle="steps-mid", solid_joinstyle="round",
              label=f"Supertrend {period}/{multiplier}", zorder=3)
-    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.3,
+    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.1,
              drawstyle="steps-mid", solid_joinstyle="round", zorder=3)
 
 
@@ -362,8 +354,9 @@ def _detect_bos(df: pd.DataFrame, swing_high, swing_low) -> list:
 
 def _find_zones(df: pd.DataFrame, bos_events: list, swing_high_idxs, swing_low_idxs) -> list:
     """Zona Demand/Supply = candle berlawanan arah terakhir (order
-    block) sebelum leg impulsif yang berujung BOS. Demand dicari di
-    leg naik (BOS bullish), Supply di leg turun (BOS bearish)."""
+    block) sebelum leg impulsif yang berujung BOS. Demand = area base
+    sebelum impuls naik (dicari di leg naik, BOS bullish), Supply =
+    area base sebelum impuls turun (dicari di leg turun, BOS bearish)."""
     open_ = df["open"].values
     close = df["close"].values
     high = df["high"].values
@@ -409,17 +402,19 @@ def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int,
             continue
         if pt["type"] == "H":
             ax.text(px, pt["price"] + pad, pt["label"], color=STRUCT_TEXT,
-                    fontsize=6.6, fontweight="bold", ha="center", va="bottom",
+                    fontsize=6.0, fontweight="bold", ha="center", va="bottom",
                     zorder=9, clip_on=False)
         else:
             ax.text(px, pt["price"] - pad, pt["label"], color=STRUCT_TEXT,
-                    fontsize=6.6, fontweight="bold", ha="center", va="top",
+                    fontsize=6.0, fontweight="bold", ha="center", va="top",
                     zorder=9, clip_on=False)
 
 
 def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span: float) -> None:
-    """Kotak transparan Demand/Supply, dari candle order block sampai
-    sedikit lewat candle konfirmasi BOS-nya."""
+    """Kotak transparan tipis Demand/Supply, dari candle order block
+    sampai sedikit lewat candle konfirmasi BOS-nya. Demand = box hijau
+    transparan tipis (area base sebelum impuls naik), Supply = box
+    merah transparan tipis (area base sebelum impuls turun)."""
     pad_zone = max(y_span, 1e-9) * 0.055
     for z in zones:
         bos_px = z["bos_idx"] - offset
@@ -437,7 +432,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
 
         ax.add_patch(Rectangle(
             (start_px, z["bottom"]), end_px - start_px, z["top"] - z["bottom"],
-            facecolor=fill, edgecolor=edge, alpha=0.18, linewidth=0.7,
+            facecolor=fill, edgecolor=edge, alpha=0.12, linewidth=0.6,
             zorder=1.2,
         ))
         # Label zona ditaruh di sisi BERLAWANAN dari cluster BOS/arrow
@@ -447,20 +442,21 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         label_y = (z["bottom"] - pad_zone) if is_demand else (z["top"] + pad_zone)
         va = "top" if is_demand else "bottom"
         ax.text(max(start_px, 0), label_y, f" {label} ", color=edge,
-                fontsize=6.2, fontweight="bold", ha="left", va=va,
-                alpha=0.95, zorder=1.5, clip_on=False)
+                fontsize=6.0, fontweight="bold", ha="left", va=va,
+                alpha=0.90, zorder=1.5, clip_on=False)
 
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame) -> None:
-    """Garis putus-putus BOS dari swing point yang ditembus sampai ke
-    candle konfirmasi, plus label 'BOS' dan marker segitiga kecil di
-    candle konfirmasinya."""
+    """Marker kecil (segitiga) pada candle bullish/bearish yang
+    mengonfirmasi breakout/BOS, plus garis putus-putus dari swing point
+    yang ditembus sampai ke candle konfirmasi dan label 'BOS' kecil —
+    semua ukurannya sengaja dijaga kecil supaya tidak mendominasi chart."""
     plot_len = len(plot_df)
     high = plot_df["high"].values
     low = plot_df["low"].values
     y_span = float(plot_df["high"].max() - plot_df["low"].min())
     pad_marker = max(y_span, 1e-9) * 0.012
-    pad_label = max(y_span, 1e-9) * 0.085
+    pad_label = max(y_span, 1e-9) * 0.075
 
     for ev in bos_events:
         idx_px = ev["idx"] - offset
@@ -471,65 +467,58 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
         color = BOS_BULL if is_bull else BOS_BEAR
 
         ax.plot([origin_px, idx_px], [ev["level"], ev["level"]], color=color,
-                 linestyle=(0, (5, 3)), linewidth=1.1, alpha=0.85, zorder=4)
+                 linestyle=(0, (5, 3)), linewidth=1.0, alpha=0.80, zorder=4)
 
         # Urutan vertikal dijaga menjauh dari candle supaya tidak
-        # numpuk: candle -> marker konfirmasi (dekat wick) -> label
-        # "BOS" (lebih jauh lagi, digeser ke kanan juga).
+        # numpuk: candle -> marker konfirmasi kecil (dekat wick) ->
+        # label "BOS" kecil (lebih jauh lagi, digeser ke kanan juga).
         marker_color = CONFIRM_BULL if is_bull else CONFIRM_BEAR
         if is_bull:
             ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=marker_color,
-                     markersize=6.5, markeredgecolor="#000000", markeredgewidth=0.6,
+                     markersize=5.0, markeredgecolor="#000000", markeredgewidth=0.5,
                      zorder=10, clip_on=False)
             label_y = max(ev["level"], high[idx_px]) + pad_label
         else:
             ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=marker_color,
-                     markersize=6.5, markeredgecolor="#000000", markeredgewidth=0.6,
+                     markersize=5.0, markeredgecolor="#000000", markeredgewidth=0.5,
                      zorder=10, clip_on=False)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
         ax.text(idx_px + 0.9, label_y, "BOS", color="#050505",
-                fontsize=6.4, fontweight="bold",
+                fontsize=5.8, fontweight="bold",
                 ha="left", va="center",
                 bbox=dict(facecolor=color, edgecolor="none",
-                          boxstyle="round,pad=0.16", alpha=0.95),
+                          boxstyle="round,pad=0.12", alpha=0.95),
                 zorder=9, clip_on=False)
 
 
-def _draw_target_arrows(ax, bos_events: list, zones: list, offset: int,
-                         plot_len: int, last_x: int, y_span: float) -> None:
-    """Panah arah target berikutnya sesudah tiap BOS — proyeksi
-    measured-move dari tinggi leg (level BOS ke zona order block-nya)."""
-    zone_by_bos = {z["bos_idx"]: z for z in zones}
+def _draw_target_arrow(ax, bos_events: list, tp_price, offset: int,
+                        plot_len: int, last_x: int) -> None:
+    """Satu panah arah target saja, dari area breakout (titik BOS)
+    menuju level TP aktual sinyal — bukan proyeksi measured-move.
+    Opacity dijaga sedang (70-80%) supaya tidak mendominasi chart."""
+    if tp_price is None or not bos_events:
+        return
 
-    for ev in bos_events:
-        idx_px = ev["idx"] - offset
-        if idx_px < 0 or idx_px >= plot_len:
-            continue
-        is_bull = ev["direction"] == "bull"
-        zone = zone_by_bos.get(ev["idx"])
-        if zone is not None:
-            leg = abs(zone["top"] - zone["bottom"]) + abs(
-                ev["level"] - (zone["bottom"] if is_bull else zone["top"])
-            )
-        else:
-            leg = y_span * 0.15
-        leg = max(leg, y_span * 0.06)
+    ev = bos_events[0]
+    idx_px = ev["idx"] - offset
+    if idx_px < 0 or idx_px >= plot_len:
+        return
 
-        target = ev["level"] + leg if is_bull else ev["level"] - leg
-        color = ARROW_BULL if is_bull else ARROW_BEAR
+    is_bull = ev["direction"] == "bull"
+    color = ARROW_BULL if is_bull else ARROW_BEAR
 
-        x_end = min(idx_px + 6, last_x - 0.3)
-        x_start = idx_px + 2.4  # mulai sesudah label "BOS" biar tidak numpuk
-        if x_end - x_start < 1.2:
-            continue
+    x_start = idx_px + 2.4  # mulai sesudah label "BOS" biar tidak numpuk
+    x_end = min(idx_px + 10, last_x + 1.2)
+    if x_end - x_start < 1.2:
+        return
 
-        ax.annotate(
-            "", xy=(x_end, target), xytext=(x_start, ev["level"]),
-            arrowprops=dict(arrowstyle="-|>", color=color, lw=1.5, alpha=0.85,
-                              shrinkA=1, shrinkB=1, mutation_scale=11),
-            zorder=9,
-        )
+    ax.annotate(
+        "", xy=(x_end, tp_price), xytext=(x_start, ev["level"]),
+        arrowprops=dict(arrowstyle="-|>", color=color, lw=1.3, alpha=0.75,
+                          shrinkA=1, shrinkB=1, mutation_scale=10),
+        zorder=9,
+    )
 
 
 def _declutter_labels(labeled_points: list, min_gap: int) -> list:
@@ -617,10 +606,11 @@ def build_chart(
     fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor(BG)
 
-    # 2 baris: harga (besar) / volume (kecil) — panel MACD dihilangkan.
+    # 2 baris: harga (besar) / volume (kecil, porsi dikecilkan supaya
+    # tidak terlalu tinggi) — panel MACD dihilangkan.
     gs = GridSpec(
         2, 1, figure=fig,
-        height_ratios=[4.2, 0.75],
+        height_ratios=[4.4, 0.6],
         hspace=0.06,
         left=0.07, right=0.96, top=0.87, bottom=0.11,
     )
@@ -629,7 +619,7 @@ def build_chart(
 
     for ax in (ax_price, ax_vol):
         ax.set_facecolor(PANEL)
-        ax.grid(True, linestyle="-", alpha=0.28, color=GRID, linewidth=0.6)
+        ax.grid(True, linestyle="-", alpha=0.14, color=GRID, linewidth=0.5)
         ax.set_axisbelow(True)
         ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
         for side in ("top", "right"):
@@ -642,13 +632,14 @@ def build_chart(
 
     # --- Panel harga: candle + EMA + Supertrend ---
     colors = _draw_candles(ax_price, plot_df)
-    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.4,
+    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.1,
                   label=f"EMA {ema_period}", zorder=4)
     _draw_supertrend(ax_price, plot_df, st_dir_full, st_period, st_mult)
 
     last_x = len(plot_df) - 1
 
-    # --- Level Entry / SL / TP (garis putus-putus + kotak label) ---
+    # --- Level Entry / SL / TP (garis putus-putus + kotak label di
+    # sisi kanan chart) ---
     ref_price = signal.entry if signal.entry is not None else (
         signal.sl if signal.sl is not None else float(plot_df["close"].iloc[-1])
     )
@@ -694,20 +685,21 @@ def build_chart(
     ax_vol.set_xlim(-0.6, last_x + extra_margin)
 
     # --- Markup market structure: zona Demand/Supply, BOS +
-    # confirmation candle, label HH/HL/LH/LL, arrow target. Urutan
-    # gambar dijaga supaya tidak tumpang tindih: zona (paling belakang)
-    # -> BOS/confirmation -> arrow -> label struktur -> label
+    # confirmation candle, label HH/HL/LH/LL, 1 arrow target ke TP.
+    # Urutan gambar dijaga supaya tidak tumpang tindih: zona (paling
+    # belakang) -> BOS/confirmation -> arrow -> label struktur -> label
     # Entry/SL/TP (paling depan, di luar area candle). ---
     plot_len = len(plot_df)
     _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span)
     _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df)
-    _draw_target_arrows(ax_price, structure["bos_events"], structure["zones"],
-                         offset, plot_len, last_x, y_span)
+    _draw_target_arrow(ax_price, structure["bos_events"], signal.tp,
+                        offset, plot_len, last_x)
     _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
 
     _place_level_labels(ax_price, levels, label_x)
 
-    # --- Panel volume ---
+    # --- Panel volume (dijaga tidak terlalu tinggi lewat height_ratios
+    # di GridSpec) ---
     _draw_volume(ax_vol, plot_df, colors)
     ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
     ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
