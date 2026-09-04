@@ -384,26 +384,22 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
                 zorder=9, clip_on=False)
 
 
-def _draw_target_arrow(ax, bos_events: list, tp_price, offset: int,
-                        plot_len: int, last_x: int) -> None:
-    if tp_price is None or not bos_events:
+def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int) -> None:
+    """Satu panah arah target, dari candle terakhir (harga close
+    terkini) menuju level TP aktual sinyal. Opacity dijaga sedang
+    (70-80%) supaya tidak mendominasi chart."""
+    if tp_price is None:
         return
 
-    ev = bos_events[0]
-    idx_px = ev["idx"] - offset
-    if idx_px < 0 or idx_px >= plot_len:
-        return
-
-    is_bull = ev["direction"] == "bull"
+    current_price = float(plot_df["close"].iloc[-1])
+    is_bull = tp_price >= current_price
     color = ARROW_BULL if is_bull else ARROW_BEAR
 
-    x_start = idx_px + 2.4
-    x_end = min(idx_px + 10, last_x + 1.2)
-    if x_end - x_start < 1.2:
-        return
+    x_start = last_x + 0.4
+    x_end = last_x + 3.0
 
     ax.annotate(
-        "", xy=(x_end, tp_price), xytext=(x_start, ev["level"]),
+        "", xy=(x_end, tp_price), xytext=(x_start, current_price),
         arrowprops=dict(arrowstyle="-|>", color=color, lw=1.3, alpha=0.75,
                           shrinkA=1, shrinkB=1, mutation_scale=10),
         zorder=9,
@@ -552,8 +548,7 @@ def build_chart(
     plot_len = len(plot_df)
     _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span)
     _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df)
-    _draw_target_arrow(ax_price, structure["bos_events"], signal.tp,
-                        offset, plot_len, last_x)
+    _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
     _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
 
     _place_level_labels(ax_price, levels, label_x)
