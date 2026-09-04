@@ -1,137 +1,139 @@
 [
   {
-    "symbol": "NEARUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 2.178,
-    "sl": 2.13128,
-    "tp": 2.24808
-  },
-  {
-    "symbol": "BOMEUSDT",
+    "symbol": "TRXUSDT",
     "direction": "SHORT",
     "score": 65.0,
     "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend",
-      "RSI overbought (60), potensi koreksi"
+      "RSI overbought (67), potensi koreksi"
     ],
-    "entry": 0.000839,
-    "sl": 0.000849,
-    "tp": 0.000823
+    "entry": 0.33134,
+    "sl": 0.331804,
+    "tp": 0.330643
   },
   {
-    "symbol": "POLUSDT",
+    "symbol": "ENJUSDT",
     "direction": "LONG",
-    "score": 75.0,
+    "score": 80.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (56)"
+      "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.09314,
-    "sl": 0.092438,
-    "tp": 0.094193
+    "entry": 0.02789,
+    "sl": 0.02744,
+    "tp": 0.028565
   },
   {
-    "symbol": "BMTUSDT",
+    "symbol": "ARBUSDT",
     "direction": "SHORT",
     "score": 75.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend",
-      "RSI netral (53)"
+      "RSI netral (40)"
     ],
-    "entry": 0.01809,
-    "sl": 0.018348,
-    "tp": 0.017703
+    "entry": 0.13129,
+    "sl": 0.133273,
+    "tp": 0.128315
   },
   {
-    "symbol": "MUBARAKUSDT",
+    "symbol": "TWTUSDT",
     "direction": "LONG",
-    "score": 75.0,
+    "score": 65.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend"
+    ],
+    "entry": 0.6298,
+    "sl": 0.620685,
+    "tp": 0.643473
+  },
+  {
+    "symbol": "AVAUSDT",
+    "direction": "SHORT",
+    "score": 70.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "Supertrend menunjukkan downtrend",
+      "Volume spike terdeteksi (menguatkan sinyal)",
+      "RSI netral (43)"
+    ],
+    "entry": 0.1655,
+    "sl": 0.168423,
+    "tp": 0.161115
+  },
+  {
+    "symbol": "VVVUSDT",
+    "direction": "LONG",
+    "score": 80.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)"
+    ],
+    "entry": 18.132,
+    "sl": 17.820067,
+    "tp": 18.5999
+  },
+  {
+    "symbol": "BANKUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (42)"
+    ],
+    "entry": 0.03487,
+    "sl": 0.035035,
+    "tp": 0.034622
+  },
+  {
+    "symbol": "BULLAUSDT",
+    "direction": "SHORT",
+    "score": 65.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend"
+    ],
+    "entry": 0.02795,
+    "sl": 0.029867,
+    "tp": 0.025074
+  },
+  {
+    "symbol": "PUMPUSDT",
+    "direction": "SHORT",
+    "score": 75.0,
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan downtrend",
       "RSI netral (49)"
     ],
-    "entry": 0.02984,
-    "sl": 0.029137,
-    "tp": 0.030895
+    "entry": 0.004272,
+    "sl": 0.004336,
+    "tp": 0.004175
   },
   {
-    "symbol": "SIGNUSDT",
+    "symbol": "USELESSUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (54)"
+      "RSI netral (52)"
     ],
-    "entry": 0.009546,
-    "sl": 0.00937,
-    "tp": 0.00981
-  },
-  {
-    "symbol": "HEMIUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI oversold (37), potensi rebound"
-    ],
-    "entry": 0.014409,
-    "sl": 0.013963,
-    "tp": 0.015078
-  },
-  {
-    "symbol": "ZKCUSDT",
-    "direction": "LONG",
-    "score": 75.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI netral (59)"
-    ],
-    "entry": 0.04907,
-    "sl": 0.048528,
-    "tp": 0.049883
-  },
-  {
-    "symbol": "4USDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 0.022332,
-    "sl": 0.020921,
-    "tp": 0.024449
-  },
-  {
-    "symbol": "GIGGLEUSDT",
-    "direction": "LONG",
-    "score": 65.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend"
-    ],
-    "entry": 41.36,
-    "sl": 40.568837,
-    "tp": 42.546744
+    "entry": 0.24604,
+    "sl": 0.230526,
+    "tp": 0.269311
   }
 ]

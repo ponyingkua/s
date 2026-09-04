@@ -250,5 +250,45 @@
   "GIGGLEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T19:49:33.956136+00:00"
+  },
+  "TRXUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:10:54.887683+00:00"
+  },
+  "ENJUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:10:58.741306+00:00"
+  },
+  "ARBUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:11:01.933314+00:00"
+  },
+  "TWTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:11:04.492010+00:00"
+  },
+  "AVAUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:11:07.598839+00:00"
+  },
+  "VVVUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:11:09.667823+00:00"
+  },
+  "BANKUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:11:11.882249+00:00"
+  },
+  "BULLAUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:11:13.910312+00:00"
+  },
+  "PUMPUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T20:11:15.719987+00:00"
+  },
+  "USELESSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T20:11:18.660474+00:00"
   }
 }
