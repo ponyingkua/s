@@ -3,7 +3,6 @@ supaya gampang dirangkai dan dites secara terpisah (unit-testable per indikator)
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 
