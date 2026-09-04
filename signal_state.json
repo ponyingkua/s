@@ -40,8 +40,8 @@
     "timestamp": "2026-09-04T22:10:12.972234+00:00"
   },
   "ETCUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:41.039877+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T23:36:41.564030+00:00"
   },
   "LINKUSDT": {
     "direction": "SHORT",
@@ -53,7 +53,7 @@
   },
   "DOTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:03.768846+00:00"
+    "timestamp": "2026-09-04T23:36:42.744308+00:00"
   },
   "CRVUSDT": {
     "direction": "LONG",
@@ -129,7 +129,7 @@
   },
   "LPTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T18:27:30.457948+00:00"
+    "timestamp": "2026-09-04T23:36:43.364536+00:00"
   },
   "FETUSDT": {
     "direction": "SHORT",
@@ -161,11 +161,11 @@
   },
   "ETHFIUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T19:07:30.711707+00:00"
+    "timestamp": "2026-09-04T23:36:44.212945+00:00"
   },
   "LISTAUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:07:38.602519+00:00"
+    "timestamp": "2026-09-04T23:36:44.744443+00:00"
   },
   "SPXUSDT": {
     "direction": "LONG",
@@ -173,11 +173,11 @@
   },
   "VANAUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:07:43.884333+00:00"
+    "timestamp": "2026-09-04T23:36:45.249448+00:00"
   },
   "HIVEUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:07:46.138342+00:00"
+    "timestamp": "2026-09-04T23:36:45.528458+00:00"
   },
   "PROMUSDT": {
     "direction": "LONG",
@@ -197,7 +197,7 @@
   },
   "SUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:16.246378+00:00"
+    "timestamp": "2026-09-04T23:36:46.035564+00:00"
   },
   "TSTUSDT": {
     "direction": "LONG",
@@ -384,8 +384,8 @@
     "timestamp": "2026-09-04T22:46:54.612226+00:00"
   },
   "TAOUSDT": {
-    "direction": "SHORT",
-    "timestamp": "2026-09-04T22:46:55.062594+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-04T23:36:44.479225+00:00"
   },
   "ZROUSDT": {
     "direction": "SHORT",
@@ -434,5 +434,9 @@
   "TOWNSUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-04T22:54:52.027896+00:00"
+  },
+  "DEXEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T23:36:45.772465+00:00"
   }
 }

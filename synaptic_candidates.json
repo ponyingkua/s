@@ -1,115 +1,89 @@
 [
   {
-    "symbol": "AXSUSDT",
+    "symbol": "ETCUSDT",
     "direction": "SHORT",
-    "score": 75.0,
+    "score": 70.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend",
-      "RSI netral (48)"
-    ],
-    "entry": 0.9232,
-    "sl": 0.928903,
-    "tp": 0.914645
-  },
-  {
-    "symbol": "JASMYUSDT",
-    "direction": "SHORT",
-    "score": 65.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
       "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (45)"
+      "RSI netral (56)"
     ],
-    "entry": 0.004341,
-    "sl": 0.004391,
-    "tp": 0.004266
+    "entry": 7.413,
+    "sl": 7.454464,
+    "tp": 7.350804
   },
   {
-    "symbol": "FETUSDT",
-    "direction": "SHORT",
-    "score": 75.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (45)"
-    ],
-    "entry": 0.1535,
-    "sl": 0.154643,
-    "tp": 0.151785
-  },
-  {
-    "symbol": "ONDOUSDT",
-    "direction": "SHORT",
-    "score": 75.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (44)"
-    ],
-    "entry": 0.3549,
-    "sl": 0.357383,
-    "tp": 0.351175
-  },
-  {
-    "symbol": "PORTALUSDT",
+    "symbol": "DOTUSDT",
     "direction": "LONG",
     "score": 65.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend"
+    ],
+    "entry": 0.8816,
+    "sl": 0.872277,
+    "tp": 0.895585
+  },
+  {
+    "symbol": "LPTUSDT",
+    "direction": "LONG",
+    "score": 70.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
       "Supertrend menunjukkan uptrend",
-      "RSI oversold (39), potensi rebound"
+      "Volume spike terdeteksi (menguatkan sinyal)",
+      "RSI netral (52)"
     ],
-    "entry": 0.01632,
-    "sl": 0.015864,
-    "tp": 0.017004
+    "entry": 1.44,
+    "sl": 1.424203,
+    "tp": 1.463696
   },
   {
-    "symbol": "EIGENUSDT",
+    "symbol": "ETHFIUSDT",
     "direction": "SHORT",
-    "score": 65.0,
+    "score": 75.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend"
+      "Supertrend menunjukkan downtrend",
+      "RSI netral (47)"
     ],
-    "entry": 0.1941,
-    "sl": 0.195838,
-    "tp": 0.191493
+    "entry": 0.558,
+    "sl": 0.563497,
+    "tp": 0.549754
   },
   {
-    "symbol": "HYPEUSDT",
-    "direction": "SHORT",
+    "symbol": "TAOUSDT",
+    "direction": "LONG",
     "score": 65.0,
     "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend"
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Volume spike terdeteksi (menguatkan sinyal)",
+      "RSI netral (57)"
     ],
-    "entry": 83.856,
-    "sl": 84.466532,
-    "tp": 82.940201
+    "entry": 225.12,
+    "sl": 223.416854,
+    "tp": 227.674719
   },
   {
-    "symbol": "SAHARAUSDT",
+    "symbol": "LISTAUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (55)"
+      "RSI netral (53)"
     ],
-    "entry": 0.009232,
-    "sl": 0.009154,
-    "tp": 0.009349
+    "entry": 0.07643,
+    "sl": 0.075538,
+    "tp": 0.077768
   },
   {
-    "symbol": "ZORAUSDT",
+    "symbol": "VANAUSDT",
     "direction": "LONG",
     "score": 75.0,
     "reasons": [
@@ -118,22 +92,50 @@
       "Supertrend menunjukkan uptrend",
       "RSI netral (59)"
     ],
-    "entry": 0.00884,
-    "sl": 0.008562,
-    "tp": 0.009257
+    "entry": 0.9493,
+    "sl": 0.941966,
+    "tp": 0.960301
   },
   {
-    "symbol": "TOWNSUSDT",
-    "direction": "SHORT",
+    "symbol": "HIVEUSDT",
+    "direction": "LONG",
     "score": 75.0,
     "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (42)"
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI netral (56)"
     ],
-    "entry": 0.002194,
-    "sl": 0.002241,
-    "tp": 0.002123
+    "entry": 0.04627,
+    "sl": 0.045976,
+    "tp": 0.046711
+  },
+  {
+    "symbol": "DEXEUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI netral (53)"
+    ],
+    "entry": 1.998,
+    "sl": 1.979811,
+    "tp": 2.025284
+  },
+  {
+    "symbol": "SUSDT",
+    "direction": "LONG",
+    "score": 75.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI netral (59)"
+    ],
+    "entry": 0.02946,
+    "sl": 0.029073,
+    "tp": 0.030041
   }
 ]
