@@ -49,7 +49,7 @@
   },
   "ATOMUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:27.401704+00:00"
+    "timestamp": "2026-09-04T02:39:44.448884+00:00"
   },
   "ALGOUSDT": {
     "direction": "LONG",
@@ -346,5 +346,41 @@
   "BMTUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-04T02:10:43.725055+00:00"
+  },
+  "DASHUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:43.751763+00:00"
+  },
+  "AAVEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:45.427442+00:00"
+  },
+  "ZENUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:46.066531+00:00"
+  },
+  "SANDUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:46.713616+00:00"
+  },
+  "TSTUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:49.433730+00:00"
+  },
+  "PUNDIXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:50.342903+00:00"
+  },
+  "TAGUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:51.338289+00:00"
+  },
+  "BLESSUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T02:39:52.341712+00:00"
+  },
+  "CLOUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T02:39:53.138261+00:00"
   }
 }
