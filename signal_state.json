@@ -41,7 +41,7 @@
   },
   "TRXUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:25.794713+00:00"
+    "timestamp": "2026-09-04T03:39:56.449553+00:00"
   },
   "XLMUSDT": {
     "direction": "LONG",
@@ -65,11 +65,11 @@
   },
   "PEOPLEUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:30.754005+00:00"
+    "timestamp": "2026-09-04T03:39:58.524663+00:00"
   },
   "APTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:31.614890+00:00"
+    "timestamp": "2026-09-04T03:39:59.885881+00:00"
   },
   "MINAUSDT": {
     "direction": "LONG",
@@ -93,7 +93,7 @@
   },
   "INJUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T23:09:34.933356+00:00"
+    "timestamp": "2026-09-04T03:39:59.220368+00:00"
   },
   "FETUSDT": {
     "direction": "LONG",
@@ -398,5 +398,29 @@
   "TIAUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T03:10:58.215441+00:00"
+  },
+  "ARUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:39:57.867849+00:00"
+  },
+  "RIFUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:40:00.782670+00:00"
+  },
+  "FARTCOINUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:40:02.117169+00:00"
+  },
+  "PROMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:40:02.811933+00:00"
+  },
+  "TRUMPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:40:03.424630+00:00"
+  },
+  "KAITOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T03:40:04.172169+00:00"
   }
 }
