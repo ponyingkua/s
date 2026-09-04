@@ -26,7 +26,9 @@ from scanner import (
     BinanceFuturesClient,
     atr,
     ema,
+    format_signal_message,
     score_symbol,
+    send_telegram_photo,
     supertrend,
 )
 
@@ -595,7 +597,17 @@ async def _fetch_and_build(symbol: str, timeframe: str, cfg: dict, out_path: str
         limit = max(400, n_show + STRUCTURE_CONTEXT + 250)
         kline = await client.get_klines(symbol, timeframe, limit=limit)
     signal = score_symbol(kline.df, symbol, cfg)
-    return build_chart(kline.df, symbol, timeframe, signal, cfg, out_path)
+    result_path = build_chart(kline.df, symbol, timeframe, signal, cfg, out_path)
+
+    # Khusus jalur CLI/manual (mis. workflow "Chart Generator (manual)"):
+    # kirim chart tunggal ini ke Telegram sebagai foto. Tidak dipanggil dari
+    # scanner.run_scan, yang mengirim hasil batch lewat 1 file zip.
+    try:
+        await send_telegram_photo(result_path, format_signal_message(signal), cfg)
+    except Exception as exc:  # jangan sampai gagal kirim Telegram menghentikan workflow
+        print(f"Gagal kirim chart ke Telegram: {exc}")
+
+    return result_path
 
 
 def main():
