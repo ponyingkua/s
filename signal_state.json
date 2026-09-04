@@ -1,0 +1,42 @@
+{
+  "BCHUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:51.823457+00:00"
+  },
+  "LTCUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:52.635874+00:00"
+  },
+  "XLMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:53.430874+00:00"
+  },
+  "XMRUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:54.144435+00:00"
+  },
+  "ZECUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:54.850374+00:00"
+  },
+  "BNBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:55.532092+00:00"
+  },
+  "ATOMUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:56.249199+00:00"
+  },
+  "ALGOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:56.943659+00:00"
+  },
+  "TRBUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:57.734377+00:00"
+  },
+  "AVAXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T08:03:58.520306+00:00"
+  }
+}
