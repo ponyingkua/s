@@ -158,5 +158,45 @@
   "COAIUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-03T23:38:12.063069+00:00"
+  },
+  "COMPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:01.194622+00:00"
+  },
+  "CAKEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:03.324378+00:00"
+  },
+  "PORTALUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:04.350609+00:00"
+  },
+  "PENGUUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:05.536752+00:00"
+  },
+  "PAXGUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:06.768608+00:00"
+  },
+  "SYRUPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:07.463982+00:00"
+  },
+  "SKYAIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:08.119879+00:00"
+  },
+  "LAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:08.829345+00:00"
+  },
+  "LABUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T00:16:10.432294+00:00"
+  },
+  "ALLOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T00:16:11.226585+00:00"
   }
 }
