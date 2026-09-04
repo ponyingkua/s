@@ -77,7 +77,7 @@
   },
   "1000FLOKIUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T22:37:33.112479+00:00"
+    "timestamp": "2026-09-04T04:11:15.174372+00:00"
   },
   "SUSHIUSDT": {
     "direction": "LONG",
@@ -109,11 +109,11 @@
   },
   "TAOUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T23:09:37.554357+00:00"
+    "timestamp": "2026-09-04T04:11:17.152292+00:00"
   },
   "RENDERUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-03T23:09:38.112100+00:00"
+    "timestamp": "2026-09-04T04:11:17.965940+00:00"
   },
   "POLUSDT": {
     "direction": "LONG",
@@ -422,5 +422,33 @@
   "KAITOUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T03:40:04.172169+00:00"
+  },
+  "XRPUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:11.546843+00:00"
+  },
+  "LDOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:13.522961+00:00"
+  },
+  "1000PEPEUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:14.461806+00:00"
+  },
+  "ETHFIUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:16.459515+00:00"
+  },
+  "MUBARAKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:19.400501+00:00"
+  },
+  "VELVETUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:20.578628+00:00"
+  },
+  "XPLUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T04:11:21.357288+00:00"
   }
 }
