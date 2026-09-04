@@ -35,6 +35,5 @@ async def send_telegram_message(text: str, cfg: dict) -> None:
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload) as resp:
-            await resp.read()
+    async with aiohttp.ClientSession() as session, session.post(url, json=payload) as resp:
+        await resp.read()
