@@ -76,8 +76,8 @@
     "timestamp": "2026-09-04T22:46:53.217320+00:00"
   },
   "AXSUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T08:27:02.938995+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:44.629586+00:00"
   },
   "BTCUSDT": {
     "direction": "LONG",
@@ -133,7 +133,7 @@
   },
   "FETUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T18:27:34.863758+00:00"
+    "timestamp": "2026-09-04T22:54:46.824499+00:00"
   },
   "MINAUSDT": {
     "direction": "LONG",
@@ -402,5 +402,37 @@
   "SYRUPUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T22:46:57.562218+00:00"
+  },
+  "JASMYUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:46.140408+00:00"
+  },
+  "ONDOUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:47.809305+00:00"
+  },
+  "PORTALUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T22:54:48.340750+00:00"
+  },
+  "EIGENUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:49.067348+00:00"
+  },
+  "HYPEUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:50.378684+00:00"
+  },
+  "SAHARAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T22:54:50.943159+00:00"
+  },
+  "ZORAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-04T22:54:51.534579+00:00"
+  },
+  "TOWNSUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-04T22:54:52.027896+00:00"
   }
 }
