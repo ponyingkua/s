@@ -52,7 +52,7 @@ backtest:
 
 chart:
   width_px: 2000
-  height_ratio: 0.5625     # tinggi = width * ratio → 2000x1125 (rasio 16:9)
+  height_ratio: 0.45       # tinggi = width * ratio → 2000x900 (rasio 20:9 ≈ 2.22:1)
   candles_shown: 120       # jumlah candle terakhir yang ditampilkan di chart
   theme:
     background: "#0d0d0f"
