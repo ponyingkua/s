@@ -1,6 +1,21 @@
 [
   {
-    "symbol": "OPUSDT",
+    "symbol": "MUUSDT",
+    "direction": "LONG",
+    "score": 90.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)",
+      "RSI netral (49)"
+    ],
+    "entry": 1015.6,
+    "sl": 1014.165479,
+    "tp": 1017.751781
+  },
+  {
+    "symbol": "AMDUSDT",
     "direction": "LONG",
     "score": 90.0,
     "reasons": [
@@ -10,27 +25,12 @@
       "Volume spike terdeteksi (menguatkan sinyal)",
       "RSI netral (56)"
     ],
-    "entry": 0.10078,
-    "sl": 0.099997,
-    "tp": 0.101955
+    "entry": 475.88,
+    "sl": 475.488563,
+    "tp": 476.467156
   },
   {
-    "symbol": "BEATUSDT",
-    "direction": "LONG",
-    "score": 90.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (58)"
-    ],
-    "entry": 0.1255,
-    "sl": 0.124052,
-    "tp": 0.127672
-  },
-  {
-    "symbol": "XRPUSDT",
+    "symbol": "SUSHIUSDT",
     "direction": "LONG",
     "score": 80.0,
     "reasons": [
@@ -39,12 +39,12 @@
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 1.426,
-    "sl": 1.418892,
-    "tp": 1.436663
+    "entry": 0.2538,
+    "sl": 0.244756,
+    "tp": 0.267366
   },
   {
-    "symbol": "COTIUSDT",
+    "symbol": "UNIUSDT",
     "direction": "LONG",
     "score": 80.0,
     "reasons": [
@@ -53,12 +53,12 @@
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.015503,
-    "sl": 0.015209,
-    "tp": 0.015944
+    "entry": 6.913,
+    "sl": 6.775644,
+    "tp": 7.119034
   },
   {
-    "symbol": "1000SHIBUSDT",
+    "symbol": "STXUSDT",
     "direction": "LONG",
     "score": 80.0,
     "reasons": [
@@ -67,8 +67,8 @@
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.005562,
-    "sl": 0.00551,
-    "tp": 0.00564
+    "entry": 0.267,
+    "sl": 0.264536,
+    "tp": 0.270696
   }
 ]
