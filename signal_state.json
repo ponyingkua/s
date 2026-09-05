@@ -97,7 +97,7 @@
   },
   "ANKRUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T20:18:22.602252+00:00"
+    "timestamp": "2026-09-05T02:05:07.336056+00:00"
   },
   "HBARUSDT": {
     "direction": "LONG",
@@ -229,11 +229,11 @@
   },
   "MUBARAKUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:49:21.311744+00:00"
+    "timestamp": "2026-09-05T02:05:07.737441+00:00"
   },
   "SIGNUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:49:23.823660+00:00"
+    "timestamp": "2026-09-05T02:05:07.014024+00:00"
   },
   "HEMIUSDT": {
     "direction": "LONG",
@@ -474,5 +474,13 @@
   "STRKUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-05T01:58:14.558057+00:00"
+  },
+  "BTCUSDT_261225": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T02:05:03.510012+00:00"
+  },
+  "BEATUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T02:05:08.068896+00:00"
   }
 }
