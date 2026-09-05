@@ -8,8 +8,8 @@
     "timestamp": "2026-09-04T08:03:52.635874+00:00"
   },
   "XLMUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T08:03:53.430874+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T02:18:02.275668+00:00"
   },
   "XMRUSDT": {
     "direction": "LONG",
@@ -101,7 +101,7 @@
   },
   "HBARUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T11:57:10.489017+00:00"
+    "timestamp": "2026-09-05T02:18:02.526319+00:00"
   },
   "1000SHIBUSDT": {
     "direction": "LONG",
@@ -261,7 +261,7 @@
   },
   "ARBUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T20:11:01.933314+00:00"
+    "timestamp": "2026-09-05T02:18:02.741413+00:00"
   },
   "TWTUSDT": {
     "direction": "LONG",
@@ -482,5 +482,13 @@
   "BEATUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-05T02:05:08.068896+00:00"
+  },
+  "SNDKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T02:18:01.284794+00:00"
+  },
+  "SNXXUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T02:18:02.062912+00:00"
   }
 }
