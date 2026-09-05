@@ -80,8 +80,8 @@
     "timestamp": "2026-09-04T22:54:44.629586+00:00"
   },
   "BTCUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T11:56:58.595281+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T01:49:30.693933+00:00"
   },
   "XRPUSDT": {
     "direction": "LONG",
@@ -209,7 +209,7 @@
   },
   "FORMUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:22.783775+00:00"
+    "timestamp": "2026-09-05T01:49:32.872957+00:00"
   },
   "BROCCOLI714USDT": {
     "direction": "LONG",
@@ -305,15 +305,15 @@
   },
   "HOMEUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T20:18:35.028259+00:00"
+    "timestamp": "2026-09-05T01:49:33.193448+00:00"
   },
   "KITEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T20:18:38.021795+00:00"
   },
   "MMTUSDT": {
-    "direction": "SHORT",
-    "timestamp": "2026-09-04T20:18:39.746109+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-05T01:49:33.582951+00:00"
   },
   "NIGHTUSDT": {
     "direction": "LONG",
@@ -462,5 +462,9 @@
   "AKEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-05T01:33:59.434890+00:00"
+  },
+  "ALLOUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T01:49:33.906288+00:00"
   }
 }
