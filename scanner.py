@@ -646,6 +646,52 @@ def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> N
 
 
 # ---------------------------------------------------------------------------
+# Market regime filter
+# ---------------------------------------------------------------------------
+
+async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
+    """Tentukan rezim pasar makro dari 1 simbol bellwether (default BTCUSDT)
+    di timeframe tinggi, dipakai buat menyaring sinyal yang melawan arus
+    utama pasar.
+
+    Alasan: backtest batch nunjukkin trend-following system ini lemah secara
+    STATISTIK SIGNIFIKAN kalau ambil sinyal berlawanan arah dengan rezim
+    dominan (SHORT saat market lagi bull luas: t-stat -3.46 dari 51 trade,
+    win rate 0% di beberapa simbol) — bukan cuma kebetulan noise di 1-2 coin,
+    kejadian di semua 10 simbol yang dites. BULL/BEAR cuma diklaim kalau ADX
+    di timeframe itu cukup kuat (di atas regime_filter.adx_min); kalau tidak,
+    dianggap NEUTRAL dan tidak menyaring arah manapun."""
+    regime_cfg = cfg.get("regime_filter", {})
+    symbol = regime_cfg.get("symbol", "BTCUSDT")
+    timeframe = regime_cfg.get("timeframe", "4h")
+    adx_threshold = regime_cfg.get("adx_min", 25)
+
+    try:
+        kline = await client.get_klines(symbol, timeframe, limit=cfg.get("scanning", {}).get("klines_limit", 300))
+    except Exception:
+        return "NEUTRAL"  # gagal fetch -> jangan blokir scan gara-gara ini, biarkan lolos netral
+
+    closed = drop_unclosed_candle(kline.df)
+    if len(closed) < 50:
+        return "NEUTRAL"
+
+    ind = compute_indicators(closed, cfg)
+    i = len(closed) - 1
+    price = closed["close"].iloc[i]
+    ema_up = price > ind["ema200"].iloc[i]
+    st_up = ind["supertrend"].iloc[i] == 1
+    adx_val = ind["adx"].iloc[i]
+
+    if pd.isna(adx_val) or adx_val < adx_threshold:
+        return "NEUTRAL"
+    if ema_up and st_up:
+        return "BULL"
+    if not ema_up and not st_up:
+        return "BEAR"
+    return "NEUTRAL"  # EMA & Supertrend tidak sepakat -> jangan jadikan dasar filter
+
+
+# ---------------------------------------------------------------------------
 # Notifikasi Telegram
 # ---------------------------------------------------------------------------
 
@@ -797,6 +843,11 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         min_vol = cfg["exchange"]["min_volume_usdt_24h"]
         active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
 
+        # --- Rezim pasar makro (BTCUSDT) — dicek SEKALI di awal, dipakai
+        # buat menyaring sinyal yang melawan arus utama di semua simbol.
+        regime_cfg = cfg.get("regime_filter", {})
+        regime = await get_market_regime(client, cfg) if regime_cfg.get("enabled", False) else "NEUTRAL"
+
         # --- Scan SETIAP timeframe secara independen ------------------------
         # Sebelumnya cuma timeframes[0] (15m) yang pernah menghasilkan sinyal;
         # 1h cuma jadi filter biner dan 4h sama sekali tidak pernah dipakai.
@@ -814,6 +865,10 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     continue
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
+                    continue
+                if regime == "BULL" and signal.direction == "SHORT":
+                    continue  # lawan arus BTC bull -> data menunjukkan ini secara sistematis buruk
+                if regime == "BEAR" and signal.direction == "LONG":
                     continue
                 if not passes_risk_filter(signal, cfg):
                     continue
