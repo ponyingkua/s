@@ -15,6 +15,7 @@ scanning:
   cooldown_hours: 4
   state_path: "signal_state.json"
   klines_limit: 300   # jumlah candle historis yang diambil per symbol per TF
+  min_history_bars: 250   # symbol dgn histori closed candle < ini di-skip (biasanya coin baru listing, EMA200/ADX belum konvergen)
 
 indicators:
   ema:
@@ -44,23 +45,27 @@ scoring:
     volume_spike: 15
     rsi_confluence: 20
     mtf_agreement: 15   # bonus skor PER timeframe lain yang searah (menggantikan filter biner lama)
+    adx_strength: 15    # bonus skor bertingkat kalau ADX jauh di atas adx_min (tren kuat vs baru lolos gate)
   setup_bonus:
     breakout: 10        # harga menembus struktur N-bar terakhir searah sinyal
     pullback: 10         # harga dekat/menyentuh EMA200 sebelum lanjut searah tren
     continuation: 0      # tren jalan normal, bukan di titik entry istimewa
     extended: -15         # harga sudah terlalu jauh dari EMA200 — rawan exhaustion
-  min_score_to_trigger: 75
+  min_score_to_trigger: 85
 
 risk:
   atr_multiplier_sl: 1.5
   risk_reward_min: 1.5
   max_signals_per_run: 5
   adx_min: 20   # di bawah ambang ini pasar dianggap choppy/sideways, sinyal ditolak duluan
+  adx_strong: 35   # ADX >= ini dianggap tren sangat kuat -> bonus adx_strength penuh (di antara adx_min & ini, bonus dislkala linear)
+  structure_sl_max_atr_mult: 2.5   # SL berbasis struktur di-cap maksimal segini x ATR, jaga R:R tetap wajar saat structure jauh
 
 setup_engine:
-  structure_lookback: 20    # jumlah bar ke belakang buat cek breakout struktur
+  structure_lookback: 20    # jumlah bar ke belakang buat cek breakout struktur & referensi SL struktural
   pullback_atr_mult: 1.0    # <= sekian ATR dari EMA200 dianggap PULLBACK
   extended_atr_mult: 3.5    # >= sekian ATR dari EMA200 dianggap EXTENDED
+  structure_sl_buffer_atr_mult: 0.25   # buffer tambahan di luar swing low/high biar SL gak persis di level (rawan wick hunt)
 
 notify:
   telegram:
