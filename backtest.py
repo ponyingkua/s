@@ -18,6 +18,12 @@ Catatan penting soal parity dengan scanner.py (live):
   win-rate/avg-R di backtest ini murni dari 1 TF, tanpa bonus MTF —
   anggap sebagai baseline konservatif (skor live bisa sedikit lebih tinggi
   dari ini kalau kebetulan ada agreement dari TF lain).
+- v3.2: Market Regime Filter SEKARANG direplikasi di backtest (lihat
+  compute_regime_series/align_regime_to) — beda dengan MTF agreement bonus
+  di atas, ini feasible dan penting untuk direplikasi karena backtest batch
+  sebelumnya (174 trade) yang menemukan masalah SHORT-vs-LONG (t=-3.46) itu
+  sendiri yang menyarankan filter ini; tanpa direplikasi di backtest, kita
+  tidak akan pernah tahu apakah fix-nya beneran membantu atau tidak.
 """
 from __future__ import annotations
 
@@ -36,6 +42,12 @@ DEFAULT_SYMBOLS = [
     "LTCUSDT", "ADAUSDT", "DOGEUSDT", "LINKUSDT", "AVAXUSDT",
 ]
 
+TF_MINUTES = {
+    "1m": 1, "3m": 3, "5m": 5, "15m": 15, "30m": 30,
+    "1h": 60, "2h": 120, "4h": 240, "6h": 360, "8h": 480, "12h": 720,
+    "1d": 1440,
+}
+
 
 async def fetch_klines(client: BinanceFuturesClient, symbol: str, timeframe: str, limit: int):
     """Pakai get_klines biasa kalau limit masih dalam batas 1 request Binance
@@ -45,6 +57,64 @@ async def fetch_klines(client: BinanceFuturesClient, symbol: str, timeframe: str
     if limit <= 1500:
         return await client.get_klines(symbol, timeframe, limit=limit)
     return await client.get_klines_paginated(symbol, timeframe, total_limit=limit)
+
+
+# ---------------------------------------------------------------------------
+# Market regime filter (replikasi backtest dari scanner.get_market_regime)
+# ---------------------------------------------------------------------------
+
+def _regime_limit_for(primary_timeframe: str, primary_limit: int, regime_timeframe: str,
+                       min_warmup: int = 300) -> int:
+    """Hitung berapa banyak candle di timeframe regime yang perlu di-fetch
+    supaya rentang waktunya menutupi seluruh rentang backtest primer, PLUS
+    warmup ekstra biar indikator regime (EMA200/ADX) sendiri sempat
+    konvergen sebelum titik awal backtest."""
+    primary_minutes = TF_MINUTES.get(primary_timeframe, 60)
+    regime_minutes = TF_MINUTES.get(regime_timeframe, 240)
+    span_minutes = primary_minutes * primary_limit
+    needed_bars = int(span_minutes / regime_minutes) + min_warmup
+    return max(needed_bars, min_warmup)
+
+
+def compute_regime_series(df_regime: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Hitung rezim (BULL/BEAR/NEUTRAL) di SETIAP bar df_regime — beda dari
+    scanner.get_market_regime() yang cuma menjawab rezim "saat ini" (bar
+    terakhir), backtest butuh rezim di titik waktu manapun sepanjang
+    histori. Dipakai bareng align_regime_to() untuk disejajarkan ke
+    timeframe primer tanpa lookahead."""
+    regime_cfg = cfg.get("regime_filter", {})
+    adx_threshold = regime_cfg.get("adx_min", 25)
+
+    ind = compute_indicators(df_regime, cfg)
+    ema_up = df_regime["close"] > ind["ema200"]
+    st_up = ind["supertrend"] == 1
+    adx_val = ind["adx"]
+    strong = adx_val >= adx_threshold
+
+    regime = pd.Series("NEUTRAL", index=df_regime.index)
+    regime[strong & ema_up & st_up] = "BULL"
+    regime[strong & ~ema_up & ~st_up] = "BEAR"
+
+    return pd.DataFrame({
+        "open_time": df_regime["open_time"],
+        "close_time": df_regime["close_time"],
+        "regime": regime,
+    })
+
+
+def align_regime_to(primary_df: pd.DataFrame, regime_df: pd.DataFrame) -> pd.Series:
+    """Sejajarkan rezim (dari TF lebih tinggi) ke tiap bar primary_df, pakai
+    rezim dari candle regime TERAKHIR YANG SUDAH CLOSE pada/sebelum waktu
+    open bar primer — supaya tidak lookahead (backtest tidak mengintip
+    rezim dari candle regime yang faktanya belum kejadian/closed saat itu)."""
+    left = primary_df[["open_time"]].reset_index(drop=True).sort_values("open_time")
+    right = regime_df.sort_values("close_time").reset_index(drop=True)
+
+    merged = pd.merge_asof(
+        left, right, left_on="open_time", right_on="close_time", direction="backward",
+    )
+    merged["regime"] = merged["regime"].fillna("NEUTRAL")
+    return merged.sort_index()["regime"].reset_index(drop=True)
 
 
 @dataclass
@@ -64,7 +134,8 @@ class Trade:
 
 
 def backtest_symbol(
-    df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "", warmup: int = 250
+    df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "", warmup: int = 250,
+    regime_series: pd.Series | None = None,
 ) -> list[Trade]:
     """Skip-ahead: setelah trade dibuka, tidak evaluasi sinyal baru sampai
     trade itu selesai — supaya trade tidak saling tumpang tindih.
@@ -73,7 +144,11 @@ def backtest_symbol(
     kayak versi sebelumnya) — lihat catatan lengkap di
     scanner.compute_indicators(). `warmup` cuma menentukan titik mulai
     evaluasi (kasih ruang indikator konvergen dulu), bukan ukuran window
-    perhitungan seperti parameter `window` di versi lama."""
+    perhitungan seperti parameter `window` di versi lama.
+
+    `regime_series`, kalau diisi, harus punya panjang & indeks yang sama
+    dengan df (lihat align_regime_to()) — dipakai buat menolak sinyal yang
+    melawan rezim BTCUSDT, sama persis seperti scanner.py saat live."""
     trades: list[Trade] = []
     fee_pct = cfg.get("backtest", {}).get("fee_round_trip_pct", 0.0)
     ind = compute_indicators(df, cfg)
@@ -83,6 +158,21 @@ def backtest_symbol(
         signal = score_at(df, ind, i, symbol, cfg, timeframe=timeframe)
 
         if signal.direction == "NONE":
+            i += 1
+            continue
+
+        if regime_series is not None:
+            regime = regime_series.iloc[i]
+            if (regime == "BULL" and signal.direction == "SHORT") or (
+                regime == "BEAR" and signal.direction == "LONG"
+            ):
+                i += 1
+                continue
+
+        risk = abs(signal.entry - signal.sl)
+        reward = abs(signal.tp - signal.entry)
+        rr_min = cfg["risk"]["risk_reward_min"]
+        if risk == 0 or (reward / risk) < rr_min - 1e-6:
             i += 1
             continue
 
@@ -189,24 +279,56 @@ def summarize_by_setup(trades: list[Trade]) -> dict[str, dict]:
     return {setup: summarize(ts) for setup, ts in by_setup.items()}
 
 
+def summarize_by_direction(trades: list[Trade]) -> dict[str, dict]:
+    """Breakdown win-rate/avg-R per arah (LONG/SHORT) — supaya asimetri
+    seperti yang ditemukan di batch sebelumnya (SHORT jauh lebih lemah dari
+    LONG, t=-3.46) langsung kelihatan tiap kali backtest dijalankan ulang,
+    tanpa perlu analisis manual dari trades_raw.json."""
+    by_dir: dict[str, list[Trade]] = {}
+    for t in trades:
+        if t.result == "OPEN":
+            continue
+        by_dir.setdefault(t.direction, []).append(t)
+    return {d: summarize(ts) for d, ts in by_dir.items()}
+
+
 # ---------------------------------------------------------------------------
 # Mode single
 # ---------------------------------------------------------------------------
 
+async def _fetch_regime_df(client: BinanceFuturesClient, timeframe: str, limit: int, cfg: dict):
+    regime_cfg = cfg.get("regime_filter", {})
+    if not regime_cfg.get("enabled", False):
+        return None
+    regime_symbol = regime_cfg.get("symbol", "BTCUSDT")
+    regime_tf = regime_cfg.get("timeframe", "4h")
+    regime_limit = _regime_limit_for(timeframe, limit, regime_tf)
+    regime_kline = await fetch_klines(client, regime_symbol, regime_tf, regime_limit)
+    return compute_regime_series(regime_kline.df, cfg)
+
+
 async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None:
     async with BinanceFuturesClient() as client:
         kline = await fetch_klines(client, symbol, timeframe, limit)
+        regime_df = await _fetch_regime_df(client, timeframe, limit, cfg)
 
-    trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe)
+    regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
+    trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe, regime_series=regime_series)
     summary = summarize(trades)
     setup_breakdown = summarize_by_setup(trades)
-    print(json.dumps({"overall": summary, "by_setup": setup_breakdown}, indent=2))
+    direction_breakdown = summarize_by_direction(trades)
+    print(json.dumps(
+        {"overall": summary, "by_setup": setup_breakdown, "by_direction": direction_breakdown},
+        indent=2,
+    ))
 
     with open("trades_raw.json", "w") as f:
         json.dump([t.__dict__ for t in trades], f, indent=2)
 
     with open("backtest_result.md", "w") as f:
         f.write(f"# Backtest — {symbol} ({timeframe})\n\n")
+        if regime_series is not None:
+            f.write("_Market regime filter: **aktif** (BTCUSDT)_\n\n")
         f.write(f"- Total trade tertutup: **{summary['total']}**\n")
         f.write(f"- Win rate: **{summary['win_rate']}%**\n")
         f.write(f"- Rata-rata R multiple: **{summary['avg_r']}**\n")
@@ -214,16 +336,22 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
             f"- Trade dengan SL & TP kesentuh di candle yang sama: "
             f"**{summary['tie_count']}** ({summary['tie_pct']}%)\n\n"
         )
-        f.write("## Breakdown per jenis setup\n\n")
+        f.write("## Breakdown per arah\n\n")
+        f.write("| Arah | Trade | Win Rate | Avg R |\n")
+        f.write("|---|---|---|---|\n")
+        for d, s in direction_breakdown.items():
+            f.write(f"| {d} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |\n")
+        f.write("\n## Breakdown per jenis setup\n\n")
         f.write("| Setup | Trade | Win Rate | Avg R |\n")
         f.write("|---|---|---|---|\n")
         for setup, s in setup_breakdown.items():
             f.write(f"| {setup} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |\n")
         f.write(
             "\n> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
-            "Detail per-trade ada di `trades_raw.json` (artifact upload). "
-            "Angka di sini murni 1 timeframe (tanpa bonus MTF agreement yang "
-            "dipakai scanner.py saat live).\n"
+            "Detail per-trade ada di `trades_raw.json`. Angka di sini murni 1 "
+            "timeframe (tanpa bonus MTF agreement yang dipakai scanner.py saat "
+            "live), tapi SUDAH termasuk market regime filter kalau diaktifkan "
+            "di config.\n"
         )
 
 
@@ -236,6 +364,11 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
     all_trades: list[Trade] = []
 
     async with BinanceFuturesClient() as client:
+        # Rezim di-fetch SEKALI buat seluruh batch (bukan per simbol) —
+        # semua simbol pakai timeframe & limit yang sama, jadi rentang
+        # waktunya nyaris identik, tidak perlu N-1 fetch tambahan yang sia-sia.
+        regime_df = await _fetch_regime_df(client, timeframe, limit, cfg)
+
         for symbol in symbols:
             try:
                 kline = await fetch_klines(client, symbol, timeframe, limit)
@@ -243,22 +376,32 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
                 per_symbol_results.append((symbol, None, str(exc)))
                 continue
 
-            trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe)
+            regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
+            trades = backtest_symbol(
+                kline.df, symbol, cfg, timeframe=timeframe, regime_series=regime_series
+            )
             summary = summarize(trades)
             per_symbol_results.append((symbol, summary, None))
             all_trades.extend(trades)
 
     combined = summarize(all_trades)
     combined_by_setup = summarize_by_setup(all_trades)
+    combined_by_direction = summarize_by_direction(all_trades)
     with open("trades_raw_batch.json", "w") as f:
         json.dump([t.__dict__ for t in all_trades], f, indent=2)
-    _write_batch_report(per_symbol_results, combined, combined_by_setup, timeframe)
+    _write_batch_report(
+        per_symbol_results, combined, combined_by_setup, combined_by_direction,
+        timeframe, regime_enabled=cfg.get("regime_filter", {}).get("enabled", False),
+    )
 
 
 def _write_batch_report(
-    per_symbol_results, combined: dict, combined_by_setup: dict[str, dict], timeframe: str
+    per_symbol_results, combined: dict, combined_by_setup: dict[str, dict],
+    combined_by_direction: dict[str, dict], timeframe: str, regime_enabled: bool = False,
 ) -> None:
     lines = [f"# Backtest Gabungan ({timeframe})\n"]
+    if regime_enabled:
+        lines.append("_Market regime filter: **aktif** (BTCUSDT)_\n")
     lines.append("| Simbol | Trade | Win Rate | Avg R |")
     lines.append("|---|---|---|---|")
 
@@ -282,6 +425,13 @@ def _write_batch_report(
     )
 
     lines.append("")
+    lines.append("## Breakdown per arah (gabungan semua simbol)")
+    lines.append("| Arah | Trade | Win Rate | Avg R |")
+    lines.append("|---|---|---|---|")
+    for d, s in combined_by_direction.items():
+        lines.append(f"| {d} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |")
+
+    lines.append("")
     lines.append("## Breakdown per jenis setup (gabungan semua simbol)")
     lines.append("| Setup | Trade | Win Rate | Avg R |")
     lines.append("|---|---|---|---|")
@@ -293,14 +443,12 @@ def _write_batch_report(
         "> ⚠️ Angka gabungan lebih bisa dipercaya dibanding angka per-simbol "
         "individual, tapi tetap bukan jaminan performa live — belum "
         "memperhitungkan slippage atau funding rate, dan belum termasuk bonus "
-        "MTF agreement yang dipakai scanner.py saat live. Baris \"tie\" di atas "
-        "menunjukkan seberapa besar hasil bergantung pada asumsi tie-break "
-        "intrabar (lihat `backtest.intrabar_tie_break` di config.yaml) — "
-        "kalau persentasenya tinggi, coba jalankan ulang dengan opsi "
-        "`optimistic` atau `midpoint` untuk lihat sensitivitas hasilnya. Kalau "
-        "salah satu jenis setup di breakdown atas win-rate-nya jauh lebih "
-        "rendah, pertimbangkan turunkan `scoring.setup_bonus` untuk setup itu "
-        "di config.yaml."
+        "MTF agreement yang dipakai scanner.py saat live (regime filter SUDAH "
+        "termasuk kalau diaktifkan). Baris \"tie\" di atas menunjukkan seberapa "
+        "besar hasil bergantung pada asumsi tie-break intrabar (lihat "
+        "`backtest.intrabar_tie_break` di config.yaml). Kalau breakdown arah "
+        "atau setup masih timpang jauh, pertimbangkan tuning lebih lanjut di "
+        "config.yaml."
     )
 
     report = "\n".join(lines)
