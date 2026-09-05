@@ -385,7 +385,7 @@
   },
   "TAOUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T23:36:44.479225+00:00"
+    "timestamp": "2026-09-05T22:09:10.501928+00:00"
   },
   "ZROUSDT": {
     "direction": "SHORT",
@@ -505,7 +505,7 @@
   },
   "AEROUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-05T13:42:29.627382+00:00"
+    "timestamp": "2026-09-05T22:09:11.292947+00:00"
   },
   "AMDUSDT": {
     "direction": "LONG",
@@ -518,5 +518,17 @@
   "ROSEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-05T22:03:50.452333+00:00"
+  },
+  "BUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T22:09:11.505905+00:00"
+  },
+  "LAUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T22:09:11.768692+00:00"
+  },
+  "SPKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T22:09:11.976931+00:00"
   }
 }

@@ -1,73 +1,72 @@
 [
   {
-    "symbol": "ZKCUSDT",
-    "direction": "LONG",
-    "score": 100.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI (61) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)"
-    ],
-    "entry": 0.04964,
-    "sl": 0.049256,
-    "tp": 0.050216
-  },
-  {
-    "symbol": "XMRUSDT",
+    "symbol": "TAOUSDT",
     "direction": "LONG",
     "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI (70) menguatkan momentum naik"
+      "RSI (60) menguatkan momentum naik"
     ],
-    "entry": 552.22,
-    "sl": 547.007558,
-    "tp": 560.038663
+    "entry": 236.18,
+    "sl": 234.466392,
+    "tp": 238.750412
   },
   {
-    "symbol": "DOTUSDT",
+    "symbol": "AEROUSDT",
     "direction": "LONG",
     "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI (69) menguatkan momentum naik"
+      "RSI (64) menguatkan momentum naik"
     ],
-    "entry": 0.9241,
-    "sl": 0.916884,
-    "tp": 0.934924
+    "entry": 0.5428,
+    "sl": 0.534893,
+    "tp": 0.554661
   },
   {
-    "symbol": "ROSEUSDT",
+    "symbol": "BUSDT",
     "direction": "LONG",
     "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI (59) menguatkan momentum naik"
+      "RSI (56) menguatkan momentum naik"
     ],
-    "entry": 0.006814,
-    "sl": 0.006741,
-    "tp": 0.006924
+    "entry": 0.1788,
+    "sl": 0.173206,
+    "tp": 0.187192
   },
   {
-    "symbol": "FETUSDT",
+    "symbol": "LAUSDT",
     "direction": "LONG",
     "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI (53) menguatkan momentum naik"
+      "RSI (54) menguatkan momentum naik"
     ],
-    "entry": 0.1653,
-    "sl": 0.163864,
-    "tp": 0.167454
+    "entry": 0.06732,
+    "sl": 0.066753,
+    "tp": 0.068171
+  },
+  {
+    "symbol": "SPKUSDT",
+    "direction": "LONG",
+    "score": 85.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI (62) menguatkan momentum naik"
+    ],
+    "entry": 0.02134,
+    "sl": 0.021118,
+    "tp": 0.021673
   }
 ]
