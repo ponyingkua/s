@@ -23,6 +23,19 @@ Perubahan dari v3 (lihat catatan detail di tiap bagian):
    get_klines_paginated() (dipanggil backtest.py untuk --limit >1500,
    sebelumnya tidak ada method-nya sama sekali -> AttributeError).
 
+Perubahan v3.2 (fokus kualitas sinyal & setup):
+6. Gate histori minimum: symbol dengan closed candle < scanning.min_history_bars
+   di-skip, supaya coin baru listing (EMA200/ADX belum konvergen) tidak ikut
+   menghasilkan sinyal yang bias.
+7. ADX sekarang juga jadi bonus skor bertingkat (scoring.weights.adx_strength),
+   bukan cuma gate biner lolos/gugur di risk.adx_min — ADX >= risk.adx_strong
+   dapat bonus penuh, di antara adx_min & adx_strong bonusnya diskala linear.
+8. SL sekarang berbasis struktur (swing low/high N-bar terakhir + buffer ATR
+   kecil), bukan cuma ATR flat — dipakai kalau lebih jauh dari ATR stop biasa,
+   di-cap di risk.structure_sl_max_atr_mult supaya R:R tidak jebol saat
+   struktur jauh (mis. tren EXTENDED). TP tetap proporsional risk_reward_min
+   terhadap SL yang baru ini, jadi kontrak reward:risk tidak berubah.
+
 Dijalankan lewat: python scanner.py --out synaptic_candidates.json
 """
 from __future__ import annotations
@@ -367,7 +380,7 @@ def score_at(
     backtest bisa hitung indikator sekali lalu skor banyak titik, bukan
     hitung ulang tiap titik (lihat compute_indicators).
 
-    Alur (v3.1):
+    Alur (v3.2):
     0. Gate ADX — kalau tren dianggap terlalu lemah (choppy), tolak duluan
        sebelum indikator lain dihitung sama sekali.
     1. Arah (`direction`) ditentukan dari 3 indikator trend-following inti
@@ -375,8 +388,13 @@ def score_at(
     2. RSI cuma MENGUATKAN arah yang sudah ditentukan (momentum
        confirmation), RSI netral (40-60) tidak dapat bonus.
     3. Volume spike cuma dapat bonus kalau searah candle dengan sinyal.
-    4. Setup Engine memberi label + bonus/penalti sesuai jenis setup
+    4. ADX strength — bonus skor bertingkat kalau ADX jauh di atas adx_min
+       (tren kuat), beda dari ADX yang cuma baru lolos gate di langkah 0.
+    5. Setup Engine memberi label + bonus/penalti sesuai jenis setup
        (breakout/pullback/continuation/extended) — lihat classify_setup().
+    6. SL dihitung dari ATR ATAU struktur (swing low/high N-bar terakhir),
+       dipilih yang lebih jauh dari entry lalu di-cap — bukan ATR flat saja.
+       TP tetap proporsional risk_reward_min terhadap SL final ini.
     """
     adx_min = cfg.get("risk", {}).get("adx_min", 0)
     if adx_min and pd.notna(ind["adx"].iloc[i]) and ind["adx"].iloc[i] < adx_min:
@@ -461,7 +479,27 @@ def score_at(
     elif has_volume_spike:
         reasons.append("Volume spike terdeteksi tapi arah candle tidak sesuai sinyal — diabaikan")
 
-    # --- 4. Setup Engine: label jenis setup + bonus/penalti skor ---------
+    # --- 4. ADX strength: bonus bertingkat, beda dari gate biner di atas -
+    # ADX yang baru lolos adx_min (mis. 21) tidak sekuat ADX 45 — di sini
+    # ADX >= risk.adx_strong dapat bonus penuh, di antaranya diskala linear.
+    adx_strength_weight = w.get("adx_strength", 0)
+    adx_val = ind["adx"].iloc[i]
+    if adx_strength_weight and pd.notna(adx_val):
+        adx_strong = cfg.get("risk", {}).get("adx_strong", (adx_min or 20) + 15)
+        if adx_val >= adx_strong:
+            adx_bonus = adx_strength_weight
+        elif adx_min and adx_val > adx_min and adx_strong > adx_min:
+            adx_bonus = adx_strength_weight * (adx_val - adx_min) / (adx_strong - adx_min)
+        else:
+            adx_bonus = 0.0
+        if adx_bonus > 0:
+            if direction == "LONG":
+                long_score += adx_bonus
+            else:
+                short_score += adx_bonus
+            reasons.append(f"ADX ({adx_val:.1f}) tren kuat (+{adx_bonus:.1f} skor)")
+
+    # --- 5. Setup Engine: label jenis setup + bonus/penalti skor ---------
     setup_type = classify_setup(df, ind, i, direction, cfg)
     setup_bonus = cfg["scoring"].get("setup_bonus", {}).get(setup_type.lower(), 0)
     if direction == "LONG":
@@ -479,7 +517,35 @@ def score_at(
             timeframe=timeframe, setup_type=setup_type, reasons=reasons,
         )
 
-    sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
+    # --- 6. SL berbasis struktur, bukan ATR flat -------------------------
+    # ATR-flat stop bisa taruh SL persis di tengah zona swing low/high yang
+    # baru saja terbentuk (rawan kesapu noise/wick). Di sini SL digeser ke
+    # luar swing low/high N-bar terakhir (structure_lookback) + buffer ATR
+    # kecil, TAPI cuma dipakai kalau itu lebih jauh dari ATR stop biasa, dan
+    # di-cap ke structure_sl_max_atr_mult supaya R:R tidak jebol saat
+    # struktur jauh (mis. setup EXTENDED). TP tetap proporsional terhadap
+    # risk_reward_min dari SL final ini, jadi kontrak reward:risk tak berubah.
+    se_cfg = cfg.get("setup_engine", {})
+    struct_lookback = se_cfg.get("structure_lookback", 20)
+    sl_buffer = ind["atr"].iloc[i] * se_cfg.get("structure_sl_buffer_atr_mult", 0.25)
+    atr_sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
+    max_sl_dist = atr_sl_dist * cfg.get("risk", {}).get("structure_sl_max_atr_mult", 2.5)
+
+    lb_start = max(0, i - struct_lookback)
+    if direction == "LONG":
+        structural_level = df["low"].iloc[lb_start:i].min() if i > lb_start else None
+        structural_dist = (price - structural_level) + sl_buffer if pd.notna(structural_level) else atr_sl_dist
+    else:
+        structural_level = df["high"].iloc[lb_start:i].max() if i > lb_start else None
+        structural_dist = (structural_level - price) + sl_buffer if pd.notna(structural_level) else atr_sl_dist
+
+    sl_dist = max(atr_sl_dist, structural_dist)
+    if sl_dist > max_sl_dist:
+        sl_dist = max_sl_dist
+        reasons.append(f"SL struktur terlalu jauh, di-cap {cfg.get('risk', {}).get('structure_sl_max_atr_mult', 2.5)}x ATR")
+    elif sl_dist > atr_sl_dist:
+        reasons.append(f"SL digeser ke luar struktur {struct_lookback}-bar terakhir (bukan cuma ATR flat)")
+
     if direction == "LONG":
         sl = price - sl_dist
         tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
@@ -717,6 +783,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     state_path = scan_cfg.get("state_path", "signal_state.json")
     cooldown_hours = scan_cfg.get("cooldown_hours", 4)
     klines_limit = scan_cfg.get("klines_limit", 300)
+    min_history_bars = scan_cfg.get("min_history_bars", 250)
     state = load_state(state_path)
 
     auto_generate_charts = cfg.get("chart", {}).get("auto_generate", True)
@@ -741,7 +808,9 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             tf_candidates: list[tuple[SignalResult, Kline]] = []
             for kline in klines:
                 closed_df = drop_unclosed_candle(kline.df)
-                if len(closed_df) < 2:
+                if len(closed_df) < min_history_bars:
+                    # Histori terlalu pendek (mis. coin baru listing) -> EMA200/ADX
+                    # belum konvergen, indikator trend-following jadi bias/tidak reliable.
                     continue
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
