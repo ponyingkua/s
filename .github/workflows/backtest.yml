@@ -17,6 +17,9 @@ on:
       timeframe:
         description: "Timeframe, mis. 15m / 1h / 4h"
         default: "1h"
+      limit:
+        description: "Jumlah candle historis (>1500 otomatis di-pagination lewat get_klines_paginated)"
+        default: "1000"
 
 jobs:
   backtest:
@@ -33,12 +36,12 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.mode }}" = "batch" ]; then
             if [ -z "${{ github.event.inputs.symbols }}" ]; then
-              python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}"
+              python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
             else
-              python backtest.py --batch --symbols "${{ github.event.inputs.symbols }}" --timeframe "${{ github.event.inputs.timeframe }}"
+              python backtest.py --batch --symbols "${{ github.event.inputs.symbols }}" --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
             fi
           else
-            python backtest.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}"
+            python backtest.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
           fi
       - name: Upload raw trade log (artifact)
         uses: actions/upload-artifact@v4
