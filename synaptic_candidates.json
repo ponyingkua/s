@@ -1,72 +1,72 @@
 [
   {
-    "symbol": "BTCUSDT",
+    "symbol": "VETUSDT",
+    "direction": "LONG",
+    "score": 80.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)"
+    ],
+    "entry": 0.006946,
+    "sl": 0.006884,
+    "tp": 0.007039
+  },
+  {
+    "symbol": "ZENUSDT",
+    "direction": "LONG",
+    "score": 80.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)"
+    ],
+    "entry": 7.307,
+    "sl": 7.104152,
+    "tp": 7.611273
+  },
+  {
+    "symbol": "STRKUSDT",
+    "direction": "LONG",
+    "score": 80.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)"
+    ],
+    "entry": 0.02726,
+    "sl": 0.026947,
+    "tp": 0.02773
+  },
+  {
+    "symbol": "SPXUSDT",
     "direction": "SHORT",
-    "score": 75.0,
+    "score": 80.0,
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan downtrend",
-      "RSI netral (44)"
+      "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 79548.5,
-    "sl": 79722.563567,
-    "tp": 79287.404649
+    "entry": 0.5914,
+    "sl": 0.599426,
+    "tp": 0.579361
   },
   {
-    "symbol": "FORMUSDT",
+    "symbol": "ZKCUSDT",
     "direction": "LONG",
-    "score": 75.0,
+    "score": 80.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI netral (55)"
+      "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.2765,
-    "sl": 0.272777,
-    "tp": 0.282085
-  },
-  {
-    "symbol": "HOMEUSDT",
-    "direction": "SHORT",
-    "score": 75.0,
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan downtrend",
-      "RSI netral (48)"
-    ],
-    "entry": 0.006009,
-    "sl": 0.006052,
-    "tp": 0.005944
-  },
-  {
-    "symbol": "MMTUSDT",
-    "direction": "LONG",
-    "score": 75.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI netral (57)"
-    ],
-    "entry": 0.1658,
-    "sl": 0.164618,
-    "tp": 0.167573
-  },
-  {
-    "symbol": "ALLOUSDT",
-    "direction": "LONG",
-    "score": 75.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI netral (45)"
-    ],
-    "entry": 0.24677,
-    "sl": 0.244798,
-    "tp": 0.249728
+    "entry": 0.05061,
+    "sl": 0.050067,
+    "tp": 0.051425
   }
 ]
