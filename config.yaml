@@ -49,8 +49,11 @@ scoring:
   setup_bonus:
     breakout: 10        # harga menembus struktur N-bar terakhir searah sinyal
     pullback: 10         # harga dekat/menyentuh EMA200 sebelum lanjut searah tren
-    continuation: 0      # tren jalan normal, bukan di titik entry istimewa
-    extended: -15         # harga sudah terlalu jauh dari EMA200 — rawan exhaustion
+    continuation: -10     # v3.2: 0 -> data batch 174 trade nunjukkin ini pecundang
+                           # terbesar (avg R -0.349, t=-1.90, n=39 -- sampel terbesar)
+    extended: 0            # v3.2: -15 -> 0. Data TIDAK mendukung penalti ini (avg R
+                           # justru +0.277, t=+1.04) -- tapi n=23 kecil, jangan buru-
+                           # buru kasih bonus positif juga sebelum ada lebih banyak data
   min_score_to_trigger: 85
 
 risk:
@@ -66,6 +69,17 @@ setup_engine:
   pullback_atr_mult: 1.0    # <= sekian ATR dari EMA200 dianggap PULLBACK
   extended_atr_mult: 3.5    # >= sekian ATR dari EMA200 dianggap EXTENDED
   structure_sl_buffer_atr_mult: 0.25   # buffer tambahan di luar swing low/high biar SL gak persis di level (rawan wick hunt)
+
+# v3.2: filter rezim pasar makro. Backtest batch (174 trade) nunjukkin SHORT
+# secara statistik signifikan lebih buruk dari LONG (t=-3.46) di SEMUA 10
+# simbol yang dites -- ciri khas market lagi bull luas, bukan kebetulan 1-2
+# coin. Filter ini menyaring sinyal yang melawan rezim BTCUSDT biar tidak
+# terus-terusan ambil sinyal di sisi yang secara historis lemah.
+regime_filter:
+  enabled: true
+  symbol: "BTCUSDT"
+  timeframe: "4h"
+  adx_min: 25   # BTC dianggap BULL/BEAR cuma kalau ADX di timeframe ini >= segini, selain itu NEUTRAL (tidak menyaring apa pun)
 
 notify:
   telegram:
