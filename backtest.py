@@ -1,10 +1,23 @@
-"""vSynapse v3 — backtest engine, 1 file. Mode single (1 simbol) atau
+"""vSynapse v3.1 — backtest engine, 1 file. Mode single (1 simbol) atau
 batch (banyak simbol + ringkasan gabungan).
 
 Contoh:
   python backtest.py --symbol BTCUSDT --timeframe 1h
   python backtest.py --batch --timeframe 1h
   python backtest.py --batch --symbols BTCUSDT,ETHUSDT --timeframe 1h
+
+Catatan penting soal parity dengan scanner.py (live):
+- Backtest ini menjalankan 1 timeframe per run (--timeframe), sama seperti
+  sebelumnya. score_at() sekarang menerima parameter `timeframe` supaya
+  tiap Trade tercatat asalnya dari TF apa, dan setiap Trade juga dicatat
+  `setup_type`-nya (breakout/pullback/continuation/extended) — sehingga
+  bisa dilihat jenis setup mana yang paling profitable.
+- Bonus skor "MTF agreement" di scanner.py (live) TIDAK direplikasi di sini,
+  karena itu perlu menyelaraskan candle-close antar-TF pada tiap titik
+  simulasi (rawan lookahead bias kalau salah implementasi). Jadi angka
+  win-rate/avg-R di backtest ini murni dari 1 TF, tanpa bonus MTF —
+  anggap sebagai baseline konservatif (skor live bisa sedikit lebih tinggi
+  dari ini kalau kebetulan ada agreement dari TF lain).
 """
 from __future__ import annotations
 
@@ -43,12 +56,16 @@ class Trade:
     tp: float
     result: str  # "WIN" | "LOSS" | "OPEN"
     r_multiple: float  # sudah dikurangi fee
+    timeframe: str = ""
+    setup_type: str = ""
     entry_time: str = ""
     exit_time: str = ""
     both_touched: bool = False  # True kalau SL & TP sama-sama kena di 1 candle
 
 
-def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250) -> list[Trade]:
+def backtest_symbol(
+    df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "", warmup: int = 250
+) -> list[Trade]:
     """Skip-ahead: setelah trade dibuka, tidak evaluasi sinyal baru sampai
     trade itu selesai — supaya trade tidak saling tumpang tindih.
 
@@ -63,7 +80,7 @@ def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250)
 
     i = warmup
     while i < len(df) - 1:
-        signal = score_at(df, ind, i, symbol, cfg)
+        signal = score_at(df, ind, i, symbol, cfg, timeframe=timeframe)
 
         if signal.direction == "NONE":
             i += 1
@@ -83,6 +100,7 @@ def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250)
             Trade(
                 symbol=symbol, direction=signal.direction, entry=signal.entry,
                 sl=signal.sl, tp=signal.tp, result=result, r_multiple=r_mult,
+                timeframe=signal.timeframe, setup_type=signal.setup_type,
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
             )
         )
@@ -158,6 +176,19 @@ def summarize(trades: list[Trade]) -> dict:
     }
 
 
+def summarize_by_setup(trades: list[Trade]) -> dict[str, dict]:
+    """Breakdown win-rate/avg-R per jenis setup (breakout/pullback/
+    continuation/extended) — supaya kelihatan jenis setup mana yang
+    layak dipertahankan dan mana yang sebaiknya di-nonaktifkan/di-tuning
+    lewat scoring.setup_bonus di config.yaml."""
+    by_setup: dict[str, list[Trade]] = {}
+    for t in trades:
+        if t.result == "OPEN":
+            continue
+        by_setup.setdefault(t.setup_type or "UNKNOWN", []).append(t)
+    return {setup: summarize(ts) for setup, ts in by_setup.items()}
+
+
 # ---------------------------------------------------------------------------
 # Mode single
 # ---------------------------------------------------------------------------
@@ -166,9 +197,10 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
     async with BinanceFuturesClient() as client:
         kline = await fetch_klines(client, symbol, timeframe, limit)
 
-    trades = backtest_symbol(kline.df, symbol, cfg)
+    trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe)
     summary = summarize(trades)
-    print(json.dumps(summary, indent=2))
+    setup_breakdown = summarize_by_setup(trades)
+    print(json.dumps({"overall": summary, "by_setup": setup_breakdown}, indent=2))
 
     with open("trades_raw.json", "w") as f:
         json.dump([t.__dict__ for t in trades], f, indent=2)
@@ -182,9 +214,16 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
             f"- Trade dengan SL & TP kesentuh di candle yang sama: "
             f"**{summary['tie_count']}** ({summary['tie_pct']}%)\n\n"
         )
+        f.write("## Breakdown per jenis setup\n\n")
+        f.write("| Setup | Trade | Win Rate | Avg R |\n")
+        f.write("|---|---|---|---|\n")
+        for setup, s in setup_breakdown.items():
+            f.write(f"| {setup} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |\n")
         f.write(
-            "> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
-            "Detail per-trade ada di `trades_raw.json` (artifact upload).\n"
+            "\n> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
+            "Detail per-trade ada di `trades_raw.json` (artifact upload). "
+            "Angka di sini murni 1 timeframe (tanpa bonus MTF agreement yang "
+            "dipakai scanner.py saat live).\n"
         )
 
 
@@ -204,18 +243,21 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
                 per_symbol_results.append((symbol, None, str(exc)))
                 continue
 
-            trades = backtest_symbol(kline.df, symbol, cfg)
+            trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe)
             summary = summarize(trades)
             per_symbol_results.append((symbol, summary, None))
             all_trades.extend(trades)
 
     combined = summarize(all_trades)
+    combined_by_setup = summarize_by_setup(all_trades)
     with open("trades_raw_batch.json", "w") as f:
         json.dump([t.__dict__ for t in all_trades], f, indent=2)
-    _write_batch_report(per_symbol_results, combined, timeframe)
+    _write_batch_report(per_symbol_results, combined, combined_by_setup, timeframe)
 
 
-def _write_batch_report(per_symbol_results, combined: dict, timeframe: str) -> None:
+def _write_batch_report(
+    per_symbol_results, combined: dict, combined_by_setup: dict[str, dict], timeframe: str
+) -> None:
     lines = [f"# Backtest Gabungan ({timeframe})\n"]
     lines.append("| Simbol | Trade | Win Rate | Avg R |")
     lines.append("|---|---|---|---|")
@@ -238,15 +280,27 @@ def _write_batch_report(per_symbol_results, combined: dict, timeframe: str) -> N
         f"- Trade dengan SL & TP kesentuh di candle yang sama (ambigu): "
         f"**{combined['tie_count']}** ({combined['tie_pct']}%)"
     )
+
+    lines.append("")
+    lines.append("## Breakdown per jenis setup (gabungan semua simbol)")
+    lines.append("| Setup | Trade | Win Rate | Avg R |")
+    lines.append("|---|---|---|---|")
+    for setup, s in combined_by_setup.items():
+        lines.append(f"| {setup} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |")
+
     lines.append("")
     lines.append(
         "> ⚠️ Angka gabungan lebih bisa dipercaya dibanding angka per-simbol "
         "individual, tapi tetap bukan jaminan performa live — belum "
-        "memperhitungkan slippage atau funding rate. Baris \"tie\" di atas "
+        "memperhitungkan slippage atau funding rate, dan belum termasuk bonus "
+        "MTF agreement yang dipakai scanner.py saat live. Baris \"tie\" di atas "
         "menunjukkan seberapa besar hasil bergantung pada asumsi tie-break "
         "intrabar (lihat `backtest.intrabar_tie_break` di config.yaml) — "
         "kalau persentasenya tinggi, coba jalankan ulang dengan opsi "
-        "`optimistic` atau `midpoint` untuk lihat sensitivitas hasilnya."
+        "`optimistic` atau `midpoint` untuk lihat sensitivitas hasilnya. Kalau "
+        "salah satu jenis setup di breakdown atas win-rate-nya jauh lebih "
+        "rendah, pertimbangkan turunkan `scoring.setup_bonus` untuk setup itu "
+        "di config.yaml."
     )
 
     report = "\n".join(lines)
