@@ -1,6 +1,6 @@
 [
   {
-    "symbol": "SOLUSDT",
+    "symbol": "OPUSDT",
     "direction": "LONG",
     "score": 90.0,
     "reasons": [
@@ -8,14 +8,14 @@
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (60)"
+      "RSI netral (56)"
     ],
-    "entry": 102.87,
-    "sl": 102.465544,
-    "tp": 103.476684
+    "entry": 0.10078,
+    "sl": 0.099997,
+    "tp": 0.101955
   },
   {
-    "symbol": "AEROUSDT",
+    "symbol": "BEATUSDT",
     "direction": "LONG",
     "score": 90.0,
     "reasons": [
@@ -23,29 +23,14 @@
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (54)"
+      "RSI netral (58)"
     ],
-    "entry": 0.5199,
-    "sl": 0.515991,
-    "tp": 0.525764
+    "entry": 0.1255,
+    "sl": 0.124052,
+    "tp": 0.127672
   },
   {
-    "symbol": "TSTUSDT",
-    "direction": "LONG",
-    "score": 90.0,
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (55)"
-    ],
-    "entry": 0.0198,
-    "sl": 0.019178,
-    "tp": 0.020734
-  },
-  {
-    "symbol": "ADAUSDT",
+    "symbol": "XRPUSDT",
     "direction": "LONG",
     "score": 80.0,
     "reasons": [
@@ -54,12 +39,12 @@
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.2158,
-    "sl": 0.214427,
-    "tp": 0.21786
+    "entry": 1.426,
+    "sl": 1.418892,
+    "tp": 1.436663
   },
   {
-    "symbol": "DOGEUSDT",
+    "symbol": "COTIUSDT",
     "direction": "LONG",
     "score": 80.0,
     "reasons": [
@@ -68,8 +53,22 @@
       "Supertrend menunjukkan uptrend",
       "Volume spike terdeteksi (menguatkan sinyal)"
     ],
-    "entry": 0.08751,
-    "sl": 0.086907,
-    "tp": 0.088415
+    "entry": 0.015503,
+    "sl": 0.015209,
+    "tp": 0.015944
+  },
+  {
+    "symbol": "1000SHIBUSDT",
+    "direction": "LONG",
+    "score": 80.0,
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Volume spike terdeteksi (menguatkan sinyal)"
+    ],
+    "entry": 0.005562,
+    "sl": 0.00551,
+    "tp": 0.00564
   }
 ]

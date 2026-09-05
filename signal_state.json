@@ -85,7 +85,7 @@
   },
   "XRPUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T11:57:02.536724+00:00"
+    "timestamp": "2026-09-05T17:59:46.420255+00:00"
   },
   "EGLDUSDT": {
     "direction": "LONG",
@@ -105,7 +105,7 @@
   },
   "1000SHIBUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T11:57:11.977602+00:00"
+    "timestamp": "2026-09-05T17:59:47.141109+00:00"
   },
   "ENSUSDT": {
     "direction": "SHORT",
@@ -113,7 +113,7 @@
   },
   "OPUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-05T01:08:19.566127+00:00"
+    "timestamp": "2026-09-05T17:59:45.061816+00:00"
   },
   "INJUSDT": {
     "direction": "SHORT",
@@ -149,7 +149,7 @@
   },
   "COTIUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:07:21.912848+00:00"
+    "timestamp": "2026-09-05T17:59:46.738235+00:00"
   },
   "1000FLOKIUSDT": {
     "direction": "LONG",
@@ -480,8 +480,8 @@
     "timestamp": "2026-09-05T02:05:03.510012+00:00"
   },
   "BEATUSDT": {
-    "direction": "SHORT",
-    "timestamp": "2026-09-05T02:05:08.068896+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-05T17:59:46.102247+00:00"
   },
   "SNDKUSDT": {
     "direction": "LONG",
