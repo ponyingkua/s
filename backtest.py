@@ -24,6 +24,16 @@ DEFAULT_SYMBOLS = [
 ]
 
 
+async def fetch_klines(client: BinanceFuturesClient, symbol: str, timeframe: str, limit: int):
+    """Pakai get_klines biasa kalau limit masih dalam batas 1 request Binance
+    (<=1500), atau get_klines_paginated kalau lebih besar dari itu — supaya
+    --limit besar (misal 5000) otomatis di-pagination tanpa perlu flag
+    tambahan di CLI."""
+    if limit <= 1500:
+        return await client.get_klines(symbol, timeframe, limit=limit)
+    return await client.get_klines_paginated(symbol, timeframe, total_limit=limit)
+
+
 @dataclass
 class Trade:
     symbol: str
@@ -154,7 +164,7 @@ def summarize(trades: list[Trade]) -> dict:
 
 async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None:
     async with BinanceFuturesClient() as client:
-        kline = await client.get_klines(symbol, timeframe, limit=limit)
+        kline = await fetch_klines(client, symbol, timeframe, limit)
 
     trades = backtest_symbol(kline.df, symbol, cfg)
     summary = summarize(trades)
@@ -189,7 +199,7 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
     async with BinanceFuturesClient() as client:
         for symbol in symbols:
             try:
-                kline = await client.get_klines(symbol, timeframe, limit=limit)
+                kline = await fetch_klines(client, symbol, timeframe, limit)
             except Exception as exc:
                 per_symbol_results.append((symbol, None, str(exc)))
                 continue
