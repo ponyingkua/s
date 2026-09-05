@@ -33,6 +33,9 @@ class Trade:
     tp: float
     result: str  # "WIN" | "LOSS" | "OPEN"
     r_multiple: float  # sudah dikurangi fee
+    entry_time: str = ""
+    exit_time: str = ""
+    both_touched: bool = False  # True kalau SL & TP sama-sama kena di 1 candle
 
 
 def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250) -> list[Trade]:
@@ -57,12 +60,20 @@ def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250)
             continue
 
         future = df.iloc[i + 1 :].reset_index(drop=True)
-        result, r_mult, exit_offset = _simulate_exit(signal, future, fee_pct)
+        tie_break = cfg.get("backtest", {}).get("intrabar_tie_break", "conservative")
+        result, r_mult, exit_offset, both_touched = _simulate_exit(
+            signal, future, fee_pct, tie_break
+        )
+
+        entry_time = str(df.iloc[i].get("open_time", df.index[i]))
+        exit_idx = i + 1 + exit_offset
+        exit_time = str(df.iloc[exit_idx].get("open_time", df.index[exit_idx])) if exit_idx < len(df) else ""
 
         trades.append(
             Trade(
                 symbol=symbol, direction=signal.direction, entry=signal.entry,
                 sl=signal.sl, tp=signal.tp, result=result, r_multiple=r_mult,
+                entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
             )
         )
 
@@ -73,25 +84,53 @@ def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250)
     return trades
 
 
-def _simulate_exit(signal, future_df: pd.DataFrame, fee_pct: float) -> tuple[str, float, int]:
+def _simulate_exit(
+    signal, future_df: pd.DataFrame, fee_pct: float, tie_break: str = "conservative"
+) -> tuple[str, float, int, bool]:
+    """tie_break menentukan hasil kalau SL & TP sama-sama kesentuh di 1 candle
+    (nggak bisa dipastikan urutan intrabar-nya tanpa data tick/lower-TF):
+      - "conservative": selalu LOSS (asumsi terburuk, ini perilaku lama)
+      - "optimistic":   selalu WIN (asumsi terbaik)
+      - "midpoint":     lihat posisi close candle relatif ke entry —
+                        kalau close lebih dekat ke arah TP, anggap WIN, kalau
+                        tidak, anggap LOSS. Kompromi lebih realistis daripada
+                        selalu pilih salah satu ekstrem.
+    """
     risk = abs(signal.entry - signal.sl)
     fee_r = (signal.entry * fee_pct) / risk if risk > 0 else 0.0
 
     for offset, (_, bar) in enumerate(future_df.iterrows()):
         if signal.direction == "LONG":
-            if bar["low"] <= signal.sl:
-                return "LOSS", -1.0 - fee_r, offset
-            if bar["high"] >= signal.tp:
-                reward = abs(signal.tp - signal.entry)
-                return "WIN", (reward / risk) - fee_r, offset
+            hit_sl = bar["low"] <= signal.sl
+            hit_tp = bar["high"] >= signal.tp
         else:
-            if bar["high"] >= signal.sl:
-                return "LOSS", -1.0 - fee_r, offset
-            if bar["low"] <= signal.tp:
-                reward = abs(signal.entry - signal.tp)
-                return "WIN", (reward / risk) - fee_r, offset
+            hit_sl = bar["high"] >= signal.sl
+            hit_tp = bar["low"] <= signal.tp
 
-    return "OPEN", 0.0, len(future_df)
+        if hit_sl and hit_tp:
+            win = _resolve_tie(tie_break, signal, bar)
+        elif hit_sl:
+            win = False
+        elif hit_tp:
+            win = True
+        else:
+            continue
+
+        if win:
+            reward = abs(signal.tp - signal.entry)
+            return "WIN", (reward / risk) - fee_r, offset, hit_sl and hit_tp
+        return "LOSS", -1.0 - fee_r, offset, hit_sl and hit_tp
+
+    return "OPEN", 0.0, len(future_df), False
+
+
+def _resolve_tie(tie_break: str, signal, bar) -> bool:
+    if tie_break == "optimistic":
+        return True
+    if tie_break == "midpoint":
+        toward_tp = abs(bar["close"] - signal.tp) < abs(bar["close"] - signal.sl)
+        return toward_tp
+    return False  # "conservative" (default, sama seperti perilaku lama)
 
 
 def summarize(trades: list[Trade]) -> dict:
@@ -99,10 +138,13 @@ def summarize(trades: list[Trade]) -> dict:
     if not closed:
         return {"total": 0, "win_rate": 0.0, "avg_r": 0.0}
     wins = [t for t in closed if t.result == "WIN"]
+    ties = [t for t in closed if t.both_touched]
     return {
         "total": len(closed),
         "win_rate": round(len(wins) / len(closed) * 100, 1),
         "avg_r": round(sum(t.r_multiple for t in closed) / len(closed), 3),
+        "tie_count": len(ties),
+        "tie_pct": round(len(ties) / len(closed) * 100, 1),
     }
 
 
@@ -118,12 +160,22 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
     summary = summarize(trades)
     print(json.dumps(summary, indent=2))
 
+    with open("trades_raw.json", "w") as f:
+        json.dump([t.__dict__ for t in trades], f, indent=2)
+
     with open("backtest_result.md", "w") as f:
         f.write(f"# Backtest — {symbol} ({timeframe})\n\n")
         f.write(f"- Total trade tertutup: **{summary['total']}**\n")
         f.write(f"- Win rate: **{summary['win_rate']}%**\n")
-        f.write(f"- Rata-rata R multiple: **{summary['avg_r']}**\n\n")
-        f.write("> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch.\n")
+        f.write(f"- Rata-rata R multiple: **{summary['avg_r']}**\n")
+        f.write(
+            f"- Trade dengan SL & TP kesentuh di candle yang sama: "
+            f"**{summary['tie_count']}** ({summary['tie_pct']}%)\n\n"
+        )
+        f.write(
+            "> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
+            "Detail per-trade ada di `trades_raw.json` (artifact upload).\n"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +200,8 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
             all_trades.extend(trades)
 
     combined = summarize(all_trades)
+    with open("trades_raw_batch.json", "w") as f:
+        json.dump([t.__dict__ for t in all_trades], f, indent=2)
     _write_batch_report(per_symbol_results, combined, timeframe)
 
 
@@ -170,11 +224,19 @@ def _write_batch_report(per_symbol_results, combined: dict, timeframe: str) -> N
     lines.append(f"- Total trade: **{combined['total']}**")
     lines.append(f"- Win rate gabungan: **{combined['win_rate']}%**")
     lines.append(f"- Avg R gabungan: **{combined['avg_r']}**")
+    lines.append(
+        f"- Trade dengan SL & TP kesentuh di candle yang sama (ambigu): "
+        f"**{combined['tie_count']}** ({combined['tie_pct']}%)"
+    )
     lines.append("")
     lines.append(
         "> ⚠️ Angka gabungan lebih bisa dipercaya dibanding angka per-simbol "
         "individual, tapi tetap bukan jaminan performa live — belum "
-        "memperhitungkan slippage atau funding rate."
+        "memperhitungkan slippage atau funding rate. Baris \"tie\" di atas "
+        "menunjukkan seberapa besar hasil bergantung pada asumsi tie-break "
+        "intrabar (lihat `backtest.intrabar_tie_break` di config.yaml) — "
+        "kalau persentasenya tinggi, coba jalankan ulang dengan opsi "
+        "`optimistic` atau `midpoint` untuk lihat sensitivitas hasilnya."
     )
 
     report = "\n".join(lines)
