@@ -53,6 +53,8 @@ confluence:
 
 backtest:
   fee_round_trip_pct: 0.001
+  intrabar_tie_break: "conservative"   # "conservative" | "optimistic" | "midpoint"
+                                       # dipakai saat 1 candle kena SL & TP sekaligus
 
 chart:
   width_px: 2000
