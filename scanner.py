@@ -227,61 +227,98 @@ def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> Sig
     """Skor 1 bar spesifik (index i) pakai indikator yang sudah dihitung
     sebelumnya lewat compute_indicators(). Dipisah dari score_symbol supaya
     backtest bisa hitung indikator sekali lalu skor banyak titik, bukan
-    hitung ulang tiap titik (lihat compute_indicators)."""
+    hitung ulang tiap titik (lihat compute_indicators).
+
+    Perubahan dari versi sebelumnya (lihat catatan di tiap bagian):
+    1. Arah (`direction`) sekarang ditentukan LEBIH DULU dari 3 indikator
+       trend-following inti (EMA200, MACD, Supertrend) — dan tidak bisa
+       dibalik lagi oleh RSI. Sebelumnya RSI oversold/overbought bisa
+       nambah skor ke sisi BERLAWANAN dari trend (reversal), padahal 3
+       indikator lain semuanya trend-following — campur aduk 2 filosofi
+       ini bikin sinyal saling melemahkan, terutama di aset volatile yang
+       sering oversold/overbought BERKEPANJANGAN karena trend lanjut,
+       bukan mau rebound.
+    2. RSI sekarang cuma MENGUATKAN arah yang sudah ditentukan (momentum
+       confirmation), dan RSI netral (40-60) tidak lagi otomatis kasih
+       bonus ke arah yang sudah unggul — sebelumnya ini cuma nambah angka
+       tanpa informasi baru, jadi bisa mendorong setup lemah lolos
+       threshold tanpa alasan yang valid.
+    3. Volume spike sekarang HARUS searah candle dengan sinyal (close>open
+       untuk LONG, close<open untuk SHORT) baru dapat bonus skor —
+       sebelumnya volume tinggi apa pun arah candle-nya otomatis dianggap
+       "menguatkan" sisi yang sedang unggul.
+    """
     w = cfg["scoring"]["weights"]
     price = df["close"].iloc[i]
+    open_price = df["open"].iloc[i]
 
     long_score, short_score = 0.0, 0.0
-    long_reasons: list[str] = []
-    short_reasons: list[str] = []
+    reasons: list[str] = []
 
-    if price > ind["ema200"].iloc[i]:
-        long_score += w["ema_trend"]
-        long_reasons.append("Harga di atas EMA200 (uptrend)")
+    # --- 1. Tentukan arah dari 3 indikator trend-following inti ---------
+    trend_long, trend_short = 0.0, 0.0
+
+    ema_up = price > ind["ema200"].iloc[i]
+    if ema_up:
+        trend_long += w["ema_trend"]
     else:
-        short_score += w["ema_trend"]
-        short_reasons.append("Harga di bawah EMA200 (downtrend)")
+        trend_short += w["ema_trend"]
 
-    if ind["macd_line"].iloc[i] > ind["signal_line"].iloc[i]:
-        long_score += w["macd_cross"]
-        long_reasons.append("MACD line di atas signal line (momentum naik)")
+    macd_up = ind["macd_line"].iloc[i] > ind["signal_line"].iloc[i]
+    if macd_up:
+        trend_long += w["macd_cross"]
     else:
-        short_score += w["macd_cross"]
-        short_reasons.append("MACD line di bawah signal line (momentum turun)")
+        trend_short += w["macd_cross"]
 
-    if ind["supertrend"].iloc[i] == 1:
-        long_score += w["supertrend"]
-        long_reasons.append("Supertrend menunjukkan uptrend")
+    st_up = ind["supertrend"].iloc[i] == 1
+    if st_up:
+        trend_long += w["supertrend"]
     else:
-        short_score += w["supertrend"]
-        short_reasons.append("Supertrend menunjukkan downtrend")
+        trend_short += w["supertrend"]
 
-    has_volume_spike = bool(ind["vol_spike"].iloc[i])
-    if has_volume_spike:
-        if long_score >= short_score:
-            long_score += w["volume_spike"]
-            long_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
-        else:
-            short_score += w["volume_spike"]
-            short_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
+    direction = "LONG" if trend_long >= trend_short else "SHORT"
+    long_score, short_score = trend_long, trend_short
 
+    if direction == "LONG":
+        reasons.append("Harga di atas EMA200 (uptrend)" if ema_up else "Harga di bawah EMA200 (tapi indikator lain condong LONG)")
+        reasons.append("MACD line di atas signal line (momentum naik)" if macd_up else "MACD line di bawah signal line (tapi indikator lain condong LONG)")
+        reasons.append("Supertrend menunjukkan uptrend" if st_up else "Supertrend menunjukkan downtrend (tapi indikator lain condong LONG)")
+    else:
+        reasons.append("Harga di bawah EMA200 (downtrend)" if not ema_up else "Harga di atas EMA200 (tapi indikator lain condong SHORT)")
+        reasons.append("MACD line di bawah signal line (momentum turun)" if not macd_up else "MACD line di atas signal line (tapi indikator lain condong SHORT)")
+        reasons.append("Supertrend menunjukkan downtrend" if not st_up else "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)")
+
+    # --- 2. RSI cuma menguatkan arah yang sudah ditentukan, tidak pernah
+    #        melawannya. RSI netral (40-60) tidak dapat bonus sama sekali
+    #        karena tidak informatif untuk arah mana pun. -----------------
     r = ind["rsi"].iloc[i]
-    if 40 <= r <= 60:
-        long_score += w["rsi_confluence"] / 2
-        short_score += w["rsi_confluence"] / 2
-        long_reasons.append(f"RSI netral ({r:.0f})")
-        short_reasons.append(f"RSI netral ({r:.0f})")
-    elif r < 40:
+    if direction == "LONG" and 50 < r <= 70:
         long_score += w["rsi_confluence"]
-        long_reasons.append(f"RSI oversold ({r:.0f}), potensi rebound")
-    elif r > 60:
+        reasons.append(f"RSI ({r:.0f}) menguatkan momentum naik")
+    elif direction == "SHORT" and 30 <= r < 50:
         short_score += w["rsi_confluence"]
-        short_reasons.append(f"RSI overbought ({r:.0f}), potensi koreksi")
-
-    if long_score >= short_score:
-        direction, final_score, reasons = "LONG", long_score, long_reasons
+        reasons.append(f"RSI ({r:.0f}) menguatkan momentum turun")
+    elif direction == "LONG" and r > 70:
+        reasons.append(f"RSI ({r:.0f}) overbought — tidak dapat bonus, hati-hati chasing")
+    elif direction == "SHORT" and r < 30:
+        reasons.append(f"RSI ({r:.0f}) oversold — tidak dapat bonus, hati-hati chasing")
     else:
-        direction, final_score, reasons = "SHORT", short_score, short_reasons
+        reasons.append(f"RSI netral ({r:.0f}), tidak menambah skor")
+
+    # --- 3. Volume spike cuma dapat bonus kalau candle-nya searah sinyal -
+    has_volume_spike = bool(ind["vol_spike"].iloc[i])
+    candle_bullish = price > open_price
+    candle_bearish = price < open_price
+    if has_volume_spike and direction == "LONG" and candle_bullish:
+        long_score += w["volume_spike"]
+        reasons.append("Volume spike di candle bullish (menguatkan sinyal LONG)")
+    elif has_volume_spike and direction == "SHORT" and candle_bearish:
+        short_score += w["volume_spike"]
+        reasons.append("Volume spike di candle bearish (menguatkan sinyal SHORT)")
+    elif has_volume_spike:
+        reasons.append("Volume spike terdeteksi tapi arah candle tidak sesuai sinyal — diabaikan")
+
+    final_score = long_score if direction == "LONG" else short_score
 
     if final_score < cfg["scoring"]["min_score_to_trigger"]:
         return SignalResult(symbol=symbol, direction="NONE", score=final_score, reasons=reasons)
