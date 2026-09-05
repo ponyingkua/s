@@ -35,7 +35,7 @@ scoring:
 risk:
   atr_multiplier_sl: 1.5
   risk_reward_min: 1.5
-  max_signals_per_run: 10
+  max_signals_per_run: 5
 
 notify:
   telegram:
