@@ -29,7 +29,6 @@ from scanner import (
     format_signal_message,
     score_symbol,
     send_telegram_photo,
-    supertrend,
 )
 
 # ============================================================
@@ -495,9 +494,9 @@ def build_chart(
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
     ema_full = ema(df["close"], ema_period).tail(n_show).reset_index(drop=True)
-    st_level_full, st_trend_full = _supertrend_trailing(df, st_period, st_mult)
-    st_level_full = st_level_full.tail(n_show).reset_index(drop=True)
-    st_trend_full = st_trend_full.tail(n_show).reset_index(drop=True)
+    st_level_work, st_trend_work = _supertrend_trailing(work_df, st_period, st_mult)
+    st_level_full = st_level_work.tail(n_show).reset_index(drop=True)
+    st_trend_full = st_trend_work.tail(n_show).reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
