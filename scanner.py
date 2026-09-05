@@ -36,6 +36,33 @@ Perubahan v3.2 (fokus kualitas sinyal & setup):
    struktur jauh (mis. tren EXTENDED). TP tetap proporsional risk_reward_min
    terhadap SL yang baru ini, jadi kontrak reward:risk tidak berubah.
 
+Perubahan v3.3 (dari analisis trades_raw_batch.json, 175 trade closed,
+17 Jul - 5 Sep 2026, backtest 1h, regime filter v3.2 aktif):
+9. Setup bonus SEKARANG per-ARAH, bukan flat sama untuk LONG & SHORT.
+   Data batch nunjukkin setup yang SAMA bisa berkebalikan hasilnya
+   tergantung arah, mis. EXTENDED: LONG avg R +0.251 (n=39, bagus) vs
+   SHORT avg R -0.714 (n=15, terburuk dari semua kombinasi). PULLBACK:
+   LONG ~0.00 (n=19, netral) vs SHORT -0.586 (n=11, buruk). Bahkan
+   BREAKOUT, setup terbaik untuk LONG (+0.257, n=58), cuma breakeven
+   untuk SHORT (-0.043, n=15) — semua 4 jenis setup SHORT ada di
+   angka breakeven-ke-bawah, tidak ada satupun yang jelas profitable.
+   Lihat get_setup_bonus() dan scoring.setup_bonus.{long,short} di config.
+   Skema lama (flat) tetap didukung sebagai fallback kalau config belum
+   diupdate.
+10. Market regime filter sekarang bisa ASIMETRIS per arah (short_mode /
+    long_mode di regime_filter config). Default baru: SHORT cuma lolos
+    kalau regime BTCUSDT sudah terkonfirmasi "BEAR" (bear_only) — bukan
+    lagi "asal bukan BULL". Alasan: breakdown kronologis data batch
+    nunjukkin SHORT tetap kalah (13-29% win rate, avg R -0.31 s/d -0.70)
+    bahkan di periode yang regime-nya cuma "NEUTRAL" (bukan BULL), artinya
+    filter lama tidak cukup ketat menangkap kondisi market yang sebenarnya
+    merugikan SHORT — dan makin dalam minusnya di paruh kedua periode
+    (avg R -0.704) pas trend naik lagi jelas-jelasnya. LONG tidak diubah
+    (masih lolos asal bukan BEAR): LONG sempat lemah juga di paruh pertama
+    (avg R -0.152, periode choppy), TAPI net positif di agregat penuh
+    (+0.192) dan tidak menunjukkan pola separah/sekonsisten SHORT yang
+    minus di KEDUA paruh waktu. Lihat passes_regime_filter().
+
 Dijalankan lewat: python scanner.py --out synaptic_candidates.json
 """
 from __future__ import annotations
@@ -372,6 +399,54 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     return "CONTINUATION"
 
 
+def get_setup_bonus(cfg: dict, direction: str, setup_type: str) -> float:
+    """Ambil bonus/penalti skor setup — skema v3.3 per-ARAH.
+
+    Config baru: scoring.setup_bonus.long.<setup> / .short.<setup>, karena
+    setup yang sama terbukti (lihat trades_raw_batch.json) bisa sangat
+    berbeda hasilnya tergantung arah (contoh paling ekstrem: EXTENDED
+    LONG +0.251 avg R vs EXTENDED SHORT -0.714 avg R — kebalikan total).
+    Kalau config masih pakai skema lama (flat, key langsung nama setup
+    tanpa "long"/"short"), fallback ke situ supaya tidak breaking change."""
+    sb_cfg = cfg["scoring"].get("setup_bonus", {})
+    if "long" in sb_cfg or "short" in sb_cfg:
+        dir_cfg = sb_cfg.get(direction.lower(), {})
+        return dir_cfg.get(setup_type.lower(), 0)
+    return sb_cfg.get(setup_type.lower(), 0)  # skema lama (v3.2 ke bawah)
+
+
+def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
+    """Cek apakah arah sinyal ini boleh lolos rezim makro BTCUSDT saat ini.
+
+    v3.3: SHORT & LONG sekarang bisa punya MODE filter yang beda (tidak
+    otomatis simetris), diatur lewat regime_filter.short_mode / long_mode:
+
+    - short_mode "bear_only" (DEFAULT baru): SHORT cuma lolos kalau regime
+      sudah terkonfirmasi "BEAR" — NEUTRAL maupun BULL berdua memblokir.
+      Ini menjawab temuan data: SHORT tetap rugi (win rate 13-29%, avg R
+      negatif di semua jenis setup) bahkan saat regime cuma "NEUTRAL".
+    - short_mode "not_bull" (perilaku lama v3.2, tersedia kalau mau
+      dibandingkan lagi setelah ada data di kondisi BEAR sungguhan):
+      SHORT diblokir cuma kalau regime == "BULL".
+    - long_mode "not_bear" (DEFAULT, tidak berubah dari v3.2): LONG
+      diblokir cuma kalau regime == "BEAR".
+    - long_mode "bull_only" (opsional/eksperimental, belum ada bukti data
+      yang menuntut ini): LONG cuma lolos kalau regime sudah "BULL".
+    """
+    regime_cfg = cfg.get("regime_filter", {})
+    if direction == "SHORT":
+        mode = regime_cfg.get("short_mode", "bear_only")
+        if mode == "bear_only":
+            return regime == "BEAR"
+        return regime != "BULL"  # mode == "not_bull"
+    if direction == "LONG":
+        mode = regime_cfg.get("long_mode", "not_bear")
+        if mode == "bull_only":
+            return regime == "BULL"
+        return regime != "BEAR"  # mode == "not_bear"
+    return True
+
+
 def score_at(
     df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict, timeframe: str = ""
 ) -> SignalResult:
@@ -501,7 +576,7 @@ def score_at(
 
     # --- 5. Setup Engine: label jenis setup + bonus/penalti skor ---------
     setup_type = classify_setup(df, ind, i, direction, cfg)
-    setup_bonus = cfg["scoring"].get("setup_bonus", {}).get(setup_type.lower(), 0)
+    setup_bonus = get_setup_bonus(cfg, direction, setup_type)
     if direction == "LONG":
         long_score += setup_bonus
     else:
@@ -866,10 +941,8 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
                     continue
-                if regime == "BULL" and signal.direction == "SHORT":
-                    continue  # lawan arus BTC bull -> data menunjukkan ini secara sistematis buruk
-                if regime == "BEAR" and signal.direction == "LONG":
-                    continue
+                if not passes_regime_filter(signal.direction, regime, cfg):
+                    continue  # lawan arus / belum terkonfirmasi searah rezim -> lihat passes_regime_filter()
                 if not passes_risk_filter(signal, cfg):
                     continue
                 if is_in_cooldown(state, kline.symbol, signal.direction, tf, cooldown_hours):
