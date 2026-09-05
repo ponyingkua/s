@@ -51,7 +51,7 @@ scoring:
     pullback: 10         # harga dekat/menyentuh EMA200 sebelum lanjut searah tren
     continuation: 0      # tren jalan normal, bukan di titik entry istimewa
     extended: -15         # harga sudah terlalu jauh dari EMA200 — rawan exhaustion
-  min_score_to_trigger: 85
+  min_score_to_trigger: 75
 
 risk:
   atr_multiplier_sl: 1.5
