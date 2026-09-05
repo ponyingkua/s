@@ -158,20 +158,53 @@ def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
              alpha=0.80, zorder=3)
 
 
-def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
-                      period: int, multiplier) -> None:
+def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
+    """Hitung level Supertrend versi 'trailing band' (band cuma bergerak
+    searah tren seperti trailing-stop, tidak dihitung ulang dari nol tiap
+    candle) supaya garis yang digambar mulus, bukan zig-zag. Dipakai khusus
+    untuk visual chart -- tidak memengaruhi skor/sinyal di scanner.py."""
     hl2 = (df["high"] + df["low"]) / 2
     atr_val = atr(df, period)
-    upper = hl2 + multiplier * atr_val
-    lower = hl2 - multiplier * atr_val
-    level = lower.where(st_dir == 1, upper)
+    basic_upper = hl2 + multiplier * atr_val
+    basic_lower = hl2 - multiplier * atr_val
 
-    x = range(len(df))
-    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.1, alpha=0.75,
-             drawstyle="steps-mid", solid_joinstyle="round",
+    close = df["close"]
+    n = len(df)
+    final_upper = basic_upper.copy()
+    final_lower = basic_lower.copy()
+    trend = pd.Series(index=df.index, dtype=int)
+    trend.iloc[0] = 1
+
+    for i in range(1, n):
+        if basic_upper.iloc[i] < final_upper.iloc[i - 1] or close.iloc[i - 1] > final_upper.iloc[i - 1]:
+            final_upper.iloc[i] = basic_upper.iloc[i]
+        else:
+            final_upper.iloc[i] = final_upper.iloc[i - 1]
+
+        if basic_lower.iloc[i] > final_lower.iloc[i - 1] or close.iloc[i - 1] < final_lower.iloc[i - 1]:
+            final_lower.iloc[i] = basic_lower.iloc[i]
+        else:
+            final_lower.iloc[i] = final_lower.iloc[i - 1]
+
+        if close.iloc[i] > final_upper.iloc[i - 1]:
+            trend.iloc[i] = 1
+        elif close.iloc[i] < final_lower.iloc[i - 1]:
+            trend.iloc[i] = -1
+        else:
+            trend.iloc[i] = trend.iloc[i - 1]
+
+    level = final_lower.where(trend == 1, final_upper)
+    return level, trend
+
+
+def _draw_supertrend(ax, level: pd.Series, trend: pd.Series,
+                      period: int, multiplier) -> None:
+    x = range(len(level))
+    ax.plot(x, level.where(trend == 1), color=ST_UP, linewidth=1.1, alpha=0.75,
+             drawstyle="steps-post", solid_joinstyle="round",
              label=f"Supertrend {period}/{multiplier}", zorder=3)
-    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.1, alpha=0.75,
-             drawstyle="steps-mid", solid_joinstyle="round", zorder=3)
+    ax.plot(x, level.where(trend == -1), color=ST_DOWN, linewidth=1.1, alpha=0.75,
+             drawstyle="steps-post", solid_joinstyle="round", zorder=3)
 
 
 # ============================================================
@@ -399,6 +432,8 @@ def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int) -> None
     ax.annotate(
         "", xy=(x_end, tp_price), xytext=(x_start, current_price),
         arrowprops=dict(arrowstyle="-|>", color=color, lw=1.3, alpha=0.75,
+                          linestyle=(0, (5, 3)),
+                          connectionstyle="arc3,rad=0.35",
                           shrinkA=1, shrinkB=1, mutation_scale=10),
         zorder=9,
     )
@@ -460,7 +495,9 @@ def build_chart(
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
     ema_full = ema(df["close"], ema_period).tail(n_show).reset_index(drop=True)
-    st_dir_full = supertrend(df, st_period, st_mult).tail(n_show).reset_index(drop=True)
+    st_level_full, st_trend_full = _supertrend_trailing(df, st_period, st_mult)
+    st_level_full = st_level_full.tail(n_show).reset_index(drop=True)
+    st_trend_full = st_trend_full.tail(n_show).reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
@@ -499,7 +536,7 @@ def build_chart(
     colors = _draw_candles(ax_price, plot_df)
     ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.6,
                   solid_capstyle="round", label=f"EMA {ema_period}", zorder=4)
-    _draw_supertrend(ax_price, plot_df, st_dir_full, st_period, st_mult)
+    _draw_supertrend(ax_price, st_level_full, st_trend_full, st_period, st_mult)
 
     last_x = len(plot_df) - 1
 
