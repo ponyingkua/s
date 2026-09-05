@@ -1,74 +1,73 @@
 [
   {
-    "symbol": "MUUSDT",
+    "symbol": "ZKCUSDT",
     "direction": "LONG",
-    "score": 90.0,
+    "score": 100.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (49)"
+      "RSI (61) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)"
     ],
-    "entry": 1015.6,
-    "sl": 1014.165479,
-    "tp": 1017.751781
+    "entry": 0.04964,
+    "sl": 0.049256,
+    "tp": 0.050216
   },
   {
-    "symbol": "AMDUSDT",
+    "symbol": "XMRUSDT",
     "direction": "LONG",
-    "score": 90.0,
+    "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)",
-      "RSI netral (56)"
+      "RSI (70) menguatkan momentum naik"
     ],
-    "entry": 475.88,
-    "sl": 475.488563,
-    "tp": 476.467156
+    "entry": 552.22,
+    "sl": 547.007558,
+    "tp": 560.038663
   },
   {
-    "symbol": "SUSHIUSDT",
+    "symbol": "DOTUSDT",
     "direction": "LONG",
-    "score": 80.0,
+    "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)"
+      "RSI (69) menguatkan momentum naik"
     ],
-    "entry": 0.2538,
-    "sl": 0.244756,
-    "tp": 0.267366
+    "entry": 0.9241,
+    "sl": 0.916884,
+    "tp": 0.934924
   },
   {
-    "symbol": "UNIUSDT",
+    "symbol": "ROSEUSDT",
     "direction": "LONG",
-    "score": 80.0,
+    "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)"
+      "RSI (59) menguatkan momentum naik"
     ],
-    "entry": 6.913,
-    "sl": 6.775644,
-    "tp": 7.119034
+    "entry": 0.006814,
+    "sl": 0.006741,
+    "tp": 0.006924
   },
   {
-    "symbol": "STXUSDT",
+    "symbol": "FETUSDT",
     "direction": "LONG",
-    "score": 80.0,
+    "score": 85.0,
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "Volume spike terdeteksi (menguatkan sinyal)"
+      "RSI (53) menguatkan momentum naik"
     ],
-    "entry": 0.267,
-    "sl": 0.264536,
-    "tp": 0.270696
+    "entry": 0.1653,
+    "sl": 0.163864,
+    "tp": 0.167454
   }
 ]
