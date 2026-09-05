@@ -3,10 +3,18 @@ exchange:
   quote_asset: USDT
   min_volume_usdt_24h: 5000000
 
+# Semua timeframe di bawah ini sekarang di-scan SENDIRI-SENDIRI (independen),
+# bukan cuma timeframes[0] sebagai TF utama. Setup bisa muncul dari TF
+# manapun yang lolos threshold skor.
 timeframes:
   - "15m"
   - "1h"
   - "4h"
+
+scanning:
+  cooldown_hours: 4
+  state_path: "signal_state.json"
+  klines_limit: 300   # jumlah candle historis yang diambil per symbol per TF
 
 indicators:
   ema:
@@ -22,6 +30,11 @@ indicators:
     period: 14
   atr:
     period: 14
+  adx:
+    period: 14
+  volume_spike:
+    lookback: 20     # sebelumnya hardcoded di kode, sekarang bisa dituning di sini
+    factor: 1.5
 
 scoring:
   weights:
@@ -30,12 +43,24 @@ scoring:
     supertrend: 25
     volume_spike: 15
     rsi_confluence: 20
+    mtf_agreement: 15   # bonus skor PER timeframe lain yang searah (menggantikan filter biner lama)
+  setup_bonus:
+    breakout: 10        # harga menembus struktur N-bar terakhir searah sinyal
+    pullback: 10         # harga dekat/menyentuh EMA200 sebelum lanjut searah tren
+    continuation: 0      # tren jalan normal, bukan di titik entry istimewa
+    extended: -15         # harga sudah terlalu jauh dari EMA200 — rawan exhaustion
   min_score_to_trigger: 75
 
 risk:
   atr_multiplier_sl: 1.5
   risk_reward_min: 1.5
   max_signals_per_run: 5
+  adx_min: 20   # di bawah ambang ini pasar dianggap choppy/sideways, sinyal ditolak duluan
+
+setup_engine:
+  structure_lookback: 20    # jumlah bar ke belakang buat cek breakout struktur
+  pullback_atr_mult: 1.0    # <= sekian ATR dari EMA200 dianggap PULLBACK
+  extended_atr_mult: 3.5    # >= sekian ATR dari EMA200 dianggap EXTENDED
 
 notify:
   telegram:
@@ -43,20 +68,13 @@ notify:
     bot_token_env: "TELEGRAM_BOT_TOKEN"
     chat_id_env: "TELEGRAM_CHAT_ID"
 
-scanning:
-  cooldown_hours: 4
-  state_path: "signal_state.json"
-
-confluence:
-  require_higher_tf: true     # tolak sinyal kalau timeframe lebih tinggi melawan arah
-  higher_timeframe: "1h"      # kosongkan ("") buat auto-pakai timeframes[-1]
-
 backtest:
   fee_round_trip_pct: 0.001
   intrabar_tie_break: "conservative"   # "conservative" | "optimistic" | "midpoint"
                                        # dipakai saat 1 candle kena SL & TP sekaligus
 
 chart:
+  auto_generate: true
   width_px: 2000
   height_ratio: 0.45       # tinggi = width * ratio → 2000x900 (rasio 20:9 ≈ 2.22:1)
   candles_shown: 120       # jumlah candle terakhir yang ditampilkan di chart
