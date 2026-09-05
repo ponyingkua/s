@@ -141,7 +141,7 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return tr.ewm(alpha=1 / period, adjust=False).mean()
 
 
-def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 3.0) -> pd.Series:
+def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 2.5) -> pd.Series:
     hl2 = (df["high"] + df["low"]) / 2
     atr_val = atr(df, period)
     upper_band = hl2 + multiplier * atr_val
@@ -484,6 +484,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         primary_tf = cfg["timeframes"][0]
         klines = await client.get_klines_many(active_symbols, primary_tf)
 
+        candidates: list[tuple[SignalResult, "Kline"]] = []
         for kline in klines:
             signal = score_symbol(kline.df, kline.symbol, cfg)
             if signal.direction == "NONE":
@@ -493,6 +494,14 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             if is_in_cooldown(state, kline.symbol, signal.direction, cooldown_hours):
                 continue
 
+            candidates.append((signal, kline))
+
+        # Ambil hanya yang terbaik (score tertinggi), bukan sekadar yang
+        # pertama ditemukan saat iterasi symbol.
+        candidates.sort(key=lambda c: c[0].score, reverse=True)
+        top_candidates = candidates[: cfg["risk"]["max_signals_per_run"]]
+
+        for signal, kline in top_candidates:
             results.append(signal.__dict__)
             mark_signaled(state, kline.symbol, signal.direction)
 
@@ -512,9 +521,6 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     chart_path,
                 )
                 chart_paths.append(chart_path)
-
-            if len(results) >= cfg["risk"]["max_signals_per_run"]:
-                break
 
     save_state(state_path, state)
 
