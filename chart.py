@@ -80,7 +80,7 @@ MAX_CANDLES_BY_TF = {
 STRUCTURE_CONTEXT = 30
 MAX_BOS_EVENTS = 1
 MIN_BOS_GAP_FRACTION = 0.10
-MIN_LABEL_GAP_FRACTION = 0.07
+MIN_LABEL_GAP_FRACTION = 0.18
 
 
 def get_candles_shown(timeframe: str, cfg: dict) -> int:
@@ -369,20 +369,16 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
         marker_color = CONFIRM_BULL if is_bull else CONFIRM_BEAR
         if is_bull:
             ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=marker_color,
-                     markersize=5.0, markeredgecolor="#000000", markeredgewidth=0.5,
-                     zorder=10, clip_on=False)
+                     markersize=5.0, zorder=10, clip_on=False)
             label_y = max(ev["level"], high[idx_px]) + pad_label
         else:
             ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=marker_color,
-                     markersize=5.0, markeredgecolor="#000000", markeredgewidth=0.5,
-                     zorder=10, clip_on=False)
+                     markersize=5.0, zorder=10, clip_on=False)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
-        ax.text(idx_px + 0.9, label_y, "BOS", color="#050505",
+        ax.text(idx_px + 0.9, label_y, "BOS", color=color,
                 fontsize=5.8, fontweight="bold",
                 ha="left", va="center",
-                bbox=dict(facecolor=color, edgecolor="none",
-                          boxstyle="round,pad=0.12", alpha=0.95),
                 zorder=9, clip_on=False)
 
 
