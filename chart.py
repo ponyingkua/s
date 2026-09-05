@@ -38,10 +38,10 @@ from scanner import (
 
 BG = "#f5f5f7"
 PANEL = "#f5f5f7"
-GRID = "#b8b8c0"
+GRID = "#9a9aa5"
 TEXT = "#1a1a1e"
-AXIS = "#5a5a63"
-SPINE = "#c0c0c6"
+AXIS = "#3f3f47"
+SPINE = "#a8a8b2"
 
 UP = "#26a69a"
 DOWN = "#ef5350"
@@ -57,7 +57,7 @@ SL = "#c62828"
 
 VOLUME_MA = "#e65100"
 
-STRUCT_TEXT = "#c9c9d1"
+STRUCT_TEXT = "#5c5c68"
 DEMAND_FILL = "#1e7a52"
 DEMAND_EDGE = "#26a69a"
 SUPPLY_FILL = "#7a2626"
@@ -150,12 +150,12 @@ def _draw_candles(ax, df: pd.DataFrame) -> list:
 
 def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
     for i in range(len(df)):
-        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.30,
+        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
                width=CANDLE_WIDTH, linewidth=0, zorder=2)
 
     vol_ma = df["volume"].rolling(20, min_periods=1).mean()
     ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
-             alpha=0.70, zorder=3)
+             alpha=0.80, zorder=3)
 
 
 def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
@@ -167,12 +167,11 @@ def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
     level = lower.where(st_dir == 1, upper)
 
     x = range(len(df))
-    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.6,
-             drawstyle="steps-mid", solid_joinstyle="round", solid_capstyle="round",
-             label=f"Supertrend {period}/{multiplier}", zorder=3.5)
-    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.6,
-             drawstyle="steps-mid", solid_joinstyle="round", solid_capstyle="round",
-             zorder=3.5)
+    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.1, alpha=0.75,
+             drawstyle="steps-mid", solid_joinstyle="round",
+             label=f"Supertrend {period}/{multiplier}", zorder=3)
+    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.1, alpha=0.75,
+             drawstyle="steps-mid", solid_joinstyle="round", zorder=3)
 
 
 # ============================================================
@@ -490,7 +489,7 @@ def build_chart(
 
     for ax in (ax_price, ax_vol):
         ax.set_facecolor(PANEL)
-        ax.grid(True, linestyle="-", alpha=0.6, color=GRID, linewidth=0.5)
+        ax.grid(True, linestyle="-", alpha=0.8, color=GRID, linewidth=0.5)
         ax.set_axisbelow(True)
         ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
         for side in ("top", "right"):
