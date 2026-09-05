@@ -85,7 +85,8 @@ class BinanceFuturesClient:
         )
         for col in ("open", "high", "low", "close", "volume"):
             df[col] = df[col].astype(float)
-        df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
+        df["open_time"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
+        df["close_time"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
         return Kline(symbol=symbol, timeframe=interval, df=df)
 
     async def get_klines_many(
@@ -93,6 +94,22 @@ class BinanceFuturesClient:
     ) -> list[Kline]:
         tasks = [self.get_klines(s, interval, limit) for s in symbols]
         return await asyncio.gather(*tasks, return_exceptions=False)
+
+
+def drop_unclosed_candle(df: pd.DataFrame) -> pd.DataFrame:
+    """Buang candle terakhir kalau itu masih 'sedang berjalan' (belum closed).
+
+    Binance selalu menyertakan candle yang sedang terbentuk sebagai baris
+    terakhir kalau di-query real-time. Kalau ini tidak dibuang, skor/sinyal
+    dihitung dari harga yang masih bisa berubah kapan saja sampai candle itu
+    benar-benar tutup — sumber utama sinyal yang "berubah-ubah" tiap scan."""
+    if df.empty or "close_time" not in df.columns:
+        return df
+    now = pd.Timestamp.now(tz="UTC")
+    last_close_time = df["close_time"].iloc[-1]
+    if pd.notna(last_close_time) and last_close_time > now:
+        return df.iloc[:-1].reset_index(drop=True)
+    return df
 
 
 # ---------------------------------------------------------------------------
@@ -179,55 +196,67 @@ class SignalResult:
     tp: float | None = None
 
 
-def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
-    w = cfg["scoring"]["weights"]
+def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
+    """Hitung semua indikator SEKALI di seluruh histori yang tersedia.
+
+    Krusial buat akurasi: indikator berbasis EWM (EMA, MACD, Supertrend, ATR)
+    butuh histori panjang supaya nilainya konvergen ke rata-rata yang stabil,
+    bukan bias ke titik mulai data yang arbitrer. Backtest versi sebelumnya
+    memotong ulang window 200 bar tiap iterasi lalu menghitung EMA200 dari
+    nol di situ — 200 bar jelas tidak cukup buat EMA span=200 konvergen,
+    hasilnya bias dan kadang salah arah dibanding EMA200 "asli"."""
     close = df["close"]
+    ind_cfg = cfg["indicators"]
 
-    ema200 = ema(close, cfg["indicators"]["ema"]["period"])
     macd_line, signal_line, _ = macd(
-        close,
-        cfg["indicators"]["macd"]["fast"],
-        cfg["indicators"]["macd"]["slow"],
-        cfg["indicators"]["macd"]["signal"],
+        close, ind_cfg["macd"]["fast"], ind_cfg["macd"]["slow"], ind_cfg["macd"]["signal"],
     )
-    st = supertrend(
-        df,
-        cfg["indicators"]["supertrend"]["period"],
-        cfg["indicators"]["supertrend"]["multiplier"],
-    )
-    rsi_val = rsi(close, cfg["indicators"]["rsi"]["period"])
-    vol_spike = volume_spike(df["volume"])
-    atr_val = atr(df, cfg["indicators"]["atr"]["period"])
 
-    last = -1
-    price = close.iloc[last]
+    return {
+        "ema200": ema(close, ind_cfg["ema"]["period"]),
+        "macd_line": macd_line,
+        "signal_line": signal_line,
+        "supertrend": supertrend(df, ind_cfg["supertrend"]["period"], ind_cfg["supertrend"]["multiplier"]),
+        "rsi": rsi(close, ind_cfg["rsi"]["period"]),
+        "vol_spike": volume_spike(df["volume"]),
+        "atr": atr(df, ind_cfg["atr"]["period"]),
+    }
+
+
+def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> SignalResult:
+    """Skor 1 bar spesifik (index i) pakai indikator yang sudah dihitung
+    sebelumnya lewat compute_indicators(). Dipisah dari score_symbol supaya
+    backtest bisa hitung indikator sekali lalu skor banyak titik, bukan
+    hitung ulang tiap titik (lihat compute_indicators)."""
+    w = cfg["scoring"]["weights"]
+    price = df["close"].iloc[i]
 
     long_score, short_score = 0.0, 0.0
     long_reasons: list[str] = []
     short_reasons: list[str] = []
 
-    if price > ema200.iloc[last]:
+    if price > ind["ema200"].iloc[i]:
         long_score += w["ema_trend"]
         long_reasons.append("Harga di atas EMA200 (uptrend)")
     else:
         short_score += w["ema_trend"]
         short_reasons.append("Harga di bawah EMA200 (downtrend)")
 
-    if macd_line.iloc[last] > signal_line.iloc[last]:
+    if ind["macd_line"].iloc[i] > ind["signal_line"].iloc[i]:
         long_score += w["macd_cross"]
         long_reasons.append("MACD line di atas signal line (momentum naik)")
     else:
         short_score += w["macd_cross"]
         short_reasons.append("MACD line di bawah signal line (momentum turun)")
 
-    if st.iloc[last] == 1:
+    if ind["supertrend"].iloc[i] == 1:
         long_score += w["supertrend"]
         long_reasons.append("Supertrend menunjukkan uptrend")
     else:
         short_score += w["supertrend"]
         short_reasons.append("Supertrend menunjukkan downtrend")
 
-    has_volume_spike = bool(vol_spike.iloc[last])
+    has_volume_spike = bool(ind["vol_spike"].iloc[i])
     if has_volume_spike:
         if long_score >= short_score:
             long_score += w["volume_spike"]
@@ -236,7 +265,7 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
             short_score += w["volume_spike"]
             short_reasons.append("Volume spike terdeteksi (menguatkan sinyal)")
 
-    r = rsi_val.iloc[last]
+    r = ind["rsi"].iloc[i]
     if 40 <= r <= 60:
         long_score += w["rsi_confluence"] / 2
         short_score += w["rsi_confluence"] / 2
@@ -257,7 +286,7 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
     if final_score < cfg["scoring"]["min_score_to_trigger"]:
         return SignalResult(symbol=symbol, direction="NONE", score=final_score, reasons=reasons)
 
-    sl_dist = atr_val.iloc[last] * cfg["risk"]["atr_multiplier_sl"]
+    sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
     if direction == "LONG":
         sl = price - sl_dist
         tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
@@ -274,6 +303,16 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
         sl=round(sl, 6),
         tp=round(tp, 6),
     )
+
+
+def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
+    """Wrapper: hitung indikator di seluruh df lalu skor bar TERAKHIR.
+    Dipakai scanner (live) & chart.py — interface tidak berubah dari versi
+    sebelumnya. Untuk backtest, pakai compute_indicators()+score_at()
+    langsung (lihat backtest.py) supaya indikator dihitung sekali, bukan
+    berulang tiap titik simulasi."""
+    ind = compute_indicators(df, cfg)
+    return score_at(df, ind, len(df) - 1, symbol, cfg)
 
 
 # ---------------------------------------------------------------------------
@@ -333,6 +372,33 @@ def mark_signaled(state: dict, symbol: str, direction: str) -> None:
         "direction": direction,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Konfluensi multi-timeframe
+# ---------------------------------------------------------------------------
+
+def higher_tf_bias(df: pd.DataFrame, cfg: dict) -> str:
+    """Tentukan bias tren di timeframe lebih tinggi, pakai EMA200 + Supertrend
+    (dua indikator trend-following paling kuat di scoring). Dipakai buat
+    filter konfluensi: tolak sinyal LONG di TF utama kalau TF lebih tinggi
+    masih downtrend, dan sebaliknya — mengurangi sinyal palsu saat market
+    sedang choppy/melawan tren besar."""
+    closed = drop_unclosed_candle(df)
+    if len(closed) < 2:
+        return "NEUTRAL"
+
+    ind = compute_indicators(closed, cfg)
+    i = len(closed) - 1
+    price = closed["close"].iloc[i]
+    ema_up = price > ind["ema200"].iloc[i]
+    st_up = ind["supertrend"].iloc[i] == 1
+
+    if ema_up and st_up:
+        return "LONG"
+    if not ema_up and not st_up:
+        return "SHORT"
+    return "NEUTRAL"  # EMA & Supertrend tidak sepakat di TF ini — jangan pakai buat konfirmasi
 
 
 # ---------------------------------------------------------------------------
@@ -486,7 +552,10 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
         candidates: list[tuple[SignalResult, "Kline"]] = []
         for kline in klines:
-            signal = score_symbol(kline.df, kline.symbol, cfg)
+            closed_df = drop_unclosed_candle(kline.df)
+            if len(closed_df) < 2:
+                continue
+            signal = score_symbol(closed_df, kline.symbol, cfg)
             if signal.direction == "NONE":
                 continue
             if not passes_risk_filter(signal, cfg):
@@ -495,6 +564,22 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 continue
 
             candidates.append((signal, kline))
+
+        # Filter konfluensi multi-timeframe: cuma fetch TF lebih tinggi buat
+        # kandidat yang sudah lolos filter primer (efisien, bukan semua simbol).
+        confluence_cfg = cfg.get("confluence", {})
+        if confluence_cfg.get("require_higher_tf", False) and candidates:
+            htf = confluence_cfg.get("higher_timeframe") or (
+                cfg["timeframes"][-1] if len(cfg["timeframes"]) > 1 else primary_tf
+            )
+            if htf != primary_tf:
+                htf_symbols = list({kline.symbol for _, kline in candidates})
+                htf_klines = await client.get_klines_many(htf_symbols, htf)
+                htf_bias_map = {k.symbol: higher_tf_bias(k.df, cfg) for k in htf_klines}
+                candidates = [
+                    (signal, kline) for signal, kline in candidates
+                    if htf_bias_map.get(kline.symbol) == signal.direction
+                ]
 
         # Ambil hanya yang terbaik (score tertinggi), bukan sekadar yang
         # pertama ditemukan saat iterasi symbol.
