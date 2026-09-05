@@ -49,7 +49,7 @@
   },
   "DOGEUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:50.048179+00:00"
+    "timestamp": "2026-09-05T13:42:30.502556+00:00"
   },
   "DOTUSDT": {
     "direction": "LONG",
@@ -61,7 +61,7 @@
   },
   "SOLUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:56.503511+00:00"
+    "timestamp": "2026-09-05T13:42:28.797452+00:00"
   },
   "UNIUSDT": {
     "direction": "SHORT",
@@ -201,7 +201,7 @@
   },
   "TSTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:18.620560+00:00"
+    "timestamp": "2026-09-05T13:42:29.902042+00:00"
   },
   "GPSUSDT": {
     "direction": "SHORT",
@@ -376,8 +376,8 @@
     "timestamp": "2026-09-04T22:20:55.589942+00:00"
   },
   "ADAUSDT": {
-    "direction": "SHORT",
-    "timestamp": "2026-09-04T22:46:51.918752+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-05T13:42:30.168867+00:00"
   },
   "ENAUSDT": {
     "direction": "SHORT",
@@ -502,5 +502,9 @@
   "ETHUSDT": {
     "direction": "SHORT",
     "timestamp": "2026-09-05T12:41:08.961668+00:00"
+  },
+  "AEROUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T13:42:29.627382+00:00"
   }
 }
