@@ -30,7 +30,7 @@ scoring:
     supertrend: 25
     volume_spike: 15
     rsi_confluence: 20
-  min_score_to_trigger: 65
+  min_score_to_trigger: 75
 
 risk:
   atr_multiplier_sl: 1.5
