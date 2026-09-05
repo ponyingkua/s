@@ -1,7 +1,27 @@
-"""vSynapse v3 — Binance Futures scanner, 1 file.
+"""vSynapse v3.1 — Binance Futures scanner, 1 file.
 
 Isi: fetch data (async), indikator teknikal, confluence scoring,
-risk filter, cooldown/dedup, notifikasi Telegram, dan entry point CLI.
+setup engine (breakout/pullback/continuation/extended), filter ADX,
+multi-timeframe scanning + MTF agreement bonus, risk filter,
+cooldown/dedup per (symbol, timeframe), notifikasi Telegram, dan
+entry point CLI.
+
+Perubahan dari v3 (lihat catatan detail di tiap bagian):
+1. Scan sekarang jalan independen di SETIAP timeframe di config
+   ("timeframes"), bukan cuma 1 TF utama + 1 TF filter biner. Setiap
+   TF bisa menghasilkan sinyal sendiri (15m, 1h, atau 4h — bukan
+   melulu 15m).
+2. Konfluensi multi-timeframe sekarang jadi BONUS SKOR (kalau 2+ TF
+   searah), bukan syarat lolos/gugur — supaya sinyal 1 TF yang kuat
+   tidak otomatis dibuang cuma karena TF lain kebetulan netral.
+3. Tambah "Setup Engine" ringan: tiap sinyal dilabeli salah satu dari
+   BREAKOUT / PULLBACK / CONTINUATION / EXTENDED, dengan bonus/penalti
+   skor sesuai jenisnya (lihat classify_setup()).
+4. Tambah filter ADX: sinyal ditolak duluan kalau tren dianggap terlalu
+   lemah/choppy (ADX di bawah ambang), sebelum indikator lain dihitung.
+5. Fix bug: BinanceFuturesClient sekarang benar-benar punya
+   get_klines_paginated() (dipanggil backtest.py untuk --limit >1500,
+   sebelumnya tidak ada method-nya sama sekali -> AttributeError).
 
 Dijalankan lewat: python scanner.py --out synaptic_candidates.json
 """
@@ -69,12 +89,8 @@ class BinanceFuturesClient:
             data = await resp.json()
         return float(data.get("quoteVolume", 0))
 
-    async def get_klines(self, symbol: str, interval: str, limit: int = 300) -> Kline:
-        url = f"{BASE_URL}/fapi/v1/klines"
-        params = {"symbol": symbol, "interval": interval, "limit": limit}
-        async with self._session.get(url, params=params) as resp:
-            raw = await resp.json()
-
+    @staticmethod
+    def _parse_klines_df(raw: list) -> pd.DataFrame:
         df = pd.DataFrame(
             raw,
             columns=[
@@ -87,6 +103,46 @@ class BinanceFuturesClient:
             df[col] = df[col].astype(float)
         df["open_time"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
         df["close_time"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
+        return df
+
+    async def get_klines(self, symbol: str, interval: str, limit: int = 300) -> Kline:
+        url = f"{BASE_URL}/fapi/v1/klines"
+        params = {"symbol": symbol, "interval": interval, "limit": limit}
+        async with self._session.get(url, params=params) as resp:
+            raw = await resp.json()
+        df = self._parse_klines_df(raw)
+        return Kline(symbol=symbol, timeframe=interval, df=df)
+
+    async def get_klines_paginated(self, symbol: str, interval: str, total_limit: int) -> Kline:
+        """Ambil kline lebih dari batas 1500/request Binance dengan beberapa
+        request mundur dari waktu sekarang (pakai endTime), lalu digabung
+        jadi satu Kline utuh. Dipakai backtest.py saat --limit > 1500 —
+        sebelumnya method ini dipanggil tapi tidak pernah didefinisikan,
+        jadi selalu crash AttributeError begitu limit-nya besar."""
+        url = f"{BASE_URL}/fapi/v1/klines"
+        all_raw: list = []
+        end_time: int | None = None
+        remaining = total_limit
+
+        while remaining > 0:
+            batch_limit = min(remaining, 1500)
+            params = {"symbol": symbol, "interval": interval, "limit": batch_limit}
+            if end_time is not None:
+                params["endTime"] = end_time
+            async with self._session.get(url, params=params) as resp:
+                raw = await resp.json()
+            if not raw:
+                break
+            all_raw = raw + all_raw
+            remaining -= len(raw)
+            end_time = int(raw[0][0]) - 1  # mundur sebelum candle paling awal batch ini
+            if len(raw) < batch_limit:
+                break  # data historis sudah habis
+
+        df = self._parse_klines_df(all_raw)
+        df = df.drop_duplicates(subset="open_time").sort_values("open_time").reset_index(drop=True)
+        if len(df) > total_limit:
+            df = df.iloc[-total_limit:].reset_index(drop=True)
         return Kline(symbol=symbol, timeframe=interval, df=df)
 
     async def get_klines_many(
@@ -181,6 +237,37 @@ def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.5) -> 
     return volume > (avg * factor)
 
 
+def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    """Average Directional Index — mengukur KEKUATAN tren, bukan arahnya.
+
+    Dipakai sebagai gate di score_at(): kalau ADX di bawah ambang, sinyal
+    ditolak lebih dulu sebelum indikator lain dihitung. Ini mengatasi kasus
+    EMA200 + MACD + Supertrend kebetulan align sesaat saat market sideways
+    (choppy) — ketiganya trend-following dan bisa "sepakat" sesaat tanpa
+    ada tren nyata yang layak ditradingkan."""
+    high, low, close = df["high"], df["low"], df["close"]
+    up_move = high.diff()
+    down_move = -low.diff()
+
+    plus_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
+    minus_dm = down_move.where((down_move > up_move) & (down_move > 0), 0.0)
+
+    tr = pd.concat(
+        [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()], axis=1
+    ).max(axis=1)
+
+    smoothed_tr = tr.ewm(alpha=1 / period, adjust=False).mean().replace(0, 1e-9)
+    smoothed_plus_dm = plus_dm.ewm(alpha=1 / period, adjust=False).mean()
+    smoothed_minus_dm = minus_dm.ewm(alpha=1 / period, adjust=False).mean()
+
+    plus_di = 100 * (smoothed_plus_dm / smoothed_tr)
+    minus_di = 100 * (smoothed_minus_dm / smoothed_tr)
+
+    di_sum = (plus_di + minus_di).replace(0, 1e-9)
+    dx = 100 * (plus_di - minus_di).abs() / di_sum
+    return dx.ewm(alpha=1 / period, adjust=False).mean()
+
+
 # ---------------------------------------------------------------------------
 # Confluence scoring
 # ---------------------------------------------------------------------------
@@ -190,6 +277,8 @@ class SignalResult:
     symbol: str
     direction: str  # "LONG" | "SHORT" | "NONE"
     score: float
+    timeframe: str = ""
+    setup_type: str = ""  # "BREAKOUT" | "PULLBACK" | "CONTINUATION" | "EXTENDED" | ""
     reasons: list[str] = field(default_factory=list)
     entry: float | None = None
     sl: float | None = None
@@ -199,18 +288,20 @@ class SignalResult:
 def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
     """Hitung semua indikator SEKALI di seluruh histori yang tersedia.
 
-    Krusial buat akurasi: indikator berbasis EWM (EMA, MACD, Supertrend, ATR)
-    butuh histori panjang supaya nilainya konvergen ke rata-rata yang stabil,
-    bukan bias ke titik mulai data yang arbitrer. Backtest versi sebelumnya
-    memotong ulang window 200 bar tiap iterasi lalu menghitung EMA200 dari
-    nol di situ — 200 bar jelas tidak cukup buat EMA span=200 konvergen,
-    hasilnya bias dan kadang salah arah dibanding EMA200 "asli"."""
+    Krusial buat akurasi: indikator berbasis EWM (EMA, MACD, Supertrend, ATR,
+    ADX) butuh histori panjang supaya nilainya konvergen ke rata-rata yang
+    stabil, bukan bias ke titik mulai data yang arbitrer. Backtest versi
+    sebelumnya memotong ulang window 200 bar tiap iterasi lalu menghitung
+    EMA200 dari nol di situ — 200 bar jelas tidak cukup buat EMA span=200
+    konvergen, hasilnya bias dan kadang salah arah dibanding EMA200 "asli"."""
     close = df["close"]
     ind_cfg = cfg["indicators"]
 
     macd_line, signal_line, _ = macd(
         close, ind_cfg["macd"]["fast"], ind_cfg["macd"]["slow"], ind_cfg["macd"]["signal"],
     )
+    vol_cfg = ind_cfg.get("volume_spike", {})
+    adx_cfg = ind_cfg.get("adx", {})
 
     return {
         "ema200": ema(close, ind_cfg["ema"]["period"]),
@@ -218,36 +309,88 @@ def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
         "signal_line": signal_line,
         "supertrend": supertrend(df, ind_cfg["supertrend"]["period"], ind_cfg["supertrend"]["multiplier"]),
         "rsi": rsi(close, ind_cfg["rsi"]["period"]),
-        "vol_spike": volume_spike(df["volume"]),
+        "vol_spike": volume_spike(
+            df["volume"], vol_cfg.get("lookback", 20), vol_cfg.get("factor", 1.5)
+        ),
         "atr": atr(df, ind_cfg["atr"]["period"]),
+        "adx": adx(df, adx_cfg.get("period", 14)),
     }
 
 
-def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> SignalResult:
+def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict) -> str:
+    """Klasifikasikan jenis setup di bar ke-i, sesuai arah yang sudah
+    ditentukan sebelumnya oleh score_at():
+
+    - BREAKOUT: harga close menembus level tertinggi/terendah N-bar
+      terakhir searah sinyal — momentum baru, biasanya paling layak dikejar.
+    - PULLBACK: harga sedang berada dekat/menyentuh garis EMA200 (area
+      value), belum breakout — entry lebih murah, R:R biasanya lebih bagus.
+    - EXTENDED: harga sudah terlalu jauh dari EMA200 (dalam satuan ATR) —
+      rawan exhaustion/reversal jangka pendek, prioritas diturunkan.
+    - CONTINUATION: tidak masuk 3 kategori di atas — tren jalan normal,
+      bukan di titik entry yang istimewa.
+
+    Ini pengganti sederhana untuk "Setup Engine" (BREAKOUT/PULLBACK/
+    CONTINUATION/EXTENDED) yang sebelumnya cuma jadi arah+skor mentah tanpa
+    label sama sekali."""
+    se_cfg = cfg.get("setup_engine", {})
+    structure_lookback = se_cfg.get("structure_lookback", 20)
+    extended_atr_mult = se_cfg.get("extended_atr_mult", 3.5)
+    pullback_atr_mult = se_cfg.get("pullback_atr_mult", 1.0)
+
+    close = df["close"].iloc[i]
+    atr_val = ind["atr"].iloc[i]
+    ema_val = ind["ema200"].iloc[i]
+    dist_ema_atr = abs(close - ema_val) / atr_val if atr_val > 0 else 0.0
+
+    lookback_start = max(0, i - structure_lookback)
+    prior_high = df["high"].iloc[lookback_start:i].max() if i > lookback_start else close
+    prior_low = df["low"].iloc[lookback_start:i].min() if i > lookback_start else close
+
+    if direction == "LONG" and pd.notna(prior_high) and close > prior_high:
+        return "BREAKOUT"
+    if direction == "SHORT" and pd.notna(prior_low) and close < prior_low:
+        return "BREAKOUT"
+
+    if dist_ema_atr <= pullback_atr_mult:
+        return "PULLBACK"
+    if dist_ema_atr >= extended_atr_mult:
+        return "EXTENDED"
+    return "CONTINUATION"
+
+
+def score_at(
+    df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict, timeframe: str = ""
+) -> SignalResult:
     """Skor 1 bar spesifik (index i) pakai indikator yang sudah dihitung
     sebelumnya lewat compute_indicators(). Dipisah dari score_symbol supaya
     backtest bisa hitung indikator sekali lalu skor banyak titik, bukan
     hitung ulang tiap titik (lihat compute_indicators).
 
-    Perubahan dari versi sebelumnya (lihat catatan di tiap bagian):
-    1. Arah (`direction`) sekarang ditentukan LEBIH DULU dari 3 indikator
-       trend-following inti (EMA200, MACD, Supertrend) — dan tidak bisa
-       dibalik lagi oleh RSI. Sebelumnya RSI oversold/overbought bisa
-       nambah skor ke sisi BERLAWANAN dari trend (reversal), padahal 3
-       indikator lain semuanya trend-following — campur aduk 2 filosofi
-       ini bikin sinyal saling melemahkan, terutama di aset volatile yang
-       sering oversold/overbought BERKEPANJANGAN karena trend lanjut,
-       bukan mau rebound.
-    2. RSI sekarang cuma MENGUATKAN arah yang sudah ditentukan (momentum
-       confirmation), dan RSI netral (40-60) tidak lagi otomatis kasih
-       bonus ke arah yang sudah unggul — sebelumnya ini cuma nambah angka
-       tanpa informasi baru, jadi bisa mendorong setup lemah lolos
-       threshold tanpa alasan yang valid.
-    3. Volume spike sekarang HARUS searah candle dengan sinyal (close>open
-       untuk LONG, close<open untuk SHORT) baru dapat bonus skor —
-       sebelumnya volume tinggi apa pun arah candle-nya otomatis dianggap
-       "menguatkan" sisi yang sedang unggul.
+    Alur (v3.1):
+    0. Gate ADX — kalau tren dianggap terlalu lemah (choppy), tolak duluan
+       sebelum indikator lain dihitung sama sekali.
+    1. Arah (`direction`) ditentukan dari 3 indikator trend-following inti
+       (EMA200, MACD, Supertrend) — dan tidak bisa dibalik lagi oleh RSI.
+    2. RSI cuma MENGUATKAN arah yang sudah ditentukan (momentum
+       confirmation), RSI netral (40-60) tidak dapat bonus.
+    3. Volume spike cuma dapat bonus kalau searah candle dengan sinyal.
+    4. Setup Engine memberi label + bonus/penalti sesuai jenis setup
+       (breakout/pullback/continuation/extended) — lihat classify_setup().
     """
+    adx_min = cfg.get("risk", {}).get("adx_min", 0)
+    if adx_min and pd.notna(ind["adx"].iloc[i]) and ind["adx"].iloc[i] < adx_min:
+        return SignalResult(
+            symbol=symbol,
+            direction="NONE",
+            score=0.0,
+            timeframe=timeframe,
+            reasons=[
+                f"ADX ({ind['adx'].iloc[i]:.1f}) di bawah ambang {adx_min} — "
+                "market dianggap choppy, sinyal ditolak"
+            ],
+        )
+
     w = cfg["scoring"]["weights"]
     price = df["close"].iloc[i]
     open_price = df["open"].iloc[i]
@@ -318,10 +461,23 @@ def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> Sig
     elif has_volume_spike:
         reasons.append("Volume spike terdeteksi tapi arah candle tidak sesuai sinyal — diabaikan")
 
+    # --- 4. Setup Engine: label jenis setup + bonus/penalti skor ---------
+    setup_type = classify_setup(df, ind, i, direction, cfg)
+    setup_bonus = cfg["scoring"].get("setup_bonus", {}).get(setup_type.lower(), 0)
+    if direction == "LONG":
+        long_score += setup_bonus
+    else:
+        short_score += setup_bonus
+    sign = "+" if setup_bonus >= 0 else ""
+    reasons.append(f"Setup terdeteksi: {setup_type} ({sign}{setup_bonus} skor)")
+
     final_score = long_score if direction == "LONG" else short_score
 
     if final_score < cfg["scoring"]["min_score_to_trigger"]:
-        return SignalResult(symbol=symbol, direction="NONE", score=final_score, reasons=reasons)
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=final_score,
+            timeframe=timeframe, setup_type=setup_type, reasons=reasons,
+        )
 
     sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
     if direction == "LONG":
@@ -335,6 +491,8 @@ def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> Sig
         symbol=symbol,
         direction=direction,
         score=round(final_score, 1),
+        timeframe=timeframe,
+        setup_type=setup_type,
         reasons=reasons,
         entry=round(price, 6),
         sl=round(sl, 6),
@@ -342,14 +500,15 @@ def score_at(df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict) -> Sig
     )
 
 
-def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict) -> SignalResult:
+def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "") -> SignalResult:
     """Wrapper: hitung indikator di seluruh df lalu skor bar TERAKHIR.
     Dipakai scanner (live) & chart.py — interface tidak berubah dari versi
-    sebelumnya. Untuk backtest, pakai compute_indicators()+score_at()
+    sebelumnya (parameter `timeframe` opsional, default "" tetap backward
+    compatible). Untuk backtest, pakai compute_indicators()+score_at()
     langsung (lihat backtest.py) supaya indikator dihitung sekali, bukan
     berulang tiap titik simulasi."""
     ind = compute_indicators(df, cfg)
-    return score_at(df, ind, len(df) - 1, symbol, cfg)
+    return score_at(df, ind, len(df) - 1, symbol, cfg, timeframe)
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +537,7 @@ def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> fl
 
 
 # ---------------------------------------------------------------------------
-# Cooldown / dedup state
+# Cooldown / dedup state — sekarang per (symbol, timeframe)
 # ---------------------------------------------------------------------------
 
 def load_state(path: str) -> dict:
@@ -396,46 +555,28 @@ def save_state(path: str, state: dict) -> None:
         json.dump(state, f, indent=2)
 
 
-def is_in_cooldown(state: dict, symbol: str, direction: str, cooldown_hours: float) -> bool:
-    entry = state.get(symbol)
+def _state_key(symbol: str, timeframe: str) -> str:
+    return f"{symbol}|{timeframe}"
+
+
+def is_in_cooldown(state: dict, symbol: str, direction: str, timeframe: str, cooldown_hours: float) -> bool:
+    """Cooldown sekarang per (symbol, timeframe) — bukan per symbol saja.
+    Sebelumnya sinyal 15m yang lagi cooldown ikut memblokir sinyal baru di
+    1h/4h untuk symbol yang sama, padahal keduanya independen."""
+    entry = state.get(_state_key(symbol, timeframe))
     if not entry or entry.get("direction") != direction:
         return False
     last_time = datetime.fromisoformat(entry["timestamp"])
     return datetime.now(timezone.utc) - last_time < timedelta(hours=cooldown_hours)
 
 
-def mark_signaled(state: dict, symbol: str, direction: str) -> None:
-    state[symbol] = {
+def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> None:
+    state[_state_key(symbol, timeframe)] = {
+        "symbol": symbol,
+        "timeframe": timeframe,
         "direction": direction,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-
-
-# ---------------------------------------------------------------------------
-# Konfluensi multi-timeframe
-# ---------------------------------------------------------------------------
-
-def higher_tf_bias(df: pd.DataFrame, cfg: dict) -> str:
-    """Tentukan bias tren di timeframe lebih tinggi, pakai EMA200 + Supertrend
-    (dua indikator trend-following paling kuat di scoring). Dipakai buat
-    filter konfluensi: tolak sinyal LONG di TF utama kalau TF lebih tinggi
-    masih downtrend, dan sebaliknya — mengurangi sinyal palsu saat market
-    sedang choppy/melawan tren besar."""
-    closed = drop_unclosed_candle(df)
-    if len(closed) < 2:
-        return "NEUTRAL"
-
-    ind = compute_indicators(closed, cfg)
-    i = len(closed) - 1
-    price = closed["close"].iloc[i]
-    ema_up = price > ind["ema200"].iloc[i]
-    st_up = ind["supertrend"].iloc[i] == 1
-
-    if ema_up and st_up:
-        return "LONG"
-    if not ema_up and not st_up:
-        return "SHORT"
-    return "NEUTRAL"  # EMA & Supertrend tidak sepakat di TF ini — jangan pakai buat konfirmasi
 
 
 # ---------------------------------------------------------------------------
@@ -443,8 +584,10 @@ def higher_tf_bias(df: pd.DataFrame, cfg: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def format_signal_message(signal: SignalResult) -> str:
+    tf_label = f" [{signal.timeframe}]" if signal.timeframe else ""
+    setup_label = f" · {signal.setup_type}" if signal.setup_type else ""
     lines = [
-        f"*{signal.symbol}* — {signal.direction} (score {signal.score})",
+        f"*{signal.symbol}*{tf_label} — {signal.direction}{setup_label} (score {signal.score})",
         f"Entry: `{signal.entry}`",
         f"SL: `{signal.sl}`",
         f"TP: `{signal.tp}`",
@@ -573,9 +716,12 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     scan_cfg = cfg.get("scanning", {})
     state_path = scan_cfg.get("state_path", "signal_state.json")
     cooldown_hours = scan_cfg.get("cooldown_hours", 4)
+    klines_limit = scan_cfg.get("klines_limit", 300)
     state = load_state(state_path)
 
     auto_generate_charts = cfg.get("chart", {}).get("auto_generate", True)
+    timeframes = cfg["timeframes"]
+    mtf_bonus_weight = cfg["scoring"]["weights"].get("mtf_agreement", 0)
 
     async with BinanceFuturesClient() as client:
         symbols = await client.get_active_symbols(cfg["exchange"]["quote_asset"])
@@ -584,48 +730,67 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         min_vol = cfg["exchange"]["min_volume_usdt_24h"]
         active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
 
-        primary_tf = cfg["timeframes"][0]
-        klines = await client.get_klines_many(active_symbols, primary_tf)
+        # --- Scan SETIAP timeframe secara independen ------------------------
+        # Sebelumnya cuma timeframes[0] (15m) yang pernah menghasilkan sinyal;
+        # 1h cuma jadi filter biner dan 4h sama sekali tidak pernah dipakai.
+        # Sekarang tiap TF di config di-scan sendiri-sendiri dengan pipeline
+        # yang identik, jadi setup bisa muncul dari TF manapun yang layak.
+        per_tf_candidates: dict[str, list[tuple[SignalResult, Kline]]] = {}
+        for tf in timeframes:
+            klines = await client.get_klines_many(active_symbols, tf, limit=klines_limit)
+            tf_candidates: list[tuple[SignalResult, Kline]] = []
+            for kline in klines:
+                closed_df = drop_unclosed_candle(kline.df)
+                if len(closed_df) < 2:
+                    continue
+                signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
+                if signal.direction == "NONE":
+                    continue
+                if not passes_risk_filter(signal, cfg):
+                    continue
+                if is_in_cooldown(state, kline.symbol, signal.direction, tf, cooldown_hours):
+                    continue
+                tf_candidates.append((signal, kline))
+            per_tf_candidates[tf] = tf_candidates
 
-        candidates: list[tuple[SignalResult, "Kline"]] = []
-        for kline in klines:
-            closed_df = drop_unclosed_candle(kline.df)
-            if len(closed_df) < 2:
-                continue
-            signal = score_symbol(closed_df, kline.symbol, cfg)
-            if signal.direction == "NONE":
-                continue
-            if not passes_risk_filter(signal, cfg):
-                continue
-            if is_in_cooldown(state, kline.symbol, signal.direction, cooldown_hours):
-                continue
+        # --- MTF agreement: sekarang jadi BONUS skor, bukan syarat lolos ----
+        # (dulu: 1h WAJIB searah baru sinyal 15m lolos; kalau 1h netral,
+        # sinyal 15m yang sebenarnya kuat ikut terbuang percuma.)
+        direction_map: dict[str, dict[str, str]] = {}
+        for tf, cands in per_tf_candidates.items():
+            for signal, kline in cands:
+                direction_map.setdefault(kline.symbol, {})[tf] = signal.direction
 
-            candidates.append((signal, kline))
-
-        # Filter konfluensi multi-timeframe: cuma fetch TF lebih tinggi buat
-        # kandidat yang sudah lolos filter primer (efisien, bukan semua simbol).
-        confluence_cfg = cfg.get("confluence", {})
-        if confluence_cfg.get("require_higher_tf", False) and candidates:
-            htf = confluence_cfg.get("higher_timeframe") or (
-                cfg["timeframes"][-1] if len(cfg["timeframes"]) > 1 else primary_tf
-            )
-            if htf != primary_tf:
-                htf_symbols = list({kline.symbol for _, kline in candidates})
-                htf_klines = await client.get_klines_many(htf_symbols, htf)
-                htf_bias_map = {k.symbol: higher_tf_bias(k.df, cfg) for k in htf_klines}
-                candidates = [
-                    (signal, kline) for signal, kline in candidates
-                    if htf_bias_map.get(kline.symbol) == signal.direction
+        flat_candidates: list[tuple[SignalResult, Kline]] = []
+        for tf, cands in per_tf_candidates.items():
+            for signal, kline in cands:
+                agree_tfs = [
+                    t for t, d in direction_map.get(kline.symbol, {}).items()
+                    if t != tf and d == signal.direction
                 ]
+                if agree_tfs and mtf_bonus_weight:
+                    bonus = mtf_bonus_weight * len(agree_tfs)
+                    signal.score = round(signal.score + bonus, 1)
+                    signal.reasons.append(
+                        f"Searah dengan TF {', '.join(agree_tfs)} (+{bonus} MTF agreement)"
+                    )
+                flat_candidates.append((signal, kline))
 
-        # Ambil hanya yang terbaik (score tertinggi), bukan sekadar yang
-        # pertama ditemukan saat iterasi symbol.
-        candidates.sort(key=lambda c: c[0].score, reverse=True)
+        # --- Satu simbol -> satu setup terbaik lintas TF ---------------------
+        # Supaya Top 5 tidak diborong 1 koin yang sinyalnya tumpang tindih
+        # di beberapa TF sekaligus; yang dipilih adalah skor tertinggi.
+        best_per_symbol: dict[str, tuple[SignalResult, Kline]] = {}
+        for signal, kline in flat_candidates:
+            current = best_per_symbol.get(kline.symbol)
+            if current is None or signal.score > current[0].score:
+                best_per_symbol[kline.symbol] = (signal, kline)
+
+        candidates = sorted(best_per_symbol.values(), key=lambda c: c[0].score, reverse=True)
         top_candidates = candidates[: cfg["risk"]["max_signals_per_run"]]
 
         for signal, kline in top_candidates:
             results.append(signal.__dict__)
-            mark_signaled(state, kline.symbol, signal.direction)
+            mark_signaled(state, kline.symbol, signal.direction, signal.timeframe)
 
             captions.append(format_signal_message(signal))
 
@@ -633,11 +798,11 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 import chart as chart_module  # lazy import, hindari circular import
 
                 os.makedirs("charts", exist_ok=True)
-                chart_path = f"charts/{kline.symbol}_{primary_tf}.png"
+                chart_path = f"charts/{kline.symbol}_{signal.timeframe}.png"
                 chart_module.build_chart(
                     kline.df,
                     kline.symbol,
-                    primary_tf,
+                    signal.timeframe,
                     signal,
                     cfg,
                     chart_path,
@@ -668,7 +833,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="vSynapse v3 scanner")
+    parser = argparse.ArgumentParser(description="vSynapse v3.1 scanner (multi-timeframe)")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--out", default="synaptic_candidates.json")
     args = parser.parse_args()
