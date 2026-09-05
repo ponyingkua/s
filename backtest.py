@@ -16,7 +16,7 @@ from dataclasses import dataclass
 import pandas as pd
 import yaml
 
-from scanner import BinanceFuturesClient, score_symbol
+from scanner import BinanceFuturesClient, compute_indicators, score_at
 
 DEFAULT_SYMBOLS = [
     "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
@@ -35,16 +35,22 @@ class Trade:
     r_multiple: float  # sudah dikurangi fee
 
 
-def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, window: int = 200) -> list[Trade]:
+def backtest_symbol(df: pd.DataFrame, symbol: str, cfg: dict, warmup: int = 250) -> list[Trade]:
     """Skip-ahead: setelah trade dibuka, tidak evaluasi sinyal baru sampai
-    trade itu selesai — supaya trade tidak saling tumpang tindih."""
+    trade itu selesai — supaya trade tidak saling tumpang tindih.
+
+    Indikator dihitung SEKALI di seluruh df (bukan direset tiap iterasi
+    kayak versi sebelumnya) — lihat catatan lengkap di
+    scanner.compute_indicators(). `warmup` cuma menentukan titik mulai
+    evaluasi (kasih ruang indikator konvergen dulu), bukan ukuran window
+    perhitungan seperti parameter `window` di versi lama."""
     trades: list[Trade] = []
     fee_pct = cfg.get("backtest", {}).get("fee_round_trip_pct", 0.0)
+    ind = compute_indicators(df, cfg)
 
-    i = window
+    i = warmup
     while i < len(df) - 1:
-        sub_df = df.iloc[i - window : i].reset_index(drop=True)
-        signal = score_symbol(sub_df, symbol, cfg)
+        signal = score_at(df, ind, i, symbol, cfg)
 
         if signal.direction == "NONE":
             i += 1
@@ -108,7 +114,7 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
     async with BinanceFuturesClient() as client:
         kline = await client.get_klines(symbol, timeframe, limit=limit)
 
-    trades = backtest_symbol(kline.df, symbol, cfg, window=200)
+    trades = backtest_symbol(kline.df, symbol, cfg)
     summary = summarize(trades)
     print(json.dumps(summary, indent=2))
 
@@ -136,7 +142,7 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
                 per_symbol_results.append((symbol, None, str(exc)))
                 continue
 
-            trades = backtest_symbol(kline.df, symbol, cfg, window=200)
+            trades = backtest_symbol(kline.df, symbol, cfg)
             summary = summarize(trades)
             per_symbol_results.append((symbol, summary, None))
             all_trades.extend(trades)
