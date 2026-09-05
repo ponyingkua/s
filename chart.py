@@ -150,12 +150,12 @@ def _draw_candles(ax, df: pd.DataFrame) -> list:
 
 def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
     for i in range(len(df)):
-        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
-               width=CANDLE_WIDTH * 1.15, linewidth=0, zorder=2)
+        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.30,
+               width=CANDLE_WIDTH, linewidth=0, zorder=2)
 
     vol_ma = df["volume"].rolling(20, min_periods=1).mean()
-    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.6,
-             alpha=0.85, zorder=3)
+    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
+             alpha=0.70, zorder=3)
 
 
 def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
@@ -167,11 +167,12 @@ def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
     level = lower.where(st_dir == 1, upper)
 
     x = range(len(df))
-    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.1,
-             drawstyle="steps-mid", solid_joinstyle="round",
-             label=f"Supertrend {period}/{multiplier}", zorder=3)
-    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.1,
-             drawstyle="steps-mid", solid_joinstyle="round", zorder=3)
+    ax.plot(x, level.where(st_dir == 1), color=ST_UP, linewidth=1.6,
+             drawstyle="steps-mid", solid_joinstyle="round", solid_capstyle="round",
+             label=f"Supertrend {period}/{multiplier}", zorder=3.5)
+    ax.plot(x, level.where(st_dir == -1), color=ST_DOWN, linewidth=1.6,
+             drawstyle="steps-mid", solid_joinstyle="round", solid_capstyle="round",
+             zorder=3.5)
 
 
 # ============================================================
@@ -468,8 +469,8 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
-    # Rasio output dikunci 16:9 (height_ratio = tinggi/lebar = 9/16).
-    height_ratio = 9 / 16
+    # Rasio output dikunci 20:9 ≈ 2.22:1 (height_ratio = tinggi/lebar = 9/20).
+    height_ratio = 9 / 20
     dpi = 150
     output_scale = 1  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
@@ -480,9 +481,9 @@ def build_chart(
 
     gs = GridSpec(
         2, 1, figure=fig,
-        height_ratios=[3.6, 1.4],
+        height_ratios=[4.4, 0.6],
         hspace=0.06,
-        left=0.07, right=0.96, top=0.85, bottom=0.11,
+        left=0.07, right=0.96, top=0.87, bottom=0.11,
     )
     ax_price = fig.add_subplot(gs[0, 0])
     ax_vol = fig.add_subplot(gs[1, 0], sharex=ax_price)
@@ -501,8 +502,8 @@ def build_chart(
     ax_price.tick_params(labelbottom=False)
 
     colors = _draw_candles(ax_price, plot_df)
-    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.1,
-                  label=f"EMA {ema_period}", zorder=4)
+    ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.6,
+                  solid_capstyle="round", label=f"EMA {ema_period}", zorder=4)
     _draw_supertrend(ax_price, plot_df, st_dir_full, st_period, st_mult)
 
     last_x = len(plot_df) - 1
