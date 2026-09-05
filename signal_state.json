@@ -1,7 +1,7 @@
 {
   "BCHUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T22:10:01.657156+00:00"
+    "timestamp": "2026-09-05T12:41:06.796797+00:00"
   },
   "LTCUSDT": {
     "direction": "LONG",
@@ -285,7 +285,7 @@
   },
   "PUMPUSDT": {
     "direction": "SHORT",
-    "timestamp": "2026-09-04T20:11:15.719987+00:00"
+    "timestamp": "2026-09-05T12:41:07.956931+00:00"
   },
   "USELESSUSDT": {
     "direction": "LONG",
@@ -490,5 +490,17 @@
   "SNXXUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-05T02:18:02.062912+00:00"
+  },
+  "TSLAUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T12:41:08.265068+00:00"
+  },
+  "MUUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T12:41:08.653035+00:00"
+  },
+  "ETHUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T12:41:08.961668+00:00"
   }
 }
