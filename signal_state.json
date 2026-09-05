@@ -13,7 +13,7 @@
   },
   "XMRUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:07:17.576502+00:00"
+    "timestamp": "2026-09-05T01:08:15.917944+00:00"
   },
   "ZECUSDT": {
     "direction": "LONG",
@@ -56,8 +56,8 @@
     "timestamp": "2026-09-04T23:36:42.744308+00:00"
   },
   "CRVUSDT": {
-    "direction": "LONG",
-    "timestamp": "2026-09-04T08:26:54.412404+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T01:08:17.470290+00:00"
   },
   "SOLUSDT": {
     "direction": "LONG",
@@ -69,7 +69,7 @@
   },
   "NEARUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:49:06.561861+00:00"
+    "timestamp": "2026-09-05T01:08:17.925475+00:00"
   },
   "AAVEUSDT": {
     "direction": "SHORT",
@@ -113,7 +113,7 @@
   },
   "OPUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:09.611806+00:00"
+    "timestamp": "2026-09-05T01:08:19.566127+00:00"
   },
   "INJUSDT": {
     "direction": "SHORT",
@@ -189,7 +189,7 @@
   },
   "GALAUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T19:36:06.806335+00:00"
+    "timestamp": "2026-09-05T01:08:18.801224+00:00"
   },
   "ACEUSDT": {
     "direction": "LONG",
@@ -265,7 +265,7 @@
   },
   "TWTUSDT": {
     "direction": "LONG",
-    "timestamp": "2026-09-04T20:11:04.492010+00:00"
+    "timestamp": "2026-09-05T01:08:20.705356+00:00"
   },
   "AVAUSDT": {
     "direction": "SHORT",
@@ -438,5 +438,21 @@
   "DEXEUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-04T23:36:45.772465+00:00"
+  },
+  "FILUSDT": {
+    "direction": "SHORT",
+    "timestamp": "2026-09-05T01:08:18.340030+00:00"
+  },
+  "DUSKUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T01:08:19.217180+00:00"
+  },
+  "TUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T01:08:20.100515+00:00"
+  },
+  "MOVRUSDT": {
+    "direction": "LONG",
+    "timestamp": "2026-09-05T01:08:21.159797+00:00"
   }
 }
