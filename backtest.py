@@ -101,11 +101,11 @@ def _simulate_exit(
 
     for offset, (_, bar) in enumerate(future_df.iterrows()):
         if signal.direction == "LONG":
-            hit_sl = bar["low"] <= signal.sl
-            hit_tp = bar["high"] >= signal.tp
+            hit_sl = bool(bar["low"] <= signal.sl)
+            hit_tp = bool(bar["high"] >= signal.tp)
         else:
-            hit_sl = bar["high"] >= signal.sl
-            hit_tp = bar["low"] <= signal.tp
+            hit_sl = bool(bar["high"] >= signal.sl)
+            hit_tp = bool(bar["low"] <= signal.tp)
 
         if hit_sl and hit_tp:
             win = _resolve_tie(tie_break, signal, bar)
