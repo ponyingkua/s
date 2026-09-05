@@ -619,9 +619,10 @@ def build_chart(
             rr_text = f"RR 1:{reward / risk:.2f}"
 
     header_extra = rr_text if rr_text else pd.Timestamp.utcnow().strftime("Updated %d %b %H:%M UTC")
+    setup_label = f"  ·  {signal.setup_type}" if signal.setup_type else ""
 
     fig.text(0.07, 0.965,
-              f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  {header_extra}",
+              f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}  ·  {header_extra}",
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
               fontsize=7, color=AXIS, ha="left", va="bottom")
@@ -638,7 +639,7 @@ async def _fetch_and_build(symbol: str, timeframe: str, cfg: dict, out_path: str
         n_show = get_candles_shown(timeframe, cfg)
         limit = max(400, n_show + STRUCTURE_CONTEXT + 250)
         kline = await client.get_klines(symbol, timeframe, limit=limit)
-    signal = score_symbol(kline.df, symbol, cfg)
+    signal = score_symbol(kline.df, symbol, cfg, timeframe=timeframe)
     result_path = build_chart(kline.df, symbol, timeframe, signal, cfg, out_path)
 
     # Khusus jalur CLI/manual (mis. workflow "Chart Generator (manual)"):
