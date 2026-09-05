@@ -24,6 +24,12 @@ Catatan penting soal parity dengan scanner.py (live):
   sebelumnya (174 trade) yang menemukan masalah SHORT-vs-LONG (t=-3.46) itu
   sendiri yang menyarankan filter ini; tanpa direplikasi di backtest, kita
   tidak akan pernah tahu apakah fix-nya beneran membantu atau tidak.
+- v3.3: Regime filter di sini sekarang lewat passes_regime_filter() (impor
+  dari scanner.py) yang sama persis dipakai scanner.py live — SHORT & LONG
+  bisa punya mode berbeda (short_mode/long_mode di config), bukan lagi
+  logika BULL/BEAR simetris yang di-hardcode di sini. Jalankan ulang
+  --batch setelah update config untuk lihat apakah short_mode="bear_only"
+  benar-benar memperbaiki angka SHORT yang sebelumnya minus di semua setup.
 """
 from __future__ import annotations
 
@@ -35,7 +41,7 @@ from dataclasses import dataclass
 import pandas as pd
 import yaml
 
-from scanner import BinanceFuturesClient, compute_indicators, score_at
+from scanner import BinanceFuturesClient, compute_indicators, passes_regime_filter, score_at
 
 DEFAULT_SYMBOLS = [
     "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
@@ -163,9 +169,7 @@ def backtest_symbol(
 
         if regime_series is not None:
             regime = regime_series.iloc[i]
-            if (regime == "BULL" and signal.direction == "SHORT") or (
-                regime == "BEAR" and signal.direction == "LONG"
-            ):
+            if not passes_regime_filter(signal.direction, regime, cfg):
                 i += 1
                 continue
 
