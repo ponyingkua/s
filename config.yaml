@@ -47,6 +47,10 @@ scanning:
   cooldown_hours: 4
   state_path: "signal_state.json"
 
+confluence:
+  require_higher_tf: true     # tolak sinyal kalau timeframe lebih tinggi melawan arah
+  higher_timeframe: "1h"      # kosongkan ("") buat auto-pakai timeframes[-1]
+
 backtest:
   fee_round_trip_pct: 0.001
 
