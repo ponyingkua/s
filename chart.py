@@ -150,12 +150,12 @@ def _draw_candles(ax, df: pd.DataFrame) -> list:
 
 def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
     for i in range(len(df)):
-        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.30,
-               width=CANDLE_WIDTH, linewidth=0, zorder=2)
+        ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
+               width=CANDLE_WIDTH * 1.15, linewidth=0, zorder=2)
 
     vol_ma = df["volume"].rolling(20, min_periods=1).mean()
-    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
-             alpha=0.70, zorder=3)
+    ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.6,
+             alpha=0.85, zorder=3)
 
 
 def _draw_supertrend(ax, df: pd.DataFrame, st_dir: pd.Series,
@@ -468,8 +468,8 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
-    # Rasio output 16:9. height_ratio = tinggi/lebar.
-    height_ratio = chart_cfg.get("height_ratio", 9 / 16)  # 2000 x 1125 = 16:9
+    # Rasio output dikunci 16:9 (height_ratio = tinggi/lebar = 9/16).
+    height_ratio = 9 / 16
     dpi = 150
     output_scale = 1  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
@@ -480,9 +480,9 @@ def build_chart(
 
     gs = GridSpec(
         2, 1, figure=fig,
-        height_ratios=[4.4, 0.6],
+        height_ratios=[3.6, 1.4],
         hspace=0.06,
-        left=0.07, right=0.96, top=0.87, bottom=0.11,
+        left=0.07, right=0.96, top=0.85, bottom=0.11,
     )
     ax_price = fig.add_subplot(gs[0, 0])
     ax_vol = fig.add_subplot(gs[1, 0], sharex=ax_price)
@@ -578,9 +578,19 @@ def build_chart(
     )
     legend.get_frame().set_linewidth(0.7)
 
+    # Risk:Reward menggantikan Score di header (lebih relevan buat pembaca chart).
+    rr_text = None
+    if signal.entry is not None and signal.sl is not None and signal.tp is not None:
+        risk = abs(signal.entry - signal.sl)
+        reward = abs(signal.tp - signal.entry)
+        if risk > 0:
+            rr_text = f"RR 1:{reward / risk:.2f}"
+
+    header_extra = rr_text if rr_text else pd.Timestamp.utcnow().strftime("Updated %d %b %H:%M UTC")
+
     fig.text(0.07, 0.965,
-              f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  Score {signal.score}",
-              fontsize=13, fontweight="bold", color=TEXT, ha="left", va="top")
+              f"{symbol}  ·  {timeframe}  ·  {signal.direction}  ·  {header_extra}",
+              fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
               fontsize=7, color=AXIS, ha="left", va="bottom")
     fig.text(0.96, 0.02, "Not financial advice",
