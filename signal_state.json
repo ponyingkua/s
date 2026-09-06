@@ -775,5 +775,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-06T12:21:14.047871+00:00"
+  },
+  "SOLUSDT|15m": {
+    "symbol": "SOLUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:50:06.620607+00:00"
+  },
+  "RAYSOLUSDT|15m": {
+    "symbol": "RAYSOLUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:50:07.674994+00:00"
+  },
+  "AEROUSDT|1h": {
+    "symbol": "AEROUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:50:08.038051+00:00"
+  },
+  "ORCAUSDT|1h": {
+    "symbol": "ORCAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:50:08.321774+00:00"
+  },
+  "METUSDT|15m": {
+    "symbol": "METUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:50:08.606328+00:00"
   }
 }
