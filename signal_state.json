@@ -715,5 +715,35 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-06T10:36:42.372564+00:00"
+  },
+  "XANUSDT|15m": {
+    "symbol": "XANUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:52:01.487119+00:00"
+  },
+  "SNXXUSDT|15m": {
+    "symbol": "SNXXUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:52:02.465376+00:00"
+  },
+  "NEARUSDT|15m": {
+    "symbol": "NEARUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:52:02.737991+00:00"
+  },
+  "APTUSDT|1h": {
+    "symbol": "APTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:52:03.009361+00:00"
+  },
+  "IOSTUSDT|1h": {
+    "symbol": "IOSTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:52:03.263495+00:00"
   }
 }

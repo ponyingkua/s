@@ -1,107 +1,104 @@
 [
   {
-    "symbol": "STRKUSDT",
+    "symbol": "XANUSDT",
     "direction": "LONG",
-    "score": 145.2,
+    "score": 142.6,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI (62) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (22.6) tren kuat (+2.6 skor)",
+      "Setup terdeteksi: BREAKOUT (+10 skor)",
+      "SL digeser ke luar struktur 20-bar terakhir (bukan cuma ATR flat)",
+      "Searah dengan TF 1h, 4h (+30 MTF agreement)"
+    ],
+    "entry": 0.017369,
+    "sl": 0.015788,
+    "tp": 0.019741
+  },
+  {
+    "symbol": "SNXXUSDT",
+    "direction": "LONG",
+    "score": 140.0,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI (70) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (53.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+10 skor)",
+      "SL struktur terlalu jauh, di-cap 2.5x ATR",
+      "Searah dengan TF 4h (+15 MTF agreement)"
+    ],
+    "entry": 18.34,
+    "sl": 18.046324,
+    "tp": 18.780514
+  },
+  {
+    "symbol": "NEARUSDT",
+    "direction": "LONG",
+    "score": 125.0,
     "timeframe": "15m",
     "setup_type": "EXTENDED",
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
-      "RSI (55) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)",
-      "ADX (25.2) tren kuat (+5.2 skor)",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (45.3) tren kuat (+15.0 skor)",
       "Setup terdeteksi: EXTENDED (+10 skor)",
-      "SL digeser ke luar struktur 20-bar terakhir (bukan cuma ATR flat)",
-      "Searah dengan TF 1h, 4h (+30 MTF agreement)"
+      "SL struktur terlalu jauh, di-cap 2.5x ATR",
+      "Searah dengan TF 1h (+15 MTF agreement)"
     ],
-    "entry": 0.0308,
-    "sl": 0.029929,
-    "tp": 0.032107
+    "entry": 2.398,
+    "sl": 2.261484,
+    "tp": 2.602774
   },
   {
-    "symbol": "DOTUSDT",
+    "symbol": "APTUSDT",
     "direction": "LONG",
-    "score": 137.5,
-    "timeframe": "15m",
+    "score": 125.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (36.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (+10 skor)",
+      "SL digeser ke luar struktur 20-bar terakhir (bukan cuma ATR flat)",
+      "Searah dengan TF 15m (+15 MTF agreement)"
+    ],
+    "entry": 0.6233,
+    "sl": 0.593218,
+    "tp": 0.668424
+  },
+  {
+    "symbol": "IOSTUSDT",
+    "direction": "LONG",
+    "score": 125.0,
+    "timeframe": "1h",
     "setup_type": "EXTENDED",
     "reasons": [
       "Harga di atas EMA200 (uptrend)",
       "MACD line di atas signal line (momentum naik)",
       "Supertrend menunjukkan uptrend",
       "RSI (63) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)",
-      "ADX (32.5) tren kuat (+12.5 skor)",
-      "Setup terdeteksi: EXTENDED (+10 skor)",
-      "SL digeser ke luar struktur 20-bar terakhir (bukan cuma ATR flat)",
-      "Searah dengan TF 1h (+15 MTF agreement)"
-    ],
-    "entry": 0.9512,
-    "sl": 0.924063,
-    "tp": 0.991906
-  },
-  {
-    "symbol": "ROSEUSDT",
-    "direction": "LONG",
-    "score": 132.1,
-    "timeframe": "4h",
-    "setup_type": "EXTENDED",
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI (66) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)",
-      "ADX (27.1) tren kuat (+7.1 skor)",
+      "ADX (65.2) tren kuat (+15.0 skor)",
       "Setup terdeteksi: EXTENDED (+10 skor)",
       "SL struktur terlalu jauh, di-cap 2.5x ATR",
-      "Searah dengan TF 1h (+15 MTF agreement)"
+      "Searah dengan TF 4h (+15 MTF agreement)"
     ],
-    "entry": 0.006872,
-    "sl": 0.006066,
-    "tp": 0.008081
-  },
-  {
-    "symbol": "INTCUSDT",
-    "direction": "LONG",
-    "score": 128.2,
-    "timeframe": "15m",
-    "setup_type": "EXTENDED",
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI (69) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)",
-      "ADX (23.2) tren kuat (+3.2 skor)",
-      "Setup terdeteksi: EXTENDED (+10 skor)",
-      "SL struktur terlalu jauh, di-cap 2.5x ATR",
-      "Searah dengan TF 1h (+15 MTF agreement)"
-    ],
-    "entry": 96.89,
-    "sl": 96.405415,
-    "tp": 97.616878
-  },
-  {
-    "symbol": "FFUSDT",
-    "direction": "LONG",
-    "score": 125.7,
-    "timeframe": "15m",
-    "setup_type": "EXTENDED",
-    "reasons": [
-      "Harga di atas EMA200 (uptrend)",
-      "MACD line di atas signal line (momentum naik)",
-      "Supertrend menunjukkan uptrend",
-      "RSI (54) menguatkan momentum naik",
-      "Volume spike di candle bullish (menguatkan sinyal LONG)",
-      "ADX (20.7) tren kuat (+0.7 skor)",
-      "Setup terdeteksi: EXTENDED (+10 skor)",
-      "SL digeser ke luar struktur 20-bar terakhir (bukan cuma ATR flat)",
-      "Searah dengan TF 1h (+15 MTF agreement)"
-    ],
-    "entry": 0.11944,
-    "sl": 0.117713,
-    "tp": 0.122031
+    "entry": 0.000749,
+    "sl": 0.000628,
+    "tp": 0.000931
   }
 ]
