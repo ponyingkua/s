@@ -302,25 +302,35 @@ def get_setup_bonus(cfg: dict, direction: str, setup_type: str, timeframe: str =
 
 
 def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
+    """Return True if the proposed direction is allowed under current market regime."""
     regime_cfg = cfg.get("regime_filter", {})
     if direction == "SHORT":
         mode = regime_cfg.get("short_mode", "bear_only")
         if mode == "bear_only":
             return regime == "BEAR"
-        return regime != "BULL"
+        if mode == "not_bull":
+            return regime != "BULL"
+        return True  # allow_all
     if direction == "LONG":
         mode = regime_cfg.get("long_mode", "not_bear")
         if mode == "bull_only":
             return regime == "BULL"
-        return regime != "BEAR"
+        if mode == "bull_or_neutral":
+            # New stricter mode: block LONG only when regime is clearly BEAR
+            return regime != "BEAR"
+        if mode == "not_bear":
+            return regime != "BEAR"
+        return True
     return True
 
 
 def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
+    """Return the direction that should be rate-limited in the current regime episode."""
     regime_cfg = cfg.get("regime_filter", {})
     if regime == "BEAR" and regime_cfg.get("short_mode", "bear_only") == "bear_only":
         return "SHORT"
-    if regime == "BULL" and regime_cfg.get("long_mode", "not_bear") == "bull_only":
+    long_mode = regime_cfg.get("long_mode", "not_bear")
+    if regime == "BULL" and long_mode in ("bull_only", "bull_or_neutral", "not_bear"):
         return "LONG"
     return None
 
@@ -353,6 +363,14 @@ def score_at(
             ],
         )
 
+    # Optional symbol blacklist
+    blacklist = cfg.get("symbol_filter", {}).get("blacklist", [])
+    if symbol in blacklist:
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=[f"{symbol} ada di blacklist"],
+        )
+
     w = cfg["scoring"]["weights"]
     price = df["close"].iloc[i]
     open_price = df["open"].iloc[i]
@@ -361,27 +379,49 @@ def score_at(
     reasons: list[str] = []
 
     trend_long, trend_short = 0.0, 0.0
+    alignment_long = 0
+    alignment_short = 0
 
     ema_up = price > ind["ema200"].iloc[i]
     if ema_up:
         trend_long += w["ema_trend"]
+        alignment_long += 1
     else:
         trend_short += w["ema_trend"]
+        alignment_short += 1
 
     macd_up = ind["macd_line"].iloc[i] > ind["signal_line"].iloc[i]
     if macd_up:
         trend_long += w["macd_cross"]
+        alignment_long += 1
     else:
         trend_short += w["macd_cross"]
+        alignment_short += 1
 
     st_up = ind["supertrend"].iloc[i] == 1
     if st_up:
         trend_long += w["supertrend"]
+        alignment_long += 1
     else:
         trend_short += w["supertrend"]
+        alignment_short += 1
 
     direction = "LONG" if trend_long >= trend_short else "SHORT"
     long_score, short_score = trend_long, trend_short
+    alignment = alignment_long if direction == "LONG" else alignment_short
+
+    # Hard confluence filter: require minimum trend alignment
+    min_alignment = cfg.get("scoring", {}).get("min_trend_alignment", 2)
+    if alignment < min_alignment:
+        return SignalResult(
+            symbol=symbol,
+            direction="NONE",
+            score=0.0,
+            timeframe=timeframe,
+            reasons=[
+                f"Konfluensi tren lemah ({alignment}/{min_alignment} indikator inti searah) — ditolak"
+            ],
+        )
 
     if direction == "LONG":
         reasons.append("Harga di atas EMA200 (uptrend)" if ema_up else "Harga di bawah EMA200 (tapi indikator lain condong LONG)")
@@ -392,17 +432,22 @@ def score_at(
         reasons.append("MACD line di bawah signal line (momentum turun)" if not macd_up else "MACD line di atas signal line (tapi indikator lain condong SHORT)")
         reasons.append("Supertrend menunjukkan downtrend" if not st_up else "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)")
 
+    reasons.append(f"Konfluensi tren: {alignment}/3 indikator inti searah")
+
     r = ind["rsi"].iloc[i]
-    if direction == "LONG" and 50 < r <= 70:
+    if direction == "LONG" and 50 < r <= 68:          # tightened upper bound
         long_score += w["rsi_confluence"]
         reasons.append(f"RSI ({r:.0f}) menguatkan momentum naik")
-    elif direction == "SHORT" and 30 <= r < 50:
+    elif direction == "SHORT" and 32 <= r < 50:      # tightened lower bound
         short_score += w["rsi_confluence"]
         reasons.append(f"RSI ({r:.0f}) menguatkan momentum turun")
     elif direction == "LONG" and r > 70:
-        reasons.append(f"RSI ({r:.0f}) overbought — tidak dapat bonus, hati-hati chasing")
+        # Stronger penalty for chasing extended moves
+        long_score -= 10
+        reasons.append(f"RSI ({r:.0f}) overbought — penalti chasing (-10)")
     elif direction == "SHORT" and r < 30:
-        reasons.append(f"RSI ({r:.0f}) oversold — tidak dapat bonus, hati-hati chasing")
+        short_score -= 10
+        reasons.append(f"RSI ({r:.0f}) oversold — penalti chasing (-10)")
     else:
         reasons.append(f"RSI netral ({r:.0f}), tidak menambah skor")
 
@@ -436,6 +481,20 @@ def score_at(
             reasons.append(f"ADX ({adx_val:.1f}) tren kuat (+{adx_bonus:.1f} skor)")
 
     setup_type = classify_setup(df, ind, i, direction, cfg, timeframe)
+
+    # Hard block EXTENDED setups on lower timeframes (data showed they are toxic)
+    if setup_type == "EXTENDED" and timeframe in ("15m", "1h"):
+        return SignalResult(
+            symbol=symbol,
+            direction="NONE",
+            score=0.0,
+            timeframe=timeframe,
+            setup_type=setup_type,
+            reasons=reasons + [
+                f"Setup EXTENDED diblokir total di timeframe {timeframe} (historis sangat underperform)"
+            ],
+        )
+
     setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
@@ -472,12 +531,13 @@ def score_at(
     elif sl_dist > atr_sl_dist:
         reasons.append(f"SL digeser ke luar struktur {struct_lookback}-bar terakhir (bukan cuma ATR flat)")
 
+    rr = cfg["risk"]["risk_reward_min"]
     if direction == "LONG":
         sl = price - sl_dist
-        tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
+        tp = price + sl_dist * rr
     else:
         sl = price + sl_dist
-        tp = price - sl_dist * cfg["risk"]["risk_reward_min"]
+        tp = price - sl_dist * rr
 
     return SignalResult(
         symbol=symbol,
