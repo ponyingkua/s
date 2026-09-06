@@ -41,7 +41,7 @@ class BinanceFuturesClient:
         url = f"{BASE_URL}/fapi/v1/exchangeInfo"
         async with self._session.get(url) as resp:
             data = await resp.json()
-        if "symbols" not in data:
+        if resp.status != 200 or "symbols" not in data:
             raise RuntimeError(
                 f"Binance API tidak mengembalikan data yang diharapkan. "
                 f"Status: {resp.status}, Response: {data}"
@@ -56,6 +56,8 @@ class BinanceFuturesClient:
         url = f"{BASE_URL}/fapi/v1/ticker/24hr"
         async with self._session.get(url, params={"symbol": symbol}) as resp:
             data = await resp.json()
+        if resp.status != 200 or not isinstance(data, dict):
+            return 0.0
         return float(data.get("quoteVolume", 0))
 
     @staticmethod
@@ -79,6 +81,11 @@ class BinanceFuturesClient:
         params = {"symbol": symbol, "interval": interval, "limit": limit}
         async with self._session.get(url, params=params) as resp:
             raw = await resp.json()
+        if resp.status != 200 or not isinstance(raw, list):
+            raise RuntimeError(
+                f"Gagal mengambil klines {symbol} {interval}: "
+                f"status={resp.status}, response={raw}"
+            )
         df = self._parse_klines_df(raw)
         return Kline(symbol=symbol, timeframe=interval, df=df)
 
@@ -95,6 +102,11 @@ class BinanceFuturesClient:
                 params["endTime"] = end_time
             async with self._session.get(url, params=params) as resp:
                 raw = await resp.json()
+            if resp.status != 200 or not isinstance(raw, list):
+                raise RuntimeError(
+                    f"Gagal mengambil klines {symbol} {interval}: "
+                    f"status={resp.status}, response={raw}"
+                )
             if not raw:
                 break
             all_raw = raw + all_raw
@@ -127,15 +139,15 @@ def drop_unclosed_candle(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def ema(series: pd.Series, period: int) -> pd.Series:
-    return series.ewm(span=period, adjust=False).mean()
+    return series.ewm(span=period, adjust=False, min_periods=period).mean()
 
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean()
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
     result = pd.Series(index=series.index, dtype=float)
     no_loss = avg_loss == 0
@@ -165,29 +177,69 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     tr = pd.concat(
         [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
     ).max(axis=1)
-    return tr.ewm(alpha=1 / period, adjust=False).mean()
+    return tr.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
 
 def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 2.5) -> pd.Series:
+    """Return the direction of the standard Supertrend calculation.
+
+    The previous implementation compared price to the *raw* previous ATR
+    bands.  Those bands are not the Supertrend bands: they must be carried
+    forward and only move in the direction allowed by the prior close.  The
+    old version therefore flipped too easily in noisy markets.
+    """
+    if df.empty:
+        return pd.Series(dtype="int64", index=df.index)
+
     hl2 = (df["high"] + df["low"]) / 2
     atr_val = atr(df, period)
-    upper_band = hl2 + multiplier * atr_val
-    lower_band = hl2 - multiplier * atr_val
+    basic_upper = hl2 + multiplier * atr_val
+    basic_lower = hl2 - multiplier * atr_val
+    final_upper = pd.Series(index=df.index, dtype=float)
+    final_lower = pd.Series(index=df.index, dtype=float)
+    trend = pd.Series(index=df.index, dtype="int64")
 
-    trend = pd.Series(index=df.index, dtype=int)
-    trend.iloc[0] = 1
+    first = df.index[0]
+    final_upper.loc[first] = basic_upper.loc[first]
+    final_lower.loc[first] = basic_lower.loc[first]
+    trend.loc[first] = 1
+
     for i in range(1, len(df)):
-        if df["close"].iloc[i] > upper_band.iloc[i - 1]:
-            trend.iloc[i] = 1
-        elif df["close"].iloc[i] < lower_band.iloc[i - 1]:
-            trend.iloc[i] = -1
+        idx = df.index[i]
+        prev_idx = df.index[i - 1]
+
+        if (
+            basic_upper.loc[idx] < final_upper.loc[prev_idx]
+            or df["close"].loc[prev_idx] > final_upper.loc[prev_idx]
+        ):
+            final_upper.loc[idx] = basic_upper.loc[idx]
         else:
-            trend.iloc[i] = trend.iloc[i - 1]
+            final_upper.loc[idx] = final_upper.loc[prev_idx]
+
+        if (
+            basic_lower.loc[idx] > final_lower.loc[prev_idx]
+            or df["close"].loc[prev_idx] < final_lower.loc[prev_idx]
+        ):
+            final_lower.loc[idx] = basic_lower.loc[idx]
+        else:
+            final_lower.loc[idx] = final_lower.loc[prev_idx]
+
+        prev_trend = trend.loc[prev_idx]
+        if prev_trend == -1 and df["close"].loc[idx] > final_upper.loc[prev_idx]:
+            trend.loc[idx] = 1
+        elif prev_trend == 1 and df["close"].loc[idx] < final_lower.loc[prev_idx]:
+            trend.loc[idx] = -1
+        else:
+            trend.loc[idx] = prev_trend
+
     return trend
 
 
 def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.5) -> pd.Series:
-    avg = volume.rolling(lookback).mean()
+    # Compare the current candle against completed candles only.  Including
+    # the current volume in its own baseline makes a genuine spike harder to
+    # detect and makes the feature inconsistent with a live alert.
+    avg = volume.shift(1).rolling(lookback, min_periods=lookback).mean()
     return volume > (avg * factor)
 
 
@@ -212,7 +264,7 @@ def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
     di_sum = (plus_di + minus_di).replace(0, 1e-9)
     dx = 100 * (plus_di - minus_di).abs() / di_sum
-    return dx.ewm(alpha=1 / period, adjust=False).mean()
+    return dx.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
 
 @dataclass
@@ -264,24 +316,34 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
     pullback_atr_mult = get_setup_engine_param(cfg, "pullback_atr_mult", timeframe, 1.0)
+    breakout_buffer_atr_mult = get_setup_engine_param(
+        cfg, "breakout_buffer_atr_mult", timeframe, 0.10
+    )
 
     close = df["close"].iloc[i]
     atr_val = ind["atr"].iloc[i]
     ema_val = ind["ema200"].iloc[i]
+    if pd.isna(close) or pd.isna(atr_val) or pd.isna(ema_val) or atr_val <= 0:
+        return "UNKNOWN"
     dist_ema_atr = abs(close - ema_val) / atr_val if atr_val > 0 else 0.0
 
     lookback_start = max(0, i - structure_lookback)
     prior_high = df["high"].iloc[lookback_start:i].max() if i > lookback_start else close
     prior_low = df["low"].iloc[lookback_start:i].min() if i > lookback_start else close
 
-    if direction == "LONG" and pd.notna(prior_high) and close > prior_high:
+    breakout_buffer = atr_val * breakout_buffer_atr_mult
+    if direction == "LONG" and pd.notna(prior_high) and close > prior_high + breakout_buffer:
         return "BREAKOUT"
-    if direction == "SHORT" and pd.notna(prior_low) and close < prior_low:
+    if direction == "SHORT" and pd.notna(prior_low) and close < prior_low - breakout_buffer:
         return "BREAKOUT"
 
-    if dist_ema_atr <= pullback_atr_mult:
+    on_trend_side = (
+        (direction == "LONG" and close >= ema_val)
+        or (direction == "SHORT" and close <= ema_val)
+    )
+    if on_trend_side and dist_ema_atr <= pullback_atr_mult:
         return "PULLBACK"
-    if dist_ema_atr >= extended_atr_mult:
+    if on_trend_side and dist_ema_atr >= extended_atr_mult:
         return "EXTENDED"
     return "CONTINUATION"
 
@@ -349,6 +411,27 @@ def update_regime_episode(state: dict, regime: str) -> dict:
 def score_at(
     df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict, timeframe: str = ""
 ) -> SignalResult:
+    if i < 0 or i >= len(df):
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=["Index candle tidak valid"],
+        )
+
+    required_values = [
+        ind["ema200"].iloc[i],
+        ind["macd_line"].iloc[i],
+        ind["signal_line"].iloc[i],
+        ind["supertrend"].iloc[i],
+        ind["rsi"].iloc[i],
+        ind["atr"].iloc[i],
+        ind["adx"].iloc[i],
+    ]
+    if any(pd.isna(value) for value in required_values):
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=["Indikator belum warm-up atau datanya tidak valid"],
+        )
+
     adx_min = cfg.get("risk", {}).get("adx_min", 0)
     if adx_min and pd.notna(ind["adx"].iloc[i]) and ind["adx"].iloc[i] < adx_min:
         return SignalResult(
@@ -411,6 +494,8 @@ def score_at(
 
     # Hard confluence filter
     min_alignment = cfg.get("scoring", {}).get("min_trend_alignment", 2)
+    min_direction_margin = cfg.get("scoring", {}).get("min_direction_margin", 0)
+    direction_margin = abs(trend_long - trend_short)
     if alignment < min_alignment:
         return SignalResult(
             symbol=symbol,
@@ -419,6 +504,14 @@ def score_at(
             timeframe=timeframe,
             reasons=[
                 f"Konfluensi tren lemah ({alignment}/{min_alignment} indikator inti searah) — ditolak"
+            ],
+        )
+    if direction_margin < min_direction_margin:
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=[
+                f"Arah terlalu imbang ({direction_margin:.1f} < "
+                f"{min_direction_margin} skor margin) — ditolak"
             ],
         )
 
@@ -479,11 +572,16 @@ def score_at(
             reasons.append(f"ADX ({adx_val:.1f}) tren kuat (+{adx_bonus:.1f} skor)")
 
     setup_type = classify_setup(df, ind, i, direction, cfg, timeframe)
+    if setup_type == "UNKNOWN":
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=["Setup tidak dapat diklasifikasikan karena nilai indikator invalid"],
+        )
 
-    # Hard block EXTENDED di semua timeframe — konsisten dengan alasan
-    # "historis sangat underperform". Sebelumnya cuma diblokir di 15m/1h,
-    # tapi malah dikasih bonus positif di 4h (kontradiksi konsep yang sama).
-    if setup_type == "EXTENDED":
+    if (
+        setup_type == "EXTENDED"
+        and cfg.get("setup_engine", {}).get("block_extended", True)
+    ):
         return SignalResult(
             symbol=symbol,
             direction="NONE",
@@ -511,23 +609,28 @@ def score_at(
             timeframe=timeframe, setup_type=setup_type, reasons=reasons,
         )
 
-    struct_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
+    struct_lookback = int(
+        get_setup_engine_param(cfg, "structure_lookback", timeframe, 20)
+    )
+    stop_lookback = int(
+        get_setup_engine_param(
+            cfg, "stop_lookback", timeframe, max(5, min(struct_lookback, 12))
+        )
+    )
     sl_buffer = ind["atr"].iloc[i] * get_setup_engine_param(cfg, "structure_sl_buffer_atr_mult", timeframe, 0.25)
     atr_sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
 
     risk_cfg = cfg.get("risk", {})
     base_cap_mult = risk_cfg.get("structure_sl_max_atr_mult", 2.5)
-    # BREAKOUT wajar punya structural stop lebih lebar: ATR sering masih kecil
-    # (market baru keluar dari konsolidasi tenang) padahal swing lookback-nya
-    # lebar. Cap generik ke-trigger nyaris selalu di kasus ini dan malah
-    # menghilangkan proteksi SL struktural pada setup yang paling sering
-    # muncul & paling tinggi skornya. Cap khusus breakout dibuat lebih longgar.
+    # These settings are multiples of raw ATR, not multiples of the already
+    # multiplied ATR stop. The old code effectively allowed
+    # 2.3 * 1.6 = 3.68 ATR while the config said 2.3 ATR.
     cap_mult = base_cap_mult
     if setup_type == "BREAKOUT":
         cap_mult = risk_cfg.get("structure_sl_max_atr_mult_breakout", base_cap_mult)
-    max_sl_dist = atr_sl_dist * cap_mult
+    max_sl_dist = ind["atr"].iloc[i] * max(cap_mult, cfg["risk"]["atr_multiplier_sl"])
 
-    lb_start = max(0, i - struct_lookback)
+    lb_start = max(0, i - stop_lookback)
     if direction == "LONG":
         structural_level = df["low"].iloc[lb_start:i].min() if i > lb_start else None
         structural_dist = (price - structural_level) + sl_buffer if pd.notna(structural_level) else atr_sl_dist
@@ -535,12 +638,25 @@ def score_at(
         structural_level = df["high"].iloc[lb_start:i].max() if i > lb_start else None
         structural_dist = (structural_level - price) + sl_buffer if pd.notna(structural_level) else atr_sl_dist
 
+    if (
+        structural_dist > max_sl_dist
+        and risk_cfg.get("reject_structural_stop_too_wide", True)
+    ):
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=final_score,
+            timeframe=timeframe, setup_type=setup_type,
+            reasons=reasons + [
+                f"Stop struktur terlalu jauh ({structural_dist / ind['atr'].iloc[i]:.2f} ATR "
+                f"> batas {cap_mult:.2f} ATR) — setup ditolak"
+            ],
+        )
+
     sl_dist = max(atr_sl_dist, structural_dist)
     if sl_dist > max_sl_dist:
         sl_dist = max_sl_dist
-        reasons.append(f"SL struktur terlalu jauh, di-cap {cap_mult}x ATR")
+        reasons.append(f"SL struktur di-cap {cap_mult}x ATR")
     elif sl_dist > atr_sl_dist:
-        reasons.append(f"SL digeser ke luar struktur {struct_lookback}-bar terakhir (bukan cuma ATR flat)")
+        reasons.append(f"SL digeser ke luar struktur {stop_lookback}-bar terakhir")
 
     rr_min = cfg["risk"]["risk_reward_min"]
     target_lookback = int(get_setup_engine_param(cfg, "target_lookback", timeframe, struct_lookback * 2))
@@ -591,6 +707,15 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "") 
 
 def passes_risk_filter(signal: SignalResult, cfg: dict) -> bool:
     if signal.direction == "NONE" or signal.entry is None:
+        return False
+    if signal.sl is None or signal.tp is None:
+        return False
+    if not all(pd.notna(value) for value in (signal.entry, signal.sl, signal.tp)):
+        return False
+
+    if signal.direction == "LONG" and not (signal.sl < signal.entry < signal.tp):
+        return False
+    if signal.direction == "SHORT" and not (signal.tp < signal.entry < signal.sl):
         return False
 
     risk = abs(signal.entry - signal.sl)
