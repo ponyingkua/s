@@ -47,6 +47,12 @@ scoring:
     "15m":
       long:
         extended: -20
+        pullback: 15
+    "1h":
+      long:
+        breakout: 20
+        extended: -15
+        pullback: -20
     "4h":
       long:
         continuation: -20
@@ -78,6 +84,10 @@ setup_engine:
   pullback_atr_mult: 1.0
   extended_atr_mult: 3.5
   structure_sl_buffer_atr_mult: 0.25
+  "15m":
+    structure_lookback: 40
+  "4h":
+    structure_lookback: 30
 
 regime_filter:
   enabled: true
