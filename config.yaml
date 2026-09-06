@@ -95,7 +95,7 @@ scoring:
       pullback: -15
       continuation: -25
       extended: -35
-  min_score_to_trigger: 92
+  min_score_to_trigger: 87
   min_trend_alignment: 2
   min_direction_margin: 15
 
