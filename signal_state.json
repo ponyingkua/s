@@ -565,5 +565,35 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-06T02:36:44.314924+00:00"
+  },
+  "COMPUSDT|1h": {
+    "symbol": "COMPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:20:25.610002+00:00"
+  },
+  "COTIUSDT|15m": {
+    "symbol": "COTIUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:20:26.432507+00:00"
+  },
+  "SNDKUSDT|15m": {
+    "symbol": "SNDKUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:20:26.708304+00:00"
+  },
+  "KORUUSDT|15m": {
+    "symbol": "KORUUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:20:26.911556+00:00"
+  },
+  "ARBUSDT|4h": {
+    "symbol": "ARBUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:20:27.117627+00:00"
   }
 }
