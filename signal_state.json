@@ -841,5 +841,17 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-06T22:16:33.734440+00:00"
+  },
+  "PEOPLEUSDT|1h": {
+    "symbol": "PEOPLEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-06T23:41:32.285040+00:00"
+  },
+  "BOMEUSDT|1h": {
+    "symbol": "BOMEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-06T23:41:33.273841+00:00"
   }
 }

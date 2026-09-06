@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "symbol": "PEOPLEUSDT",
+    "direction": "SHORT",
+    "score": 64.0,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (43) menguatkan momentum turun",
+      "ADX (22.9) tren kuat (+2.0 skor)",
+      "Setup terdeteksi: PULLBACK (+6 skor)"
+    ],
+    "entry": 0.008082,
+    "sl": 0.00826,
+    "tp": 0.007761
+  },
+  {
+    "symbol": "BOMEUSDT",
+    "direction": "SHORT",
+    "score": 63.8,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (46) menguatkan momentum turun",
+      "ADX (22.7) tren kuat (+1.8 skor)",
+      "Setup terdeteksi: PULLBACK (+6 skor)",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 1.89"
+    ],
+    "entry": 0.000898,
+    "sl": 0.000939,
+    "tp": 0.000822
+  }
+]
