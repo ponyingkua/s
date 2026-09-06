@@ -1,104 +1,3 @@
-"""vSynapse v3.1 — Binance Futures scanner, 1 file.
-
-Isi: fetch data (async), indikator teknikal, confluence scoring,
-setup engine (breakout/pullback/continuation/extended), filter ADX,
-multi-timeframe scanning + MTF agreement bonus, risk filter,
-cooldown/dedup per (symbol, timeframe), notifikasi Telegram, dan
-entry point CLI.
-
-Perubahan dari v3 (lihat catatan detail di tiap bagian):
-1. Scan sekarang jalan independen di SETIAP timeframe di config
-   ("timeframes"), bukan cuma 1 TF utama + 1 TF filter biner. Setiap
-   TF bisa menghasilkan sinyal sendiri (15m, 1h, atau 4h — bukan
-   melulu 15m).
-2. Konfluensi multi-timeframe sekarang jadi BONUS SKOR (kalau 2+ TF
-   searah), bukan syarat lolos/gugur — supaya sinyal 1 TF yang kuat
-   tidak otomatis dibuang cuma karena TF lain kebetulan netral.
-3. Tambah "Setup Engine" ringan: tiap sinyal dilabeli salah satu dari
-   BREAKOUT / PULLBACK / CONTINUATION / EXTENDED, dengan bonus/penalti
-   skor sesuai jenisnya (lihat classify_setup()).
-4. Tambah filter ADX: sinyal ditolak duluan kalau tren dianggap terlalu
-   lemah/choppy (ADX di bawah ambang), sebelum indikator lain dihitung.
-5. Fix bug: BinanceFuturesClient sekarang benar-benar punya
-   get_klines_paginated() (dipanggil backtest.py untuk --limit >1500,
-   sebelumnya tidak ada method-nya sama sekali -> AttributeError).
-
-Perubahan v3.2 (fokus kualitas sinyal & setup):
-6. Gate histori minimum: symbol dengan closed candle < scanning.min_history_bars
-   di-skip, supaya coin baru listing (EMA200/ADX belum konvergen) tidak ikut
-   menghasilkan sinyal yang bias.
-7. ADX sekarang juga jadi bonus skor bertingkat (scoring.weights.adx_strength),
-   bukan cuma gate biner lolos/gugur di risk.adx_min — ADX >= risk.adx_strong
-   dapat bonus penuh, di antara adx_min & adx_strong bonusnya diskala linear.
-8. SL sekarang berbasis struktur (swing low/high N-bar terakhir + buffer ATR
-   kecil), bukan cuma ATR flat — dipakai kalau lebih jauh dari ATR stop biasa,
-   di-cap di risk.structure_sl_max_atr_mult supaya R:R tidak jebol saat
-   struktur jauh (mis. tren EXTENDED). TP tetap proporsional risk_reward_min
-   terhadap SL yang baru ini, jadi kontrak reward:risk tidak berubah.
-
-Perubahan v3.3 (dari analisis trades_raw_batch.json, 175 trade closed,
-17 Jul - 5 Sep 2026, backtest 1h, regime filter v3.2 aktif):
-9. Setup bonus SEKARANG per-ARAH, bukan flat sama untuk LONG & SHORT.
-   Data batch nunjukkin setup yang SAMA bisa berkebalikan hasilnya
-   tergantung arah, mis. EXTENDED: LONG avg R +0.251 (n=39, bagus) vs
-   SHORT avg R -0.714 (n=15, terburuk dari semua kombinasi). PULLBACK:
-   LONG ~0.00 (n=19, netral) vs SHORT -0.586 (n=11, buruk). Bahkan
-   BREAKOUT, setup terbaik untuk LONG (+0.257, n=58), cuma breakeven
-   untuk SHORT (-0.043, n=15) — semua 4 jenis setup SHORT ada di
-   angka breakeven-ke-bawah, tidak ada satupun yang jelas profitable.
-   Lihat get_setup_bonus() dan scoring.setup_bonus.{long,short} di config.
-   Skema lama (flat) tetap didukung sebagai fallback kalau config belum
-   diupdate.
-10. Market regime filter sekarang bisa ASIMETRIS per arah (short_mode /
-    long_mode di regime_filter config). Default baru: SHORT cuma lolos
-    kalau regime BTCUSDT sudah terkonfirmasi "BEAR" (bear_only) — bukan
-    lagi "asal bukan BULL". Alasan: breakdown kronologis data batch
-    nunjukkin SHORT tetap kalah (13-29% win rate, avg R -0.31 s/d -0.70)
-    bahkan di periode yang regime-nya cuma "NEUTRAL" (bukan BULL), artinya
-    filter lama tidak cukup ketat menangkap kondisi market yang sebenarnya
-    merugikan SHORT — dan makin dalam minusnya di paruh kedua periode
-    (avg R -0.704) pas trend naik lagi jelas-jelasnya. LONG tidak diubah
-    (masih lolos asal bukan BEAR): LONG sempat lemah juga di paruh pertama
-    (avg R -0.152, periode choppy), TAPI net positif di agregat penuh
-    (+0.192) dan tidak menunjukkan pola separah/sekonsisten SHORT yang
-    minus di KEDUA paruh waktu. Lihat passes_regime_filter().
-
-Perubahan v3.4:
-11. setup_bonus sekarang bisa 3 LEVEL: <timeframe>.<direction>.<setup>,
-    bukan cuma 2 level (direction.setup) -- karena setup yang sama juga bisa
-    beda hasilnya antar-TF, bukan cuma antar-arah. Skema 2-level v3.3 tetap
-    jadi FALLBACK persis apa adanya: kalau TF tidak ada entry-nya di config,
-    atau TF ada tapi setup spesifik itu belum diisi, turun ke direction.setup
-    yang lama. Jadi config boleh cuma override SEBAGIAN kombinasi TF x arah x
-    setup (mis. cuma continuation di 4h), sisanya otomatis pakai baseline
-    lama. Lihat get_setup_bonus().
-12. Penalti CONTINUATION 4h diperbesar (lihat scoring.setup_bonus."4h" di
-    config) karena setup CONTINUATION di TF tinggi dianggap lebih rawan
-    "telat masuk" tren yang sudah jalan lama. CONTINUATION 15m/1h SENGAJA
-    ditahan dulu di angka lama (fallback ke skema flat v3.3) karena jumlah
-    sampel per-TF untuk keduanya masih terlalu kecil untuk dipisah dengan
-    percaya diri -- baru dipisah kalau backtest per-TF sudah cukup data.
-13. Tambah pengaman risk-management baru: throttle "N sinyal per regime-flip
-    episode", TERPISAH dari risk.max_signals_per_run. bear_only untuk SHORT
-    TIDAK dilonggarkan (tetap seperti v3.3) -- tapi begitu regime BTCUSDT
-    flip ke BEAR, berpotensi BANYAK simbol sekaligus lolos SHORT di run yang
-    sama maupun run-run berikutnya selama regime itu bertahan (cron jalan
-    tiap 15 menit), padahal semuanya pada dasarnya taruhan yang SAMA
-    (mengikuti macro trend BTCUSDT), bukan sinyal independen per simbol.
-    max_signals_per_run cuma membatasi PER RUN, tidak lintas run. Sekarang
-    ada "episode" rezim yang dilacak persisten di signal_state.json (reset
-    tiap kali regime berubah dari yang tercatat terakhir), dan cuma arah
-    yang memang di-gate KHUSUS oleh mode "_only" (mis. SHORT saat bear_only
-    aktif & regime == BEAR) yang kena throttle ini -- arah yang tidak
-    di-gate ketat (mis. LONG dengan mode "not_bear") tidak terpengaruh.
-    Lihat get_regime_gated_direction() & update_regime_episode(). CATATAN:
-    ini TIDAK direplikasi di backtest.py -- backtest_symbol() jalan per
-    simbol sendiri-sendiri tanpa jam bersama antar-simbol, jadi tidak bisa
-    meniru "N sinyal dari 1 run lintas-simbol" tanpa berisiko implementasi
-    yang salah kaprah (sama seperti alasan MTF agreement tidak direplikasi).
-
-Dijalankan lewat: python scanner.py --out synaptic_candidates.json
-"""
 from __future__ import annotations
 
 import argparse
@@ -113,12 +12,8 @@ import aiohttp
 import pandas as pd
 import yaml
 
-BASE_URL = "https://www.binance.com"  # fapi.binance.com sering diblokir IP datacenter
+BASE_URL = "https://www.binance.com"
 
-
-# ---------------------------------------------------------------------------
-# Data client
-# ---------------------------------------------------------------------------
 
 @dataclass
 class Kline:
@@ -188,11 +83,6 @@ class BinanceFuturesClient:
         return Kline(symbol=symbol, timeframe=interval, df=df)
 
     async def get_klines_paginated(self, symbol: str, interval: str, total_limit: int) -> Kline:
-        """Ambil kline lebih dari batas 1500/request Binance dengan beberapa
-        request mundur dari waktu sekarang (pakai endTime), lalu digabung
-        jadi satu Kline utuh. Dipakai backtest.py saat --limit > 1500 —
-        sebelumnya method ini dipanggil tapi tidak pernah didefinisikan,
-        jadi selalu crash AttributeError begitu limit-nya besar."""
         url = f"{BASE_URL}/fapi/v1/klines"
         all_raw: list = []
         end_time: int | None = None
@@ -209,9 +99,9 @@ class BinanceFuturesClient:
                 break
             all_raw = raw + all_raw
             remaining -= len(raw)
-            end_time = int(raw[0][0]) - 1  # mundur sebelum candle paling awal batch ini
+            end_time = int(raw[0][0]) - 1
             if len(raw) < batch_limit:
-                break  # data historis sudah habis
+                break
 
         df = self._parse_klines_df(all_raw)
         df = df.drop_duplicates(subset="open_time").sort_values("open_time").reset_index(drop=True)
@@ -227,12 +117,6 @@ class BinanceFuturesClient:
 
 
 def drop_unclosed_candle(df: pd.DataFrame) -> pd.DataFrame:
-    """Buang candle terakhir kalau itu masih 'sedang berjalan' (belum closed).
-
-    Binance selalu menyertakan candle yang sedang terbentuk sebagai baris
-    terakhir kalau di-query real-time. Kalau ini tidak dibuang, skor/sinyal
-    dihitung dari harga yang masih bisa berubah kapan saja sampai candle itu
-    benar-benar tutup — sumber utama sinyal yang "berubah-ubah" tiap scan."""
     if df.empty or "close_time" not in df.columns:
         return df
     now = pd.Timestamp.now(tz="UTC")
@@ -241,10 +125,6 @@ def drop_unclosed_candle(df: pd.DataFrame) -> pd.DataFrame:
         return df.iloc[:-1].reset_index(drop=True)
     return df
 
-
-# ---------------------------------------------------------------------------
-# Indikator teknikal
-# ---------------------------------------------------------------------------
 
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
@@ -312,13 +192,6 @@ def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.5) -> 
 
 
 def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    """Average Directional Index — mengukur KEKUATAN tren, bukan arahnya.
-
-    Dipakai sebagai gate di score_at(): kalau ADX di bawah ambang, sinyal
-    ditolak lebih dulu sebelum indikator lain dihitung. Ini mengatasi kasus
-    EMA200 + MACD + Supertrend kebetulan align sesaat saat market sideways
-    (choppy) — ketiganya trend-following dan bisa "sepakat" sesaat tanpa
-    ada tren nyata yang layak ditradingkan."""
     high, low, close = df["high"], df["low"], df["close"]
     up_move = high.diff()
     down_move = -low.diff()
@@ -342,17 +215,13 @@ def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return dx.ewm(alpha=1 / period, adjust=False).mean()
 
 
-# ---------------------------------------------------------------------------
-# Confluence scoring
-# ---------------------------------------------------------------------------
-
 @dataclass
 class SignalResult:
     symbol: str
-    direction: str  # "LONG" | "SHORT" | "NONE"
+    direction: str
     score: float
     timeframe: str = ""
-    setup_type: str = ""  # "BREAKOUT" | "PULLBACK" | "CONTINUATION" | "EXTENDED" | ""
+    setup_type: str = ""
     reasons: list[str] = field(default_factory=list)
     entry: float | None = None
     sl: float | None = None
@@ -360,14 +229,6 @@ class SignalResult:
 
 
 def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
-    """Hitung semua indikator SEKALI di seluruh histori yang tersedia.
-
-    Krusial buat akurasi: indikator berbasis EWM (EMA, MACD, Supertrend, ATR,
-    ADX) butuh histori panjang supaya nilainya konvergen ke rata-rata yang
-    stabil, bukan bias ke titik mulai data yang arbitrer. Backtest versi
-    sebelumnya memotong ulang window 200 bar tiap iterasi lalu menghitung
-    EMA200 dari nol di situ — 200 bar jelas tidak cukup buat EMA span=200
-    konvergen, hasilnya bias dan kadang salah arah dibanding EMA200 "asli"."""
     close = df["close"]
     ind_cfg = cfg["indicators"]
 
@@ -392,21 +253,6 @@ def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
 
 
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict) -> str:
-    """Klasifikasikan jenis setup di bar ke-i, sesuai arah yang sudah
-    ditentukan sebelumnya oleh score_at():
-
-    - BREAKOUT: harga close menembus level tertinggi/terendah N-bar
-      terakhir searah sinyal — momentum baru, biasanya paling layak dikejar.
-    - PULLBACK: harga sedang berada dekat/menyentuh garis EMA200 (area
-      value), belum breakout — entry lebih murah, R:R biasanya lebih bagus.
-    - EXTENDED: harga sudah terlalu jauh dari EMA200 (dalam satuan ATR) —
-      rawan exhaustion/reversal jangka pendek, prioritas diturunkan.
-    - CONTINUATION: tidak masuk 3 kategori di atas — tren jalan normal,
-      bukan di titik entry yang istimewa.
-
-    Ini pengganti sederhana untuk "Setup Engine" (BREAKOUT/PULLBACK/
-    CONTINUATION/EXTENDED) yang sebelumnya cuma jadi arah+skor mentah tanpa
-    label sama sekali."""
     se_cfg = cfg.get("setup_engine", {})
     structure_lookback = se_cfg.get("structure_lookback", 20)
     extended_atr_mult = se_cfg.get("extended_atr_mult", 3.5)
@@ -434,25 +280,6 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
 
 
 def get_setup_bonus(cfg: dict, direction: str, setup_type: str, timeframe: str = "") -> float:
-    """Ambil bonus/penalti skor setup — sekarang bisa 3 level (v3.4):
-    scoring.setup_bonus.<timeframe>.<direction>.<setup>.
-
-    Alasan: setup yang sama juga bisa beda hasilnya antar-TIMEFRAME, bukan
-    cuma antar-arah (contoh: CONTINUATION di 4h dianggap lebih rawan "telat
-    masuk" tren yang sudah jalan lama dibanding CONTINUATION di 15m/1h).
-    Tapi baru sebagian kombinasi TF yang punya cukup data untuk dipisah,
-    jadi fallback-nya berlapis dua:
-
-    1. Kalau ada config.setup_bonus.<timeframe> DAN setup spesifik ini
-       terisi di situ -> pakai itu.
-    2. Kalau tidak (TF tidak ada entry-nya sama sekali, ATAU TF ada tapi
-       setup ini belum diisi di situ) -> turun ke skema v3.3 (2 level,
-       flat lintas semua TF): scoring.setup_bonus.<direction>.<setup>.
-       Pola fallback ini PERSIS yang sudah ada sebelumnya, dipakai ulang
-       apa adanya supaya config lama/sebagian-terisi tetap jalan.
-    3. Kalau config masih skema lama sekali (flat, key langsung nama setup
-       tanpa "long"/"short") -> fallback paling akhir ke situ (v3.2 ke bawah).
-    """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
 
     tf_cfg = sb_cfg.get(timeframe, {}) if timeframe else {}
@@ -460,59 +287,29 @@ def get_setup_bonus(cfg: dict, direction: str, setup_type: str, timeframe: str =
         dir_cfg = tf_cfg.get(direction.lower(), {})
         if setup_type.lower() in dir_cfg:
             return dir_cfg[setup_type.lower()]
-        # TF ada tapi kombinasi arah+setup ini belum diisi -> lanjut ke
-        # fallback flat di bawah, JANGAN diam-diam anggap 0.
 
     if "long" in sb_cfg or "short" in sb_cfg:
         dir_cfg = sb_cfg.get(direction.lower(), {})
         return dir_cfg.get(setup_type.lower(), 0)
-    return sb_cfg.get(setup_type.lower(), 0)  # skema lama flat (v3.2 ke bawah)
+    return sb_cfg.get(setup_type.lower(), 0)
 
 
 def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
-    """Cek apakah arah sinyal ini boleh lolos rezim makro BTCUSDT saat ini.
-
-    v3.3: SHORT & LONG sekarang bisa punya MODE filter yang beda (tidak
-    otomatis simetris), diatur lewat regime_filter.short_mode / long_mode:
-
-    - short_mode "bear_only" (DEFAULT baru): SHORT cuma lolos kalau regime
-      sudah terkonfirmasi "BEAR" — NEUTRAL maupun BULL berdua memblokir.
-      Ini menjawab temuan data: SHORT tetap rugi (win rate 13-29%, avg R
-      negatif di semua jenis setup) bahkan saat regime cuma "NEUTRAL".
-    - short_mode "not_bull" (perilaku lama v3.2, tersedia kalau mau
-      dibandingkan lagi setelah ada data di kondisi BEAR sungguhan):
-      SHORT diblokir cuma kalau regime == "BULL".
-    - long_mode "not_bear" (DEFAULT, tidak berubah dari v3.2): LONG
-      diblokir cuma kalau regime == "BEAR".
-    - long_mode "bull_only" (opsional/eksperimental, belum ada bukti data
-      yang menuntut ini): LONG cuma lolos kalau regime sudah "BULL".
-    """
     regime_cfg = cfg.get("regime_filter", {})
     if direction == "SHORT":
         mode = regime_cfg.get("short_mode", "bear_only")
         if mode == "bear_only":
             return regime == "BEAR"
-        return regime != "BULL"  # mode == "not_bull"
+        return regime != "BULL"
     if direction == "LONG":
         mode = regime_cfg.get("long_mode", "not_bear")
         if mode == "bull_only":
             return regime == "BULL"
-        return regime != "BEAR"  # mode == "not_bear"
+        return regime != "BEAR"
     return True
 
 
 def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
-    """Arah mana (kalau ada) yang HANYA lolos karena rezim spesifik ini
-    sedang aktif lewat mode ketat "_only" (bear_only/bull_only) — bukan yang
-    lolos lewat mode longgar "not_bear"/"not_bull".
-
-    Ini penting buat throttle_regime_episode(): arah yang di-gate ketat oleh
-    SATU rezim tertentu adalah arah yang paling rawan muncul serentak di
-    banyak simbol sekaligus tiap kali rezim itu baru saja flip — semuanya
-    breakout searah BTCUSDT di momen yang sama, bukan sinyal independen per
-    simbol. Arah dengan mode longgar (mis. LONG default "not_bear", lolos
-    di BULL maupun NEUTRAL) tidak dianggap "milik" satu rezim tunggal,
-    jadi tidak ikut di-throttle di sini."""
     regime_cfg = cfg.get("regime_filter", {})
     if regime == "BEAR" and regime_cfg.get("short_mode", "bear_only") == "bear_only":
         return "SHORT"
@@ -522,16 +319,6 @@ def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
 
 
 def update_regime_episode(state: dict, regime: str) -> dict:
-    """Lacak "episode" rezim saat ini di state persisten (signal_state.json)
-    lewat key reserved "_regime_episode" (aman dari bentrok dengan key
-    cooldown per-symbol, yang selalu berbentuk "{symbol}|{timeframe}").
-
-    Sebuah episode dimulai tiap kali regime BERUBAH dari yang tercatat
-    terakhir kali run_scan() dipanggil, dan mencatat berapa sinyal yang
-    sudah diambil selama episode itu bertahan — dipakai supaya cluster
-    sinyal berkorelasi dari SATU regime-flip tidak terus menumpuk lintas
-    banyak run selama regime itu belum berubah lagi (beda dengan
-    max_signals_per_run yang cuma membatasi PER RUN)."""
     episode = state.get("_regime_episode")
     if not isinstance(episode, dict) or episode.get("regime") != regime:
         episode = {
@@ -546,27 +333,6 @@ def update_regime_episode(state: dict, regime: str) -> dict:
 def score_at(
     df: pd.DataFrame, ind: dict, i: int, symbol: str, cfg: dict, timeframe: str = ""
 ) -> SignalResult:
-    """Skor 1 bar spesifik (index i) pakai indikator yang sudah dihitung
-    sebelumnya lewat compute_indicators(). Dipisah dari score_symbol supaya
-    backtest bisa hitung indikator sekali lalu skor banyak titik, bukan
-    hitung ulang tiap titik (lihat compute_indicators).
-
-    Alur (v3.2):
-    0. Gate ADX — kalau tren dianggap terlalu lemah (choppy), tolak duluan
-       sebelum indikator lain dihitung sama sekali.
-    1. Arah (`direction`) ditentukan dari 3 indikator trend-following inti
-       (EMA200, MACD, Supertrend) — dan tidak bisa dibalik lagi oleh RSI.
-    2. RSI cuma MENGUATKAN arah yang sudah ditentukan (momentum
-       confirmation), RSI netral (40-60) tidak dapat bonus.
-    3. Volume spike cuma dapat bonus kalau searah candle dengan sinyal.
-    4. ADX strength — bonus skor bertingkat kalau ADX jauh di atas adx_min
-       (tren kuat), beda dari ADX yang cuma baru lolos gate di langkah 0.
-    5. Setup Engine memberi label + bonus/penalti sesuai jenis setup
-       (breakout/pullback/continuation/extended) — lihat classify_setup().
-    6. SL dihitung dari ATR ATAU struktur (swing low/high N-bar terakhir),
-       dipilih yang lebih jauh dari entry lalu di-cap — bukan ATR flat saja.
-       TP tetap proporsional risk_reward_min terhadap SL final ini.
-    """
     adx_min = cfg.get("risk", {}).get("adx_min", 0)
     if adx_min and pd.notna(ind["adx"].iloc[i]) and ind["adx"].iloc[i] < adx_min:
         return SignalResult(
@@ -587,7 +353,6 @@ def score_at(
     long_score, short_score = 0.0, 0.0
     reasons: list[str] = []
 
-    # --- 1. Tentukan arah dari 3 indikator trend-following inti ---------
     trend_long, trend_short = 0.0, 0.0
 
     ema_up = price > ind["ema200"].iloc[i]
@@ -620,9 +385,6 @@ def score_at(
         reasons.append("MACD line di bawah signal line (momentum turun)" if not macd_up else "MACD line di atas signal line (tapi indikator lain condong SHORT)")
         reasons.append("Supertrend menunjukkan downtrend" if not st_up else "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)")
 
-    # --- 2. RSI cuma menguatkan arah yang sudah ditentukan, tidak pernah
-    #        melawannya. RSI netral (40-60) tidak dapat bonus sama sekali
-    #        karena tidak informatif untuk arah mana pun. -----------------
     r = ind["rsi"].iloc[i]
     if direction == "LONG" and 50 < r <= 70:
         long_score += w["rsi_confluence"]
@@ -637,7 +399,6 @@ def score_at(
     else:
         reasons.append(f"RSI netral ({r:.0f}), tidak menambah skor")
 
-    # --- 3. Volume spike cuma dapat bonus kalau candle-nya searah sinyal -
     has_volume_spike = bool(ind["vol_spike"].iloc[i])
     candle_bullish = price > open_price
     candle_bearish = price < open_price
@@ -650,9 +411,6 @@ def score_at(
     elif has_volume_spike:
         reasons.append("Volume spike terdeteksi tapi arah candle tidak sesuai sinyal — diabaikan")
 
-    # --- 4. ADX strength: bonus bertingkat, beda dari gate biner di atas -
-    # ADX yang baru lolos adx_min (mis. 21) tidak sekuat ADX 45 — di sini
-    # ADX >= risk.adx_strong dapat bonus penuh, di antaranya diskala linear.
     adx_strength_weight = w.get("adx_strength", 0)
     adx_val = ind["adx"].iloc[i]
     if adx_strength_weight and pd.notna(adx_val):
@@ -670,7 +428,6 @@ def score_at(
                 short_score += adx_bonus
             reasons.append(f"ADX ({adx_val:.1f}) tren kuat (+{adx_bonus:.1f} skor)")
 
-    # --- 5. Setup Engine: label jenis setup + bonus/penalti skor ---------
     setup_type = classify_setup(df, ind, i, direction, cfg)
     setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
@@ -688,14 +445,6 @@ def score_at(
             timeframe=timeframe, setup_type=setup_type, reasons=reasons,
         )
 
-    # --- 6. SL berbasis struktur, bukan ATR flat -------------------------
-    # ATR-flat stop bisa taruh SL persis di tengah zona swing low/high yang
-    # baru saja terbentuk (rawan kesapu noise/wick). Di sini SL digeser ke
-    # luar swing low/high N-bar terakhir (structure_lookback) + buffer ATR
-    # kecil, TAPI cuma dipakai kalau itu lebih jauh dari ATR stop biasa, dan
-    # di-cap ke structure_sl_max_atr_mult supaya R:R tidak jebol saat
-    # struktur jauh (mis. setup EXTENDED). TP tetap proporsional terhadap
-    # risk_reward_min dari SL final ini, jadi kontrak reward:risk tak berubah.
     se_cfg = cfg.get("setup_engine", {})
     struct_lookback = se_cfg.get("structure_lookback", 20)
     sl_buffer = ind["atr"].iloc[i] * se_cfg.get("structure_sl_buffer_atr_mult", 0.25)
@@ -738,19 +487,9 @@ def score_at(
 
 
 def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "") -> SignalResult:
-    """Wrapper: hitung indikator di seluruh df lalu skor bar TERAKHIR.
-    Dipakai scanner (live) & chart.py — interface tidak berubah dari versi
-    sebelumnya (parameter `timeframe` opsional, default "" tetap backward
-    compatible). Untuk backtest, pakai compute_indicators()+score_at()
-    langsung (lihat backtest.py) supaya indikator dihitung sekali, bukan
-    berulang tiap titik simulasi."""
     ind = compute_indicators(df, cfg)
     return score_at(df, ind, len(df) - 1, symbol, cfg, timeframe)
 
-
-# ---------------------------------------------------------------------------
-# Risk filter
-# ---------------------------------------------------------------------------
 
 def passes_risk_filter(signal: SignalResult, cfg: dict) -> bool:
     if signal.direction == "NONE" or signal.entry is None:
@@ -762,7 +501,7 @@ def passes_risk_filter(signal: SignalResult, cfg: dict) -> bool:
         return False
 
     rr = reward / risk
-    return rr >= cfg["risk"]["risk_reward_min"] - 1e-6  # toleransi pembulatan
+    return rr >= cfg["risk"]["risk_reward_min"] - 1e-6
 
 
 def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> float:
@@ -772,10 +511,6 @@ def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> fl
         return 0.0
     return risk_amount / per_unit_risk
 
-
-# ---------------------------------------------------------------------------
-# Cooldown / dedup state — sekarang per (symbol, timeframe)
-# ---------------------------------------------------------------------------
 
 def load_state(path: str) -> dict:
     if not os.path.exists(path):
@@ -797,9 +532,6 @@ def _state_key(symbol: str, timeframe: str) -> str:
 
 
 def is_in_cooldown(state: dict, symbol: str, direction: str, timeframe: str, cooldown_hours: float) -> bool:
-    """Cooldown sekarang per (symbol, timeframe) — bukan per symbol saja.
-    Sebelumnya sinyal 15m yang lagi cooldown ikut memblokir sinyal baru di
-    1h/4h untuk symbol yang sama, padahal keduanya independen."""
     entry = state.get(_state_key(symbol, timeframe))
     if not entry or entry.get("direction") != direction:
         return False
@@ -816,22 +548,7 @@ def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> N
     }
 
 
-# ---------------------------------------------------------------------------
-# Market regime filter
-# ---------------------------------------------------------------------------
-
 async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
-    """Tentukan rezim pasar makro dari 1 simbol bellwether (default BTCUSDT)
-    di timeframe tinggi, dipakai buat menyaring sinyal yang melawan arus
-    utama pasar.
-
-    Alasan: backtest batch nunjukkin trend-following system ini lemah secara
-    STATISTIK SIGNIFIKAN kalau ambil sinyal berlawanan arah dengan rezim
-    dominan (SHORT saat market lagi bull luas: t-stat -3.46 dari 51 trade,
-    win rate 0% di beberapa simbol) — bukan cuma kebetulan noise di 1-2 coin,
-    kejadian di semua 10 simbol yang dites. BULL/BEAR cuma diklaim kalau ADX
-    di timeframe itu cukup kuat (di atas regime_filter.adx_min); kalau tidak,
-    dianggap NEUTRAL dan tidak menyaring arah manapun."""
     regime_cfg = cfg.get("regime_filter", {})
     symbol = regime_cfg.get("symbol", "BTCUSDT")
     timeframe = regime_cfg.get("timeframe", "4h")
@@ -840,7 +557,7 @@ async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
     try:
         kline = await client.get_klines(symbol, timeframe, limit=cfg.get("scanning", {}).get("klines_limit", 300))
     except Exception:
-        return "NEUTRAL"  # gagal fetch -> jangan blokir scan gara-gara ini, biarkan lolos netral
+        return "NEUTRAL"
 
     closed = drop_unclosed_candle(kline.df)
     if len(closed) < 50:
@@ -859,12 +576,8 @@ async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
         return "BULL"
     if not ema_up and not st_up:
         return "BEAR"
-    return "NEUTRAL"  # EMA & Supertrend tidak sepakat -> jangan jadikan dasar filter
+    return "NEUTRAL"
 
-
-# ---------------------------------------------------------------------------
-# Notifikasi Telegram
-# ---------------------------------------------------------------------------
 
 def format_signal_message(signal: SignalResult) -> str:
     tf_label = f" [{signal.timeframe}]" if signal.timeframe else ""
@@ -926,7 +639,6 @@ async def send_telegram_photo(photo_path: str, caption: str, cfg: dict) -> None:
 
 
 async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> None:
-    """Kirim 1 file (misal .zip berisi kumpulan chart) sebagai dokumen Telegram."""
     tg_cfg = cfg["notify"]["telegram"]
     if not tg_cfg.get("enabled"):
         return
@@ -937,7 +649,6 @@ async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> Non
         return
 
     url = f"https://api.telegram.org/bot{token}/sendDocument"
-    # Caption Telegram dibatasi ~1024 karakter untuk dokumen.
     safe_caption = caption[:1024]
     with open(file_path, "rb") as doc_file:
         data = aiohttp.FormData()
@@ -961,10 +672,6 @@ def zip_charts(
     summary_text: str | None = None,
     out_dir: str = "charts",
 ) -> str | None:
-    """Kumpulkan semua chart hasil scan ke dalam 1 file .zip, plus file teks
-    ringkasan.txt berisi detail tiap sinyal di dalam zip yang sama. Return
-    path zip, atau None kalau tidak ada apa pun (chart maupun ringkasan)
-    untuk di-zip."""
     if not chart_paths and not summary_text:
         return None
 
@@ -981,10 +688,6 @@ def zip_charts(
 
     return zip_path
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 def load_config(path: str = "config.yaml") -> dict:
     with open(path) as f:
@@ -1014,25 +717,13 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         min_vol = cfg["exchange"]["min_volume_usdt_24h"]
         active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
 
-        # --- Rezim pasar makro (BTCUSDT) — dicek SEKALI di awal, dipakai
-        # buat menyaring sinyal yang melawan arus utama di semua simbol.
         regime_cfg = cfg.get("regime_filter", {})
         regime = await get_market_regime(client, cfg) if regime_cfg.get("enabled", False) else "NEUTRAL"
 
-        # --- Regime-flip episode: dilacak persisten di `state`, dipakai buat
-        # throttle_regime_episode di seleksi top_candidates di bawah (lihat
-        # get_regime_gated_direction & update_regime_episode). Direction yang
-        # None berarti rezim saat ini tidak sedang "memiliki" satu arah
-        # spesifik lewat mode ketat "_only" -> tidak ada yang di-throttle.
         regime_episode = update_regime_episode(state, regime)
         regime_gated_direction = get_regime_gated_direction(regime, cfg)
         max_signals_per_episode = cfg.get("risk", {}).get("max_signals_per_regime_episode")
 
-        # --- Scan SETIAP timeframe secara independen ------------------------
-        # Sebelumnya cuma timeframes[0] (15m) yang pernah menghasilkan sinyal;
-        # 1h cuma jadi filter biner dan 4h sama sekali tidak pernah dipakai.
-        # Sekarang tiap TF di config di-scan sendiri-sendiri dengan pipeline
-        # yang identik, jadi setup bisa muncul dari TF manapun yang layak.
         per_tf_candidates: dict[str, list[tuple[SignalResult, Kline]]] = {}
         for tf in timeframes:
             klines = await client.get_klines_many(active_symbols, tf, limit=klines_limit)
@@ -1040,14 +731,12 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             for kline in klines:
                 closed_df = drop_unclosed_candle(kline.df)
                 if len(closed_df) < min_history_bars:
-                    # Histori terlalu pendek (mis. coin baru listing) -> EMA200/ADX
-                    # belum konvergen, indikator trend-following jadi bias/tidak reliable.
                     continue
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
                     continue
                 if not passes_regime_filter(signal.direction, regime, cfg):
-                    continue  # lawan arus / belum terkonfirmasi searah rezim -> lihat passes_regime_filter()
+                    continue
                 if not passes_risk_filter(signal, cfg):
                     continue
                 if is_in_cooldown(state, kline.symbol, signal.direction, tf, cooldown_hours):
@@ -1055,9 +744,6 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 tf_candidates.append((signal, kline))
             per_tf_candidates[tf] = tf_candidates
 
-        # --- MTF agreement: sekarang jadi BONUS skor, bukan syarat lolos ----
-        # (dulu: 1h WAJIB searah baru sinyal 15m lolos; kalau 1h netral,
-        # sinyal 15m yang sebenarnya kuat ikut terbuang percuma.)
         direction_map: dict[str, dict[str, str]] = {}
         for tf, cands in per_tf_candidates.items():
             for signal, kline in cands:
@@ -1078,9 +764,6 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     )
                 flat_candidates.append((signal, kline))
 
-        # --- Satu simbol -> satu setup terbaik lintas TF ---------------------
-        # Supaya Top 5 tidak diborong 1 koin yang sinyalnya tumpang tindih
-        # di beberapa TF sekaligus; yang dipilih adalah skor tertinggi.
         best_per_symbol: dict[str, tuple[SignalResult, Kline]] = {}
         for signal, kline in flat_candidates:
             current = best_per_symbol.get(kline.symbol)
@@ -1089,12 +772,6 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
         candidates = sorted(best_per_symbol.values(), key=lambda c: c[0].score, reverse=True)
 
-        # --- Ambil top N per run, TAPI arah yang di-gate ketat oleh regime
-        # ("_only" mode) juga dibatasi terpisah oleh sisa budget episode
-        # rezim saat ini (lihat update_regime_episode & docstring v3.4 poin
-        # 13). Kandidat yang kena throttle dilewati, digantikan kandidat
-        # berikutnya di urutan skor supaya slot max_signals_per_run tetap
-        # terisi penuh oleh sinyal yang TIDAK kena batasan ini.
         max_per_run = cfg["risk"]["max_signals_per_run"]
         top_candidates: list[tuple[SignalResult, Kline]] = []
         for signal, kline in candidates:
@@ -1124,7 +801,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             captions.append(format_signal_message(signal))
 
             if auto_generate_charts:
-                import chart as chart_module  # lazy import, hindari circular import
+                import chart as chart_module
 
                 os.makedirs("charts", exist_ok=True)
                 chart_path = f"charts/{kline.symbol}_{signal.timeframe}.png"
@@ -1143,7 +820,6 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
-    # --- Kirim ke Telegram: cukup 1 file zip per scan, tanpa pesan teks terpisah ---
     summary = None
     if captions:
         summary = f"Scan selesai — {len(results)} sinyal ditemukan\n\n" + "\n\n".join(captions)
