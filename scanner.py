@@ -480,8 +480,10 @@ def score_at(
 
     setup_type = classify_setup(df, ind, i, direction, cfg, timeframe)
 
-    # Hard block EXTENDED on lower timeframes
-    if setup_type == "EXTENDED" and timeframe in ("15m", "1h"):
+    # Hard block EXTENDED di semua timeframe — konsisten dengan alasan
+    # "historis sangat underperform". Sebelumnya cuma diblokir di 15m/1h,
+    # tapi malah dikasih bonus positif di 4h (kontradiksi konsep yang sama).
+    if setup_type == "EXTENDED":
         return SignalResult(
             symbol=symbol,
             direction="NONE",
@@ -512,7 +514,18 @@ def score_at(
     struct_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     sl_buffer = ind["atr"].iloc[i] * get_setup_engine_param(cfg, "structure_sl_buffer_atr_mult", timeframe, 0.25)
     atr_sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
-    max_sl_dist = atr_sl_dist * cfg.get("risk", {}).get("structure_sl_max_atr_mult", 2.5)
+
+    risk_cfg = cfg.get("risk", {})
+    base_cap_mult = risk_cfg.get("structure_sl_max_atr_mult", 2.5)
+    # BREAKOUT wajar punya structural stop lebih lebar: ATR sering masih kecil
+    # (market baru keluar dari konsolidasi tenang) padahal swing lookback-nya
+    # lebar. Cap generik ke-trigger nyaris selalu di kasus ini dan malah
+    # menghilangkan proteksi SL struktural pada setup yang paling sering
+    # muncul & paling tinggi skornya. Cap khusus breakout dibuat lebih longgar.
+    cap_mult = base_cap_mult
+    if setup_type == "BREAKOUT":
+        cap_mult = risk_cfg.get("structure_sl_max_atr_mult_breakout", base_cap_mult)
+    max_sl_dist = atr_sl_dist * cap_mult
 
     lb_start = max(0, i - struct_lookback)
     if direction == "LONG":
@@ -525,16 +538,38 @@ def score_at(
     sl_dist = max(atr_sl_dist, structural_dist)
     if sl_dist > max_sl_dist:
         sl_dist = max_sl_dist
-        reasons.append(f"SL struktur terlalu jauh, di-cap {cfg.get('risk', {}).get('structure_sl_max_atr_mult', 2.5)}x ATR")
+        reasons.append(f"SL struktur terlalu jauh, di-cap {cap_mult}x ATR")
     elif sl_dist > atr_sl_dist:
         reasons.append(f"SL digeser ke luar struktur {struct_lookback}-bar terakhir (bukan cuma ATR flat)")
 
+    rr_min = cfg["risk"]["risk_reward_min"]
+    target_lookback = int(get_setup_engine_param(cfg, "target_lookback", timeframe, struct_lookback * 2))
+    tgt_start = max(0, i - target_lookback)
+
     if direction == "LONG":
         sl = price - sl_dist
-        tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
+        rr_tp = price + sl_dist * rr_min
+        struct_target = df["high"].iloc[tgt_start:i].max() if i > tgt_start else None
+        if pd.notna(struct_target) and (struct_target - price) >= sl_dist * rr_min:
+            tp = struct_target
+            reasons.append(
+                f"TP diambil dari level struktur (prior high {target_lookback}-bar), "
+                f"RR aktual {(tp - price) / sl_dist:.2f}"
+            )
+        else:
+            tp = rr_tp
     else:
         sl = price + sl_dist
-        tp = price - sl_dist * cfg["risk"]["risk_reward_min"]
+        rr_tp = price - sl_dist * rr_min
+        struct_target = df["low"].iloc[tgt_start:i].min() if i > tgt_start else None
+        if pd.notna(struct_target) and (price - struct_target) >= sl_dist * rr_min:
+            tp = struct_target
+            reasons.append(
+                f"TP diambil dari level struktur (prior low {target_lookback}-bar), "
+                f"RR aktual {(price - tp) / sl_dist:.2f}"
+            )
+        else:
+            tp = rr_tp
 
     return SignalResult(
         symbol=symbol,
