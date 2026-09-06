@@ -9,7 +9,7 @@ timeframes:
   - "4h"
 
 scanning:
-  cooldown_hours: 6          # slightly longer cooldown to reduce overtrading
+  cooldown_hours: 6
   state_path: "signal_state.json"
   klines_limit: 300
   min_history_bars: 250
@@ -32,7 +32,7 @@ indicators:
     period: 14
   volume_spike:
     lookback: 20
-    factor: 1.6              # slightly stricter volume spike
+    factor: 1.6
 
 scoring:
   weights:
@@ -44,13 +44,12 @@ scoring:
     mtf_agreement: 15
     adx_strength: 15
   setup_bonus:
-    # === Timeframe-specific overrides (higher priority) ===
     "15m":
       long:
         breakout: 15
         pullback: 20
         continuation: -25
-        extended: -60        # hard penalty — EXTENDED was terrible on 15m
+        extended: -60
       short:
         breakout: 10
         pullback: -10
@@ -61,7 +60,7 @@ scoring:
         breakout: 25
         pullback: -5
         continuation: -20
-        extended: -45        # strong penalty
+        extended: -45
       short:
         breakout: 5
         pullback: -15
@@ -72,13 +71,12 @@ scoring:
         breakout: 15
         pullback: 10
         continuation: -15
-        extended: 5          # EXTENDED was actually decent on 4h
+        extended: 5
       short:
         breakout: 10
         pullback: -10
         continuation: -30
         extended: -20
-    # === Base (fallback) ===
     long:
       breakout: 12
       pullback: 8
@@ -89,23 +87,22 @@ scoring:
       pullback: -15
       continuation: -25
       extended: -35
-  min_score_to_trigger: 95   # raised from 85 — demand higher quality
-  # New: require minimum number of core trend indicators aligned
-  min_trend_alignment: 2     # at least 2 of (EMA, MACD, Supertrend) must agree with direction
+  min_score_to_trigger: 95
+  min_trend_alignment: 2
 
 risk:
-  atr_multiplier_sl: 1.6     # slightly wider SL to reduce noise stops
-  risk_reward_min: 1.6       # raised from 1.5 — better fee absorption especially on 15m
-  max_signals_per_run: 4     # slightly more selective
-  adx_min: 22                # raised from 20
+  atr_multiplier_sl: 1.6
+  risk_reward_min: 1.6
+  max_signals_per_run: 4
+  adx_min: 22
   adx_strong: 35
   structure_sl_max_atr_mult: 2.3
-  max_signals_per_regime_episode: 2   # tighter to avoid correlated clusters
+  max_signals_per_regime_episode: 2
 
 setup_engine:
   structure_lookback: 20
   pullback_atr_mult: 1.0
-  extended_atr_mult: 3.2     # slightly tighter definition of "extended"
+  extended_atr_mult: 3.2
   structure_sl_buffer_atr_mult: 0.25
   "15m":
     structure_lookback: 40
@@ -118,13 +115,12 @@ regime_filter:
   enabled: true
   symbol: "BTCUSDT"
   timeframe: "4h"
-  adx_min: 27                # slightly higher — only strong regimes
-  short_mode: "bear_only"    # keep strict for shorts
-  long_mode: "bull_or_neutral"  # new mode: allow LONG only in BULL or NEUTRAL (block pure BEAR)
+  adx_min: 27
+  short_mode: "bear_only"
+  long_mode: "bull_or_neutral"
 
-# Optional symbol quality filter (used by scanner if present)
 symbol_filter:
-  blacklist: []              # can add "DOGEUSDT", "AVAXUSDT" later if still underperforming
+  blacklist: []
 
 notify:
   telegram:
