@@ -3,9 +3,6 @@ exchange:
   quote_asset: USDT
   min_volume_usdt_24h: 5000000
 
-# Semua timeframe di bawah ini sekarang di-scan SENDIRI-SENDIRI (independen),
-# bukan cuma timeframes[0] sebagai TF utama. Setup bisa muncul dari TF
-# manapun yang lolos threshold skor.
 timeframes:
   - "15m"
   - "1h"
@@ -14,8 +11,8 @@ timeframes:
 scanning:
   cooldown_hours: 4
   state_path: "signal_state.json"
-  klines_limit: 300   # jumlah candle historis yang diambil per symbol per TF
-  min_history_bars: 250   # symbol dgn histori closed candle < ini di-skip (biasanya coin baru listing, EMA200/ADX belum konvergen)
+  klines_limit: 300
+  min_history_bars: 250
 
 indicators:
   ema:
@@ -34,7 +31,7 @@ indicators:
   adx:
     period: 14
   volume_spike:
-    lookback: 20     # sebelumnya hardcoded di kode, sekarang bisa dituning di sini
+    lookback: 20
     factor: 1.5
 
 scoring:
@@ -44,96 +41,48 @@ scoring:
     supertrend: 25
     volume_spike: 15
     rsi_confluence: 20
-    mtf_agreement: 15   # bonus skor PER timeframe lain yang searah (menggantikan filter biner lama)
-    adx_strength: 15    # bonus skor bertingkat kalau ADX jauh di atas adx_min (tren kuat vs baru lolos gate)
-  # v3.3: setup_bonus per-ARAH (long/short terpisah), bukan flat.
-  # Sumber: trades_raw_batch.json, 175 trade closed, 17 Jul - 5 Sep 2026 (1h).
-  # Setup yang SAMA bisa berkebalikan hasilnya tergantung arah -- flat bonus
-  # lama tidak bisa menangkap ini (lihat get_setup_bonus() di scanner.py).
-  # Skema lama (flat, key setup langsung tanpa long/short) masih didukung
-  # sebagai fallback kalau belum sempat migrasi.
-  #
-  # v3.4: bisa juga 3 LEVEL, per-TIMEFRAME -- <tf>.<direction>.<setup> --
-  # untuk override SEBAGIAN kombinasi saja (lihat blok "4h" di bawah). TF
-  # yang tidak dibuatkan blok sendiri, atau blok TF-nya ada tapi setup
-  # tertentu belum diisi di situ, otomatis fallback ke skema flat long/short
-  # di bawah (pola fallback lama, dipakai ulang apa adanya -- lihat
-  # get_setup_bonus()).
+    mtf_agreement: 15
+    adx_strength: 15
   setup_bonus:
     "4h":
-      # Cuma override CONTINUATION di 4h (diperbesar penaltinya) -- breakout/
-      # pullback/extended 4h SENGAJA dibiarkan kosong di sini supaya fallback
-      # ke angka flat long/short di bawah, sama seperti 15m & 1h. Angka di
-      # bawah ini titik awal (belum divalidasi backtest per-TF terpisah) --
-      # sesuaikan lagi begitu ada cukup data CONTINUATION 4h sendiri.
       long:
-        continuation: -20   # diperbesar dari -10 (flat) khusus 4h
+        continuation: -20
       short:
-        continuation: -35   # diperbesar dari -20 (flat) khusus 4h
-    # CONTINUATION 15m/1h SENGAJA ditahan dulu di angka flat di bawah (n
-    # per-TF masih kecil) -- jangan dipisah sampai backtest per-TF cukup data.
+        continuation: -35
     long:
-      breakout: 10        # avg R +0.257 (n=58) -- setup terbaik, pertahankan bonus penuh
-      extended: 10        # avg R +0.251 (n=39) -- sama kuatnya dgn breakout, sebelumnya
-                           # cuma dapat bonus 0 (v3.2), sekarang disamakan
-      pullback: 5          # avg R -0.001 (n=19) -- praktis breakeven, turunkan dari 10
-                           # karena tidak terbukti seunggul breakout/extended
-      continuation: -10   # avg R -0.053 (n=10, sampel kecil) -- dipakai 15m/1h + fallback 4h
+      breakout: 10
+      extended: 10
+      pullback: 5
+      continuation: -10
     short:
-      breakout: -5         # avg R -0.043 (n=15) -- breakeven di TERBAIK dari semua
-                           # setup SHORT, tidak layak dapat bonus positif lagi
-      pullback: -25        # avg R -0.586 (n=11) -- buruk, tekan keras
-      continuation: -20    # avg R -0.411 (n=8) -- dipakai 15m/1h + fallback 4h
-      extended: -30        # avg R -0.714 (n=15) -- TERBURUK dari semua kombinasi
-                           # arah x setup, praktis harus hampir tidak pernah lolos
+      breakout: -5
+      pullback: -25
+      continuation: -20
+      extended: -30
   min_score_to_trigger: 85
 
 risk:
   atr_multiplier_sl: 1.5
   risk_reward_min: 1.5
   max_signals_per_run: 5
-  adx_min: 20   # di bawah ambang ini pasar dianggap choppy/sideways, sinyal ditolak duluan
-  adx_strong: 35   # ADX >= ini dianggap tren sangat kuat -> bonus adx_strength penuh (di antara adx_min & ini, bonus dislkala linear)
-  structure_sl_max_atr_mult: 2.5   # SL berbasis struktur di-cap maksimal segini x ATR, jaga R:R tetap wajar saat structure jauh
-  # v3.4: throttle tambahan, TERPISAH dari max_signals_per_run di atas.
-  # max_signals_per_run cuma membatasi PER RUN; ini membatasi lintas BANYAK
-  # run selama BTCUSDT masih di rezim yang SAMA (lihat get_regime_gated_direction
-  # & update_regime_episode di scanner.py). Cuma berlaku untuk arah yang
-  # di-gate KETAT oleh mode "_only" (bear_only/bull_only) -- default cuma
-  # SHORT (short_mode: bear_only di bawah), karena itulah arah yang paling
-  # rawan muncul serentak di banyak simbol sekaligus tiap kali regime BTCUSDT
-  # baru saja flip ke BEAR (semuanya pada dasarnya taruhan yang sama,
-  # bukan sinyal independen per simbol). bear_only sendiri TIDAK dilonggarkan.
+  adx_min: 20
+  adx_strong: 35
+  structure_sl_max_atr_mult: 2.5
   max_signals_per_regime_episode: 3
 
 setup_engine:
-  structure_lookback: 20    # jumlah bar ke belakang buat cek breakout struktur & referensi SL struktural
-  pullback_atr_mult: 1.0    # <= sekian ATR dari EMA200 dianggap PULLBACK
-  extended_atr_mult: 3.5    # >= sekian ATR dari EMA200 dianggap EXTENDED
-  structure_sl_buffer_atr_mult: 0.25   # buffer tambahan di luar swing low/high biar SL gak persis di level (rawan wick hunt)
+  structure_lookback: 20
+  pullback_atr_mult: 1.0
+  extended_atr_mult: 3.5
+  structure_sl_buffer_atr_mult: 0.25
 
-# v3.2: filter rezim pasar makro. Backtest batch (174 trade) nunjukkin SHORT
-# secara statistik signifikan lebih buruk dari LONG (t=-3.46) di SEMUA 10
-# simbol yang dites -- ciri khas market lagi bull luas, bukan kebetulan 1-2
-# coin. Filter ini menyaring sinyal yang melawan rezim BTCUSDT biar tidak
-# terus-terusan ambil sinyal di sisi yang secara historis lemah.
-#
-# v3.3: filter lama ("blokir SHORT cuma kalau regime BULL") ternyata BELUM
-# cukup ketat -- batch 175 trade (17 Jul - 5 Sep 2026) nunjukkin SHORT tetap
-# rugi di semua jenis setup (win rate 13-40%, avg R -0.04 s/d -0.71) bahkan
-# saat regime cuma "NEUTRAL", dan makin parah di paruh kedua periode (win
-# rate SHORT turun ke 13.3%, avg R -0.704) justru saat LONG sedang bagus-
-# bagusnya (win rate 58.9%, avg R +0.441) -- pola klasik market lagi tren
-# naik kuat yang ADX 4h-nya belum tentu >=25 terus-menerus. short_mode
-# "bear_only" mengetatkan ini: SHORT cuma lolos kalau regime SUDAH
-# terkonfirmasi "BEAR", bukan sekadar "bukan BULL".
 regime_filter:
   enabled: true
   symbol: "BTCUSDT"
   timeframe: "4h"
-  adx_min: 25   # BTC dianggap BULL/BEAR cuma kalau ADX di timeframe ini >= segini, selain itu NEUTRAL (tidak menyaring apa pun)
-  short_mode: "bear_only"   # "bear_only" (v3.3, direkomendasikan) | "not_bull" (perilaku lama v3.2)
-  long_mode: "not_bear"     # "not_bear" (default, tidak berubah) | "bull_only" (belum ada bukti data perlu ini)
+  adx_min: 25
+  short_mode: "bear_only"
+  long_mode: "not_bear"
 
 notify:
   telegram:
@@ -143,14 +92,13 @@ notify:
 
 backtest:
   fee_round_trip_pct: 0.001
-  intrabar_tie_break: "conservative"   # "conservative" | "optimistic" | "midpoint"
-                                       # dipakai saat 1 candle kena SL & TP sekaligus
+  intrabar_tie_break: "conservative"
 
 chart:
   auto_generate: true
   width_px: 2000
-  height_ratio: 0.45       # tinggi = width * ratio → 2000x900 (rasio 20:9 ≈ 2.22:1)
-  candles_shown: 120       # jumlah candle terakhir yang ditampilkan di chart
+  height_ratio: 0.45
+  candles_shown: 120
   theme:
     background: "#0d0d0f"
     grid: "#1c1c22"
