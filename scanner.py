@@ -624,7 +624,11 @@ def score_at(
     if final_score < cfg["scoring"]["min_score_to_trigger"]:
         return SignalResult(
             symbol=symbol, direction="NONE", score=final_score,
-            timeframe=timeframe, setup_type=setup_type, reasons=reasons,
+            timeframe=timeframe, setup_type=setup_type,
+            reasons=reasons + [
+                f"Skor akhir ({final_score:.1f}) di bawah ambang "
+                f"{cfg['scoring']['min_score_to_trigger']} — sinyal ditahan"
+            ],
         )
 
     struct_lookback = int(
@@ -970,6 +974,28 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             "history_too_short": 0, "score_none": 0, "regime_rejected": 0,
             "risk_rejected": 0, "cooldown_rejected": 0, "passed": 0,
         }
+        none_reason_totals: dict[str, int] = {}
+
+        def _classify_none_reason(reasons: list[str]) -> str:
+            last = reasons[-1] if reasons else ""
+            if "belum warm-up" in last:
+                return "warmup"
+            if "ADX" in last and "ambang" in last:
+                return "adx_filter"
+            if "blacklist" in last:
+                return "blacklist"
+            if "Konfluensi tren lemah" in last:
+                return "weak_alignment"
+            if "terlalu imbang" in last:
+                return "weak_margin"
+            if "tidak dapat diklasifikasikan" in last:
+                return "unknown_setup"
+            if "diblokir total" in last:
+                return "setup_blocked"
+            if "Skor akhir" in last:
+                return "score_below_threshold"
+            return "other"
+
         for tf in timeframes:
             klines = await client.get_klines_many(active_symbols, tf, limit=klines_limit)
             tf_candidates: list[tuple[SignalResult, Kline]] = []
@@ -981,6 +1007,8 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
                     diag_totals["score_none"] += 1
+                    reason_key = _classify_none_reason(signal.reasons)
+                    none_reason_totals[reason_key] = none_reason_totals.get(reason_key, 0) + 1
                     continue
                 if not passes_regime_filter(signal.direction, regime, cfg):
                     diag_totals["regime_rejected"] += 1
@@ -1001,6 +1029,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             f"risk_rejected={diag_totals['risk_rejected']} cooldown_rejected={diag_totals['cooldown_rejected']} "
             f"passed={diag_totals['passed']}"
         )
+        print(f"[diag] rincian score_none: {none_reason_totals}")
 
         direction_map: dict[str, dict[str, str]] = {}
         for tf, cands in per_tf_candidates.items():
