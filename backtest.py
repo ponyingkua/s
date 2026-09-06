@@ -8,7 +8,13 @@ from dataclasses import dataclass, field
 import pandas as pd
 import yaml
 
-from scanner import BinanceFuturesClient, compute_indicators, passes_regime_filter, score_at
+from scanner import (
+    BinanceFuturesClient,
+    compute_indicators,
+    passes_regime_filter,
+    passes_risk_filter,
+    score_at,
+)
 
 DEFAULT_SYMBOLS = [
     "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
@@ -85,6 +91,25 @@ def align_regime_to(primary_df: pd.DataFrame, regime_df: pd.DataFrame) -> pd.Ser
     return merged.sort_index()["regime"].reset_index(drop=True)
 
 
+def align_series_by_open_time(
+    target_df: pd.DataFrame,
+    source_df: pd.DataFrame,
+    source_series: pd.Series,
+    default: str = "NEUTRAL",
+) -> pd.Series:
+    """Align a time series without using any future source candle."""
+    source = pd.DataFrame({
+        "open_time": source_df["open_time"].reset_index(drop=True),
+        "value": source_series.reset_index(drop=True),
+    }).sort_values("open_time")
+    left = target_df[["open_time"]].reset_index(drop=True).sort_values("open_time")
+    merged = pd.merge_asof(
+        left, source, on="open_time", direction="backward"
+    )
+    merged["value"] = merged["value"].fillna(default)
+    return merged.sort_index()["value"].reset_index(drop=True)
+
+
 def _build_mtf_direction_series(
     primary_df: pd.DataFrame,
     other_df: pd.DataFrame,
@@ -92,6 +117,7 @@ def _build_mtf_direction_series(
     symbol: str,
     cfg: dict,
     warmup: int = 250,
+    regime_series: pd.Series | None = None,
 ) -> pd.Series:
     """
     For every bar on the primary timeframe, look up the most recent closed bar
@@ -107,6 +133,13 @@ def _build_mtf_direction_series(
     times = []
     for j in range(warmup, len(other_df)):
         sig = score_at(other_df, ind_other, j, symbol, cfg, timeframe=other_tf)
+        if sig.direction != "NONE":
+            if not passes_risk_filter(sig, cfg):
+                sig.direction = "NONE"
+            elif regime_series is not None:
+                regime = regime_series.iloc[j]
+                if not passes_regime_filter(sig.direction, regime, cfg):
+                    sig.direction = "NONE"
         directions.append(sig.direction)
         times.append(other_df["close_time"].iloc[j])
 
@@ -206,13 +239,21 @@ def backtest_symbol(
 
         future = df.iloc[i + 1 :].reset_index(drop=True)
         tie_break = cfg.get("backtest", {}).get("intrabar_tie_break", "conservative")
+        max_holding_bars = int(cfg.get("backtest", {}).get("max_holding_bars", 0))
         result, r_mult, exit_offset, both_touched = _simulate_exit(
-            signal, future, fee_pct, tie_break
+            signal, future, fee_pct, tie_break, max_holding_bars=max_holding_bars
         )
 
-        entry_time = str(df.iloc[i].get("open_time", df.index[i]))
+        # The signal is generated after candle i closes, so entry_time must be
+        # close_time. Reporting open_time made every trade appear one candle
+        # earlier than the price at which it was actually entered.
+        entry_time = str(df.iloc[i].get("close_time", df.iloc[i].get("open_time", df.index[i])))
         exit_idx = i + 1 + exit_offset
-        exit_time = str(df.iloc[exit_idx].get("open_time", df.index[exit_idx])) if exit_idx < len(df) else ""
+        exit_time = (
+            str(df.iloc[exit_idx].get("close_time", df.iloc[exit_idx].get("open_time", df.index[exit_idx])))
+            if exit_idx < len(df)
+            else ""
+        )
 
         trades.append(
             Trade(
@@ -232,12 +273,20 @@ def backtest_symbol(
 
 
 def _simulate_exit(
-    signal, future_df: pd.DataFrame, fee_pct: float, tie_break: str = "conservative"
+    signal,
+    future_df: pd.DataFrame,
+    fee_pct: float,
+    tie_break: str = "conservative",
+    max_holding_bars: int = 0,
 ) -> tuple[str, float, int, bool]:
     risk = abs(signal.entry - signal.sl)
     fee_r = (signal.entry * fee_pct) / risk if risk > 0 else 0.0
 
-    for offset, (_, bar) in enumerate(future_df.iterrows()):
+    bars_to_check = future_df
+    if max_holding_bars > 0:
+        bars_to_check = future_df.iloc[:max_holding_bars]
+
+    for offset, (_, bar) in enumerate(bars_to_check.iterrows()):
         if signal.direction == "LONG":
             hit_sl = bool(bar["low"] <= signal.sl)
             hit_tp = bool(bar["high"] >= signal.tp)
@@ -258,6 +307,14 @@ def _simulate_exit(
             reward = abs(signal.tp - signal.entry)
             return "WIN", (reward / risk) - fee_r, offset, hit_sl and hit_tp
         return "LOSS", -1.0 - fee_r, offset, hit_sl and hit_tp
+
+    if max_holding_bars > 0 and len(future_df) >= max_holding_bars and len(bars_to_check) > 0:
+        last_close = float(bars_to_check.iloc[-1]["close"])
+        if signal.direction == "LONG":
+            mark_r = (last_close - signal.entry) / risk
+        else:
+            mark_r = (signal.entry - last_close) / risk
+        return "TIMEOUT", mark_r - fee_r, len(bars_to_check) - 1, False
 
     return "OPEN", 0.0, len(future_df), False
 
@@ -346,11 +403,18 @@ def _build_mtf_map(
     symbol: str,
     cfg: dict,
     warmup: int = 250,
+    regime_series: pd.Series | None = None,
 ) -> dict[str, pd.Series]:
     mtf_map = {}
     for tf, odf in mtf_dfs.items():
+        other_regime = None
+        if regime_series is not None:
+            other_regime = align_series_by_open_time(
+                odf, primary_df, regime_series, default="NEUTRAL"
+            )
         mtf_map[tf] = _build_mtf_direction_series(
-            primary_df, odf, tf, symbol, cfg, warmup=warmup
+            primary_df, odf, tf, symbol, cfg, warmup=warmup,
+            regime_series=other_regime,
         )
     return mtf_map
 
@@ -367,7 +431,11 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
             mtf_dfs = await _fetch_mtf_data(client, symbol, timeframe, limit, cfg)
 
     regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
-    mtf_map = _build_mtf_map(kline.df, mtf_dfs, symbol, cfg) if mtf_dfs else None
+    mtf_map = (
+        _build_mtf_map(kline.df, mtf_dfs, symbol, cfg, regime_series=regime_series)
+        if mtf_dfs
+        else None
+    )
 
     trades = backtest_symbol(
         kline.df, symbol, cfg, timeframe=timeframe,
@@ -441,7 +509,13 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict,
                 mtf_dfs = await _fetch_mtf_data(client, symbol, timeframe, limit, cfg)
 
             regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
-            mtf_map = _build_mtf_map(kline.df, mtf_dfs, symbol, cfg) if mtf_dfs else None
+            mtf_map = (
+                _build_mtf_map(
+                    kline.df, mtf_dfs, symbol, cfg, regime_series=regime_series
+                )
+                if mtf_dfs
+                else None
+            )
 
             trades = backtest_symbol(
                 kline.df, symbol, cfg, timeframe=timeframe,
