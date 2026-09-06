@@ -835,5 +835,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-06T21:44:35.176432+00:00"
+  },
+  "TSTUSDT|15m": {
+    "symbol": "TSTUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-06T22:16:33.734440+00:00"
   }
 }
