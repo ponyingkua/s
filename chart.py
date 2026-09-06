@@ -35,8 +35,8 @@ from scanner import (
 # STYLE
 # ============================================================
 
-BG = "#1B1B1B"
-PANEL = "#1B1B1B"
+BG = "#0e1111"
+PANEL = "#0e1111"
 GRID = "#3A3A3A"
 TEXT = "#F2F2F2"
 AXIS = "#B8B8B8"
