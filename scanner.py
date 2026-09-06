@@ -598,6 +598,19 @@ def score_at(
             ],
         )
 
+    blocked_setups = cfg.get("setup_engine", {}).get("block_setups", {}).get(timeframe, [])
+    if setup_type in blocked_setups:
+        return SignalResult(
+            symbol=symbol,
+            direction="NONE",
+            score=0.0,
+            timeframe=timeframe,
+            setup_type=setup_type,
+            reasons=reasons + [
+                f"Setup {setup_type} diblokir total di timeframe {timeframe} (histori backtest jelek — lihat setup_engine.block_setups)"
+            ],
+        )
+
     setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
