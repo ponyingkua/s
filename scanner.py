@@ -252,11 +252,18 @@ def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
     }
 
 
-def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict) -> str:
+def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: float = 0.0) -> float:
     se_cfg = cfg.get("setup_engine", {})
-    structure_lookback = se_cfg.get("structure_lookback", 20)
-    extended_atr_mult = se_cfg.get("extended_atr_mult", 3.5)
-    pullback_atr_mult = se_cfg.get("pullback_atr_mult", 1.0)
+    tf_cfg = se_cfg.get(timeframe, {}) if timeframe else {}
+    if isinstance(tf_cfg, dict) and param in tf_cfg:
+        return tf_cfg[param]
+    return se_cfg.get(param, default)
+
+
+def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
+    structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
+    extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
+    pullback_atr_mult = get_setup_engine_param(cfg, "pullback_atr_mult", timeframe, 1.0)
 
     close = df["close"].iloc[i]
     atr_val = ind["atr"].iloc[i]
@@ -428,7 +435,7 @@ def score_at(
                 short_score += adx_bonus
             reasons.append(f"ADX ({adx_val:.1f}) tren kuat (+{adx_bonus:.1f} skor)")
 
-    setup_type = classify_setup(df, ind, i, direction, cfg)
+    setup_type = classify_setup(df, ind, i, direction, cfg, timeframe)
     setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
@@ -445,9 +452,8 @@ def score_at(
             timeframe=timeframe, setup_type=setup_type, reasons=reasons,
         )
 
-    se_cfg = cfg.get("setup_engine", {})
-    struct_lookback = se_cfg.get("structure_lookback", 20)
-    sl_buffer = ind["atr"].iloc[i] * se_cfg.get("structure_sl_buffer_atr_mult", 0.25)
+    struct_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
+    sl_buffer = ind["atr"].iloc[i] * get_setup_engine_param(cfg, "structure_sl_buffer_atr_mult", timeframe, 0.25)
     atr_sl_dist = ind["atr"].iloc[i] * cfg["risk"]["atr_multiplier_sl"]
     max_sl_dist = atr_sl_dist * cfg.get("risk", {}).get("structure_sl_max_atr_mult", 2.5)
 
