@@ -58,7 +58,12 @@ scoring:
     "1h":
       long:
         breakout: 12
-        pullback: 8
+        # Backtest terbaru (bull_only, n=13): 1h PULLBACK 23.1% WR / avgR -0.360,
+        # jelas paling lemah di antara semua kombinasi TF+setup. Bonus diturunkan
+        # dari 8 supaya butuh konfluensi lebih kuat dari indikator lain buat
+        # tembus min_score_to_trigger. 1h BREAKOUT (50% WR / avgR +0.576, n=18)
+        # tidak disentuh — itu justru setup terbaik yang ada.
+        pullback: 2
         continuation: -18
         extended: -45
       short:
@@ -68,7 +73,10 @@ scoring:
         extended: -40
     "4h":
       long:
-        breakout: 10
+        # Backtest terbaru (bull_only, n=6): 4h BREAKOUT 16.7% WR / avgR -0.556,
+        # kombinasi terlemah kedua. Bonus diturunkan dari 10 biar tidak dikasih
+        # insentif setara 1h breakout yang justru unggul.
+        breakout: 4
         pullback: 8
         continuation: -15
         extended: -25
