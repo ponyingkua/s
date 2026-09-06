@@ -22,6 +22,12 @@ TF_MINUTES = {
 }
 
 
+def limit_for_days(timeframe: str, days: float, warmup: int = 250) -> int:
+    minutes = TF_MINUTES.get(timeframe, 60)
+    trading_bars = int(days * 24 * 60 / minutes)
+    return trading_bars + warmup
+
+
 async def fetch_klines(client: BinanceFuturesClient, symbol: str, timeframe: str, limit: int):
     if limit <= 1500:
         return await client.get_klines(symbol, timeframe, limit=limit)
@@ -374,17 +380,25 @@ def main():
     parser.add_argument("--symbols", default=",".join(DEFAULT_SYMBOLS), help="Simbol dipisah koma untuk mode batch")
     parser.add_argument("--timeframe", default="1h")
     parser.add_argument("--limit", type=int, default=1000)
+    parser.add_argument("--days", type=float, default=None,
+                         help="Target cakupan kalender (hari) buat window trading, "
+                              "sama rata lintas timeframe. Kalau diisi, override --limit.")
     parser.add_argument("--config", default="config.yaml")
     args = parser.parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
 
+    limit = limit_for_days(args.timeframe, args.days) if args.days is not None else args.limit
+    if args.days is not None:
+        print(f"--days {args.days} @ {args.timeframe} -> --limit {limit} "
+              f"({args.days:.0f} hari trading + 250 warmup)")
+
     if args.batch:
         symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
-        asyncio.run(run_batch(symbols, args.timeframe, args.limit, cfg))
+        asyncio.run(run_batch(symbols, args.timeframe, limit, cfg))
     else:
-        asyncio.run(run_single(args.symbol.upper(), args.timeframe, args.limit, cfg))
+        asyncio.run(run_single(args.symbol.upper(), args.timeframe, limit, cfg))
 
 
 if __name__ == "__main__":
