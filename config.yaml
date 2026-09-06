@@ -96,7 +96,7 @@ scoring:
       pullback: -15
       continuation: -25
       extended: -35
-  min_score_to_trigger: 66
+  min_score_to_trigger: 65
   min_trend_alignment: 2
   # Dengan bobot ema_trend(20)/macd_cross(18)/supertrend(25), margin arah cuma
   # bisa 4 nilai: 13, 23, 27, atau 63 — gak pernah ada nilai di antara 0-13.
@@ -174,7 +174,7 @@ regime_filter:
   enabled: true
   symbol: "BTCUSDT"
   timeframe: "4h"
-  adx_min: 26
+  adx_min: 27
   # short_mode was "bear_only": SHORT only allowed when BTC 4h is
   # simultaneously EMA-down + Supertrend-down + ADX>=27. Across all 3
   # backtest batches (558 trades, Feb-Sep 2026) that condition never once
