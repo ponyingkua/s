@@ -655,5 +655,35 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-06T09:38:55.231894+00:00"
+  },
+  "BNBUSDT|4h": {
+    "symbol": "BNBUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:22:00.915800+00:00"
+  },
+  "SOLUSDT|1h": {
+    "symbol": "SOLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:22:03.244980+00:00"
+  },
+  "FLOCKUSDT|15m": {
+    "symbol": "FLOCKUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:22:03.615535+00:00"
+  },
+  "NVDAUSDT|1h": {
+    "symbol": "NVDAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:22:03.933747+00:00"
+  },
+  "FFUSDT|4h": {
+    "symbol": "FFUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:22:04.214398+00:00"
   }
 }
