@@ -20,6 +20,9 @@ on:
       limit:
         description: "Jumlah candle historis (>1500 otomatis di-pagination lewat get_klines_paginated)"
         default: "1000"
+      days:
+        description: "Cakupan kalender (hari) - override limit biar sama rata lintas timeframe (kosongkan buat pakai limit biasa)"
+        default: ""
 
 jobs:
   backtest:
@@ -34,14 +37,19 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Jalankan backtest
         run: |
+          if [ -n "${{ github.event.inputs.days }}" ]; then
+            EXTRA_ARGS=(--days "${{ github.event.inputs.days }}")
+          else
+            EXTRA_ARGS=(--limit "${{ github.event.inputs.limit }}")
+          fi
           if [ "${{ github.event.inputs.mode }}" = "batch" ]; then
             if [ -z "${{ github.event.inputs.symbols }}" ]; then
-              python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
+              python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}" "${EXTRA_ARGS[@]}"
             else
-              python backtest.py --batch --symbols "${{ github.event.inputs.symbols }}" --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
+              python backtest.py --batch --symbols "${{ github.event.inputs.symbols }}" --timeframe "${{ github.event.inputs.timeframe }}" "${EXTRA_ARGS[@]}"
             fi
           else
-            python backtest.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}" --limit "${{ github.event.inputs.limit }}"
+            python backtest.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}" "${EXTRA_ARGS[@]}"
           fi
       - name: Upload raw trade log (artifact)
         uses: actions/upload-artifact@v4
