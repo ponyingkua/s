@@ -44,6 +44,9 @@ scoring:
     mtf_agreement: 15
     adx_strength: 15
   setup_bonus:
+    "15m":
+      long:
+        extended: -20
     "4h":
       long:
         continuation: -20
