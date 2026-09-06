@@ -51,7 +51,7 @@ scoring:
         continuation: -20
         extended: -60
       short:
-        breakout: 8
+        breakout: 18
         pullback: 8
         continuation: -18
         extended: -50
@@ -59,11 +59,12 @@ scoring:
       long:
         breakout: 12
         # Backtest terbaru (bull_only, n=13): 1h PULLBACK 23.1% WR / avgR -0.360,
-        # jelas paling lemah di antara semua kombinasi TF+setup. Bonus diturunkan
-        # dari 8 supaya butuh konfluensi lebih kuat dari indikator lain buat
-        # tembus min_score_to_trigger. 1h BREAKOUT (50% WR / avgR +0.576, n=18)
-        # tidak disentuh — itu justru setup terbaik yang ada.
-        pullback: 2
+        # jelas paling lemah di antara semua kombinasi TF+setup. Dulu ini juga
+        # di-hard-block lewat setup_engine.block_setups; sekarang hard-block-nya
+        # dihapus (biar EXTENDED/4h-BREAKOUT/1h-PULLBACK konsisten difilter
+        # lewat skor, bukan diveto total) jadi angkanya perlu benar-benar
+        # negatif, bukan cuma diturunkan sedikit dari default.
+        pullback: -25
         continuation: -18
         extended: -45
       short:
@@ -74,9 +75,9 @@ scoring:
     "4h":
       long:
         # Backtest terbaru (bull_only, n=6): 4h BREAKOUT 16.7% WR / avgR -0.556,
-        # kombinasi terlemah kedua. Bonus diturunkan dari 10 biar tidak dikasih
-        # insentif setara 1h breakout yang justru unggul.
-        breakout: 4
+        # kombinasi terlemah kedua. Sama seperti 1h PULLBACK di atas — dulu
+        # hard-blocked, sekarang murni penalti skor.
+        breakout: -25
         pullback: 8
         continuation: -15
         extended: -25
@@ -97,7 +98,15 @@ scoring:
       extended: -35
   min_score_to_trigger: 66
   min_trend_alignment: 2
-  min_direction_margin: 15
+  # Dengan bobot ema_trend(20)/macd_cross(18)/supertrend(25), margin arah cuma
+  # bisa 4 nilai: 13, 23, 27, atau 63 — gak pernah ada nilai di antara 0-13.
+  # min_direction_margin=15 kemarin nolak SEMUA kasus margin=13 (ema+macd
+  # sepakat, supertrend beda arah) - padahal itu bukan kasus "ambigu", cuma
+  # kebetulan jatuh di bawah 15. Diturunkan ke bawah 13 biar gak nolak split
+  # 2-1 yang sah; min_trend_alignment=2 sendiri sudah otomatis selalu
+  # terpenuhi untuk arah yang menang (kombinasi 2 bobot terendah manapun >
+  # bobot tunggal tertinggi), jadi dibiarkan sebagai dokumentasi niat.
+  min_direction_margin: 8
 
 risk:
   atr_multiplier_sl: 1.8
@@ -119,21 +128,6 @@ setup_engine:
   pullback_atr_mult: 1.0
   breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
-  block_extended: true
-  # 4h BREAKOUT: 0% WR (0/5, avgR -1.022) di batch trade terbaru, dan
-  # sebelumnya juga sudah underperform (16.7% WR menurut backtest lama).
-  # Sample masih kecil, tapi konsisten jelek di 2 batch berbeda - diblokir
-  # total dulu (sama seperti EXTENDED) daripada cuma dikasih bonus rendah,
-  # sampai ada sample lebih besar yang membuktikan sebaliknya.
-  #
-  # 1h PULLBACK: konsisten jelek di 2 setting pullback_atr_mult berbeda
-  # (1.0 -> 18.2% WR/avgR -0.487, n=11; 0.8 -> 11.1% WR/avgR -0.700, n=9).
-  # Sudah dicoba diperketat, hasilnya makin buruk bukan makin baik - berarti
-  # bukan soal ambang klasifikasi, setupnya sendiri lemah di TF ini.
-  # Diblokir total juga, sama seperti 4h BREAKOUT.
-  block_setups:
-    "4h": ["BREAKOUT"]
-    "1h": ["PULLBACK"]
   structure_sl_buffer_atr_mult: 0.25
   # Lookback buat cari level resistance/support riil sebagai kandidat TP.
   # Dulu ada 1 nilai global (40) yang niatnya cuma fallback "kalau TF tidak
