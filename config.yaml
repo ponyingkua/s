@@ -96,7 +96,7 @@ scoring:
       pullback: -15
       continuation: -25
       extended: -35
-  min_score_to_trigger: 65
+  min_score_to_trigger: 63
   min_trend_alignment: 2
   # Dengan bobot ema_trend(20)/macd_cross(18)/supertrend(25), margin arah cuma
   # bisa 4 nilai: 13, 23, 27, atau 63 — gak pernah ada nilai di antara 0-13.
