@@ -1,51 +1,3 @@
-"""vSynapse v3.1 — backtest engine, 1 file. Mode single (1 simbol) atau
-batch (banyak simbol + ringkasan gabungan).
-
-Contoh:
-  python backtest.py --symbol BTCUSDT --timeframe 1h
-  python backtest.py --batch --timeframe 1h
-  python backtest.py --batch --symbols BTCUSDT,ETHUSDT --timeframe 1h
-
-Catatan penting soal parity dengan scanner.py (live):
-- Backtest ini menjalankan 1 timeframe per run (--timeframe), sama seperti
-  sebelumnya. score_at() sekarang menerima parameter `timeframe` supaya
-  tiap Trade tercatat asalnya dari TF apa, dan setiap Trade juga dicatat
-  `setup_type`-nya (breakout/pullback/continuation/extended) — sehingga
-  bisa dilihat jenis setup mana yang paling profitable.
-- Bonus skor "MTF agreement" di scanner.py (live) TIDAK direplikasi di sini,
-  karena itu perlu menyelaraskan candle-close antar-TF pada tiap titik
-  simulasi (rawan lookahead bias kalau salah implementasi). Jadi angka
-  win-rate/avg-R di backtest ini murni dari 1 TF, tanpa bonus MTF —
-  anggap sebagai baseline konservatif (skor live bisa sedikit lebih tinggi
-  dari ini kalau kebetulan ada agreement dari TF lain).
-- v3.2: Market Regime Filter SEKARANG direplikasi di backtest (lihat
-  compute_regime_series/align_regime_to) — beda dengan MTF agreement bonus
-  di atas, ini feasible dan penting untuk direplikasi karena backtest batch
-  sebelumnya (174 trade) yang menemukan masalah SHORT-vs-LONG (t=-3.46) itu
-  sendiri yang menyarankan filter ini; tanpa direplikasi di backtest, kita
-  tidak akan pernah tahu apakah fix-nya beneran membantu atau tidak.
-- v3.3: Regime filter di sini sekarang lewat passes_regime_filter() (impor
-  dari scanner.py) yang sama persis dipakai scanner.py live — SHORT & LONG
-  bisa punya mode berbeda (short_mode/long_mode di config), bukan lagi
-  logika BULL/BEAR simetris yang di-hardcode di sini. Jalankan ulang
-  --batch setelah update config untuk lihat apakah short_mode="bear_only"
-  benar-benar memperbaiki angka SHORT yang sebelumnya minus di semua setup.
-- v3.4: setup_bonus 3-level (per-timeframe) di get_setup_bonus() otomatis
-  ikut kepakai di sini juga, karena backtest_symbol() manggil score_at()
-  yang sama persis dengan scanner.py live (parameter timeframe sudah
-  diteruskan sejak v3.1) — tidak perlu perubahan apa pun di file ini untuk
-  itu. TAPI throttle "N sinyal per regime-flip episode" (risk baru di
-  scanner.py v3.4) SENGAJA TIDAK direplikasi di sini, dengan alasan yang
-  sama seperti MTF agreement di atas: backtest_symbol() jalan per SIMBOL
-  sendiri-sendiri (dipanggil terpisah per simbol di mode --batch), tidak
-  ada jam bersama lintas-simbol untuk tahu "berapa sinyal lain yang sudah
-  diambil simbol lain di titik waktu yang sama" — meniru ini secara naif
-  berisiko implementasi yang salah kaprah, bukan cuma tidak lengkap. Angka
-  win-rate/avg-R per setup+arah dari backtest ini jadi sedikit lebih
-  optimis untuk arah yang di-gate ketat (mis. SHORT) dibanding hasil live
-  sungguhan, karena live-nya sudah ditahan throttle ini sementara backtest
-  belum.
-"""
 from __future__ import annotations
 
 import argparse
@@ -71,25 +23,13 @@ TF_MINUTES = {
 
 
 async def fetch_klines(client: BinanceFuturesClient, symbol: str, timeframe: str, limit: int):
-    """Pakai get_klines biasa kalau limit masih dalam batas 1 request Binance
-    (<=1500), atau get_klines_paginated kalau lebih besar dari itu — supaya
-    --limit besar (misal 5000) otomatis di-pagination tanpa perlu flag
-    tambahan di CLI."""
     if limit <= 1500:
         return await client.get_klines(symbol, timeframe, limit=limit)
     return await client.get_klines_paginated(symbol, timeframe, total_limit=limit)
 
 
-# ---------------------------------------------------------------------------
-# Market regime filter (replikasi backtest dari scanner.get_market_regime)
-# ---------------------------------------------------------------------------
-
 def _regime_limit_for(primary_timeframe: str, primary_limit: int, regime_timeframe: str,
                        min_warmup: int = 300) -> int:
-    """Hitung berapa banyak candle di timeframe regime yang perlu di-fetch
-    supaya rentang waktunya menutupi seluruh rentang backtest primer, PLUS
-    warmup ekstra biar indikator regime (EMA200/ADX) sendiri sempat
-    konvergen sebelum titik awal backtest."""
     primary_minutes = TF_MINUTES.get(primary_timeframe, 60)
     regime_minutes = TF_MINUTES.get(regime_timeframe, 240)
     span_minutes = primary_minutes * primary_limit
@@ -98,11 +38,6 @@ def _regime_limit_for(primary_timeframe: str, primary_limit: int, regime_timefra
 
 
 def compute_regime_series(df_regime: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Hitung rezim (BULL/BEAR/NEUTRAL) di SETIAP bar df_regime — beda dari
-    scanner.get_market_regime() yang cuma menjawab rezim "saat ini" (bar
-    terakhir), backtest butuh rezim di titik waktu manapun sepanjang
-    histori. Dipakai bareng align_regime_to() untuk disejajarkan ke
-    timeframe primer tanpa lookahead."""
     regime_cfg = cfg.get("regime_filter", {})
     adx_threshold = regime_cfg.get("adx_min", 25)
 
@@ -124,10 +59,6 @@ def compute_regime_series(df_regime: pd.DataFrame, cfg: dict) -> pd.DataFrame:
 
 
 def align_regime_to(primary_df: pd.DataFrame, regime_df: pd.DataFrame) -> pd.Series:
-    """Sejajarkan rezim (dari TF lebih tinggi) ke tiap bar primary_df, pakai
-    rezim dari candle regime TERAKHIR YANG SUDAH CLOSE pada/sebelum waktu
-    open bar primer — supaya tidak lookahead (backtest tidak mengintip
-    rezim dari candle regime yang faktanya belum kejadian/closed saat itu)."""
     left = primary_df[["open_time"]].reset_index(drop=True).sort_values("open_time")
     right = regime_df.sort_values("close_time").reset_index(drop=True)
 
@@ -145,31 +76,19 @@ class Trade:
     entry: float
     sl: float
     tp: float
-    result: str  # "WIN" | "LOSS" | "OPEN"
-    r_multiple: float  # sudah dikurangi fee
+    result: str
+    r_multiple: float
     timeframe: str = ""
     setup_type: str = ""
     entry_time: str = ""
     exit_time: str = ""
-    both_touched: bool = False  # True kalau SL & TP sama-sama kena di 1 candle
+    both_touched: bool = False
 
 
 def backtest_symbol(
     df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "", warmup: int = 250,
     regime_series: pd.Series | None = None,
 ) -> list[Trade]:
-    """Skip-ahead: setelah trade dibuka, tidak evaluasi sinyal baru sampai
-    trade itu selesai — supaya trade tidak saling tumpang tindih.
-
-    Indikator dihitung SEKALI di seluruh df (bukan direset tiap iterasi
-    kayak versi sebelumnya) — lihat catatan lengkap di
-    scanner.compute_indicators(). `warmup` cuma menentukan titik mulai
-    evaluasi (kasih ruang indikator konvergen dulu), bukan ukuran window
-    perhitungan seperti parameter `window` di versi lama.
-
-    `regime_series`, kalau diisi, harus punya panjang & indeks yang sama
-    dengan df (lihat align_regime_to()) — dipakai buat menolak sinyal yang
-    melawan rezim BTCUSDT, sama persis seperti scanner.py saat live."""
     trades: list[Trade] = []
     fee_pct = cfg.get("backtest", {}).get("fee_round_trip_pct", 0.0)
     ind = compute_indicators(df, cfg)
@@ -224,15 +143,6 @@ def backtest_symbol(
 def _simulate_exit(
     signal, future_df: pd.DataFrame, fee_pct: float, tie_break: str = "conservative"
 ) -> tuple[str, float, int, bool]:
-    """tie_break menentukan hasil kalau SL & TP sama-sama kesentuh di 1 candle
-    (nggak bisa dipastikan urutan intrabar-nya tanpa data tick/lower-TF):
-      - "conservative": selalu LOSS (asumsi terburuk, ini perilaku lama)
-      - "optimistic":   selalu WIN (asumsi terbaik)
-      - "midpoint":     lihat posisi close candle relatif ke entry —
-                        kalau close lebih dekat ke arah TP, anggap WIN, kalau
-                        tidak, anggap LOSS. Kompromi lebih realistis daripada
-                        selalu pilih salah satu ekstrem.
-    """
     risk = abs(signal.entry - signal.sl)
     fee_r = (signal.entry * fee_pct) / risk if risk > 0 else 0.0
 
@@ -267,7 +177,7 @@ def _resolve_tie(tie_break: str, signal, bar) -> bool:
     if tie_break == "midpoint":
         toward_tp = abs(bar["close"] - signal.tp) < abs(bar["close"] - signal.sl)
         return toward_tp
-    return False  # "conservative" (default, sama seperti perilaku lama)
+    return False
 
 
 def summarize(trades: list[Trade]) -> dict:
@@ -286,10 +196,6 @@ def summarize(trades: list[Trade]) -> dict:
 
 
 def summarize_by_setup(trades: list[Trade]) -> dict[str, dict]:
-    """Breakdown win-rate/avg-R per jenis setup (breakout/pullback/
-    continuation/extended) — supaya kelihatan jenis setup mana yang
-    layak dipertahankan dan mana yang sebaiknya di-nonaktifkan/di-tuning
-    lewat scoring.setup_bonus di config.yaml."""
     by_setup: dict[str, list[Trade]] = {}
     for t in trades:
         if t.result == "OPEN":
@@ -299,10 +205,6 @@ def summarize_by_setup(trades: list[Trade]) -> dict[str, dict]:
 
 
 def summarize_by_direction(trades: list[Trade]) -> dict[str, dict]:
-    """Breakdown win-rate/avg-R per arah (LONG/SHORT) — supaya asimetri
-    seperti yang ditemukan di batch sebelumnya (SHORT jauh lebih lemah dari
-    LONG, t=-3.46) langsung kelihatan tiap kali backtest dijalankan ulang,
-    tanpa perlu analisis manual dari trades_raw.json."""
     by_dir: dict[str, list[Trade]] = {}
     for t in trades:
         if t.result == "OPEN":
@@ -310,10 +212,6 @@ def summarize_by_direction(trades: list[Trade]) -> dict[str, dict]:
         by_dir.setdefault(t.direction, []).append(t)
     return {d: summarize(ts) for d, ts in by_dir.items()}
 
-
-# ---------------------------------------------------------------------------
-# Mode single
-# ---------------------------------------------------------------------------
 
 async def _fetch_regime_df(client: BinanceFuturesClient, timeframe: str, limit: int, cfg: dict):
     regime_cfg = cfg.get("regime_filter", {})
@@ -374,18 +272,11 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
         )
 
 
-# ---------------------------------------------------------------------------
-# Mode batch
-# ---------------------------------------------------------------------------
-
 async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -> None:
     per_symbol_results: list[tuple[str, dict | None, str | None]] = []
     all_trades: list[Trade] = []
 
     async with BinanceFuturesClient() as client:
-        # Rezim di-fetch SEKALI buat seluruh batch (bukan per simbol) —
-        # semua simbol pakai timeframe & limit yang sama, jadi rentang
-        # waktunya nyaris identik, tidak perlu N-1 fetch tambahan yang sia-sia.
         regime_df = await _fetch_regime_df(client, timeframe, limit, cfg)
 
         for symbol in symbols:
@@ -475,10 +366,6 @@ def _write_batch_report(
         f.write(report)
     print(report)
 
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser()
