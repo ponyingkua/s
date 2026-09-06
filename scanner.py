@@ -583,34 +583,6 @@ def score_at(
             reasons=["Setup tidak dapat diklasifikasikan karena nilai indikator invalid"],
         )
 
-    if (
-        setup_type == "EXTENDED"
-        and cfg.get("setup_engine", {}).get("block_extended", True)
-    ):
-        return SignalResult(
-            symbol=symbol,
-            direction="NONE",
-            score=0.0,
-            timeframe=timeframe,
-            setup_type=setup_type,
-            reasons=reasons + [
-                f"Setup EXTENDED diblokir total di timeframe {timeframe} (historis sangat underperform)"
-            ],
-        )
-
-    blocked_setups = cfg.get("setup_engine", {}).get("block_setups", {}).get(timeframe, [])
-    if setup_type in blocked_setups:
-        return SignalResult(
-            symbol=symbol,
-            direction="NONE",
-            score=0.0,
-            timeframe=timeframe,
-            setup_type=setup_type,
-            reasons=reasons + [
-                f"Setup {setup_type} diblokir total di timeframe {timeframe} (histori backtest jelek — lihat setup_engine.block_setups)"
-            ],
-        )
-
     setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
@@ -728,25 +700,31 @@ def score_symbol(df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "") 
 
 
 def passes_risk_filter(signal: SignalResult, cfg: dict) -> bool:
+    return passes_risk_filter_detailed(signal, cfg)[0]
+
+
+def passes_risk_filter_detailed(signal: SignalResult, cfg: dict) -> tuple[bool, str]:
     if signal.direction == "NONE" or signal.entry is None:
-        return False
+        return False, "no_entry"
     if signal.sl is None or signal.tp is None:
-        return False
+        return False, "no_sl_tp"
     if not all(pd.notna(value) for value in (signal.entry, signal.sl, signal.tp)):
-        return False
+        return False, "nan_price"
 
     if signal.direction == "LONG" and not (signal.sl < signal.entry < signal.tp):
-        return False
+        return False, "invalid_order"
     if signal.direction == "SHORT" and not (signal.tp < signal.entry < signal.sl):
-        return False
+        return False, "invalid_order"
 
     risk = abs(signal.entry - signal.sl)
     reward = abs(signal.tp - signal.entry)
     if risk == 0:
-        return False
+        return False, "zero_risk"
 
     rr = reward / risk
-    return rr >= cfg["risk"]["risk_reward_min"] - 1e-6
+    if rr >= cfg["risk"]["risk_reward_min"] - 1e-6:
+        return True, "ok"
+    return False, "rr_too_low"
 
 
 def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> float:
@@ -991,11 +969,13 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 return "weak_margin"
             if "tidak dapat diklasifikasikan" in last:
                 return "unknown_setup"
-            if "diblokir total" in last:
-                return "setup_blocked"
+            if "Stop struktur terlalu jauh" in last:
+                return "structural_stop_too_wide"
             if "Skor akhir" in last:
                 return "score_below_threshold"
             return "other"
+
+        risk_reason_totals: dict[str, int] = {}
 
         for tf in timeframes:
             klines = await client.get_klines_many(active_symbols, tf, limit=klines_limit)
@@ -1016,8 +996,10 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 if not passes_regime_filter(signal.direction, regime, cfg):
                     diag_totals["regime_rejected"] += 1
                     continue
-                if not passes_risk_filter(signal, cfg):
+                risk_ok, risk_reason = passes_risk_filter_detailed(signal, cfg)
+                if not risk_ok:
                     diag_totals["risk_rejected"] += 1
+                    risk_reason_totals[risk_reason] = risk_reason_totals.get(risk_reason, 0) + 1
                     continue
                 if is_in_cooldown(state, kline.symbol, signal.direction, tf, cooldown_hours):
                     diag_totals["cooldown_rejected"] += 1
@@ -1026,13 +1008,19 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 tf_candidates.append((signal, kline))
             per_tf_candidates[tf] = tf_candidates
 
-        print(
-            f"[diag] regime={regime} | history_too_short={diag_totals['history_too_short']} "
-            f"score_none={diag_totals['score_none']} regime_rejected={diag_totals['regime_rejected']} "
-            f"risk_rejected={diag_totals['risk_rejected']} cooldown_rejected={diag_totals['cooldown_rejected']} "
-            f"passed={diag_totals['passed']}"
-        )
-        print(f"[diag] rincian score_none: {none_reason_totals}")
+        diag_lines = [
+            "### Diagnostik scan",
+            f"- Regime saat ini: **{regime}**",
+            f"- Total dicek: {sum(diag_totals.values())} (simbol × timeframe)",
+            f"- Lolos semua filter: **{diag_totals['passed']}**",
+            f"- Ditolak: history_too_short={diag_totals['history_too_short']}, "
+            f"score_none={diag_totals['score_none']}, regime_rejected={diag_totals['regime_rejected']}, "
+            f"risk_rejected={diag_totals['risk_rejected']}, cooldown_rejected={diag_totals['cooldown_rejected']}",
+        ]
+        if none_reason_totals:
+            diag_lines.append(f"- Rincian score_none: {none_reason_totals}")
+        if risk_reason_totals:
+            diag_lines.append(f"- Rincian risk_rejected: {risk_reason_totals}")
         if near_miss_scores:
             current_min = cfg["scoring"]["min_score_to_trigger"]
             candidate_thresholds = sorted(
@@ -1042,11 +1030,19 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 thr: sum(1 for s in near_miss_scores if s >= thr)
                 for thr in candidate_thresholds
             }
-            print(
-                f"[diag] near-miss scores (n={len(near_miss_scores)}), "
-                f"min={min(near_miss_scores):.1f} max={max(near_miss_scores):.1f} | "
+            diag_lines.append(
+                f"- Near-miss scores (n={len(near_miss_scores)}), "
+                f"min={min(near_miss_scores):.1f} max={max(near_miss_scores):.1f} — "
                 f"tambahan lolos kalau threshold diturunkan: {impact}"
             )
+
+        diag_text = "\n".join(diag_lines)
+        print(diag_text.replace("**", "").replace("### ", "[diag] "))
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_path:
+            with open(summary_path, "a") as f:
+                f.write(diag_text + "\n\n")
+
 
         direction_map: dict[str, dict[str, str]] = {}
         for tf, cands in per_tf_candidates.items():
