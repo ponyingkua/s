@@ -530,5 +530,40 @@
   "SPKUSDT": {
     "direction": "LONG",
     "timestamp": "2026-09-05T22:09:11.976931+00:00"
+  },
+  "_regime_episode": {
+    "regime": "NEUTRAL",
+    "started_at": "2026-09-06T02:36:18.020984+00:00",
+    "signal_count": 0
+  },
+  "XMRUSDT|1h": {
+    "symbol": "XMRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T02:36:42.437951+00:00"
+  },
+  "ZECUSDT|15m": {
+    "symbol": "ZECUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T02:36:43.348051+00:00"
+  },
+  "DOGEUSDT|1h": {
+    "symbol": "DOGEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T02:36:43.720370+00:00"
+  },
+  "UNIUSDT|15m": {
+    "symbol": "UNIUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T02:36:44.007721+00:00"
+  },
+  "ENSUSDT|15m": {
+    "symbol": "ENSUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T02:36:44.314924+00:00"
   }
 }
