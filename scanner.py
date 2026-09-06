@@ -388,7 +388,12 @@ def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
 def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
     """Return the direction that should be rate-limited in the current regime episode."""
     regime_cfg = cfg.get("regime_filter", {})
-    if regime == "BEAR" and regime_cfg.get("short_mode", "bear_only") == "bear_only":
+    short_mode = regime_cfg.get("short_mode", "bear_only")
+    if regime == "BEAR" and short_mode in ("bear_only", "not_bull"):
+        # Both modes treat BEAR as SHORT's "home" regime, so a long BEAR
+        # episode still needs the cluster cap - not just the strict
+        # bear_only case. Without this, loosening short_mode to not_bull
+        # would silently disable episode capping for shorts.
         return "SHORT"
     long_mode = regime_cfg.get("long_mode", "not_bear")
     if regime == "BULL" and long_mode in ("bull_only", "bull_or_neutral", "not_bear"):
