@@ -595,5 +595,35 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-06T07:20:27.117627+00:00"
+  },
+  "FILUSDT|4h": {
+    "symbol": "FILUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:52:17.268032+00:00"
+  },
+  "TIAUSDT|15m": {
+    "symbol": "TIAUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:52:18.228515+00:00"
+  },
+  "PENDLEUSDT|4h": {
+    "symbol": "PENDLEUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:52:18.571196+00:00"
+  },
+  "GRTUSDT|15m": {
+    "symbol": "GRTUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:52:18.860998+00:00"
+  },
+  "ENSOUSDT|15m": {
+    "symbol": "ENSOUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T07:52:19.182073+00:00"
   }
 }
