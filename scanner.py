@@ -966,24 +966,41 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         max_signals_per_episode = cfg.get("risk", {}).get("max_signals_per_regime_episode")
 
         per_tf_candidates: dict[str, list[tuple[SignalResult, Kline]]] = {}
+        diag_totals = {
+            "history_too_short": 0, "score_none": 0, "regime_rejected": 0,
+            "risk_rejected": 0, "cooldown_rejected": 0, "passed": 0,
+        }
         for tf in timeframes:
             klines = await client.get_klines_many(active_symbols, tf, limit=klines_limit)
             tf_candidates: list[tuple[SignalResult, Kline]] = []
             for kline in klines:
                 closed_df = drop_unclosed_candle(kline.df)
                 if len(closed_df) < min_history_bars:
+                    diag_totals["history_too_short"] += 1
                     continue
                 signal = score_symbol(closed_df, kline.symbol, cfg, timeframe=tf)
                 if signal.direction == "NONE":
+                    diag_totals["score_none"] += 1
                     continue
                 if not passes_regime_filter(signal.direction, regime, cfg):
+                    diag_totals["regime_rejected"] += 1
                     continue
                 if not passes_risk_filter(signal, cfg):
+                    diag_totals["risk_rejected"] += 1
                     continue
                 if is_in_cooldown(state, kline.symbol, signal.direction, tf, cooldown_hours):
+                    diag_totals["cooldown_rejected"] += 1
                     continue
+                diag_totals["passed"] += 1
                 tf_candidates.append((signal, kline))
             per_tf_candidates[tf] = tf_candidates
+
+        print(
+            f"[diag] regime={regime} | history_too_short={diag_totals['history_too_short']} "
+            f"score_none={diag_totals['score_none']} regime_rejected={diag_totals['regime_rejected']} "
+            f"risk_rejected={diag_totals['risk_rejected']} cooldown_rejected={diag_totals['cooldown_rejected']} "
+            f"passed={diag_totals['passed']}"
+        )
 
         direction_map: dict[str, dict[str, str]] = {}
         for tf, cands in per_tf_candidates.items():
