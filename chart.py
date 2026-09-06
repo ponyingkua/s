@@ -35,38 +35,38 @@ from scanner import (
 # STYLE
 # ============================================================
 
-BG = "#f5f5f7"
-PANEL = "#f5f5f7"
-GRID = "#9a9aa5"
-TEXT = "#1a1a1e"
-AXIS = "#3f3f47"
-SPINE = "#a8a8b2"
+BG = "#1B1B1B"
+PANEL = "#1B1B1B"
+GRID = "#3A3A3A"
+TEXT = "#F2F2F2"
+AXIS = "#B8B8B8"
+SPINE = "#4A4A4A"
 
-UP = "#26a69a"
-DOWN = "#ef5350"
+UP = "#26A69A"
+DOWN = "#EF5350"
 
-EMA_COLOR = "#1565c0"
+EMA_COLOR = "#42A5F5"
 
-ST_UP = "#2e7d32"
-ST_DOWN = "#c62828"
+ST_UP = "#66BB6A"
+ST_DOWN = "#EF5350"
 
-ENTRY = "#1565c0"
-TP1 = "#00897b"
-SL = "#c62828"
+ENTRY = "#42A5F5"
+TP1 = "#26A69A"
+SL = "#EF5350"
 
-VOLUME_MA = "#e65100"
+VOLUME_MA = "#FFB74D"
 
-STRUCT_TEXT = "#5c5c68"
-DEMAND_FILL = "#1e7a52"
-DEMAND_EDGE = "#26a69a"
-SUPPLY_FILL = "#7a2626"
-SUPPLY_EDGE = "#ef5350"
-BOS_BULL = "#4fc3f7"
-BOS_BEAR = "#ffab40"
-CONFIRM_BULL = "#4fc3f7"
-CONFIRM_BEAR = "#ffab40"
-ARROW_BULL = "#4fc3f7"
-ARROW_BEAR = "#ffab40"
+STRUCT_TEXT = "#BDBDBD"
+DEMAND_FILL = "#1E7A52"
+DEMAND_EDGE = "#26A69A"
+SUPPLY_FILL = "#7A2626"
+SUPPLY_EDGE = "#EF5350"
+BOS_BULL = "#4FC3F7"
+BOS_BEAR = "#FFB74D"
+CONFIRM_BULL = "#4FC3F7"
+CONFIRM_BEAR = "#FFB74D"
+ARROW_BULL = "#4FC3F7"
+ARROW_BEAR = "#FFB74D"
 
 CANDLE_WIDTH = 0.72
 
