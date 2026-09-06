@@ -745,5 +745,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-06T10:52:03.263495+00:00"
+  },
+  "COMPUSDT|15m": {
+    "symbol": "COMPUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:21:10.507680+00:00"
+  },
+  "COTIUSDT|1h": {
+    "symbol": "COTIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:21:13.126294+00:00"
+  },
+  "SUSHIUSDT|4h": {
+    "symbol": "SUSHIUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:21:13.458573+00:00"
+  },
+  "LDOUSDT|15m": {
+    "symbol": "LDOUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:21:13.745048+00:00"
+  },
+  "TAOUSDT|1h": {
+    "symbol": "TAOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T12:21:14.047871+00:00"
   }
 }
