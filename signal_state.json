@@ -625,5 +625,35 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-06T07:52:19.182073+00:00"
+  },
+  "ZENUSDT|4h": {
+    "symbol": "ZENUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T09:38:52.517138+00:00"
+  },
+  "ZECUSDT|4h": {
+    "symbol": "ZECUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T09:38:54.289836+00:00"
+  },
+  "EPICUSDT|4h": {
+    "symbol": "EPICUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T09:38:54.648374+00:00"
+  },
+  "NAORISUSDT|1h": {
+    "symbol": "NAORISUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T09:38:54.944030+00:00"
+  },
+  "ORCAUSDT|4h": {
+    "symbol": "ORCAUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T09:38:55.231894+00:00"
   }
 }
