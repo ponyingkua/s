@@ -174,7 +174,7 @@ regime_filter:
   enabled: true
   symbol: "BTCUSDT"
   timeframe: "4h"
-  adx_min: 27
+  adx_min: 26
   # short_mode was "bear_only": SHORT only allowed when BTC 4h is
   # simultaneously EMA-down + Supertrend-down + ADX>=27. Across all 3
   # backtest batches (558 trades, Feb-Sep 2026) that condition never once
