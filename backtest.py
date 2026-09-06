@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 import yaml
@@ -43,6 +43,16 @@ def _regime_limit_for(primary_timeframe: str, primary_limit: int, regime_timefra
     return max(needed_bars, min_warmup)
 
 
+def _mtf_limit_for(primary_timeframe: str, primary_limit: int, other_tf: str,
+                   min_warmup: int = 250) -> int:
+    """How many bars of another TF are needed to cover the same calendar span."""
+    primary_minutes = TF_MINUTES.get(primary_timeframe, 60)
+    other_minutes = TF_MINUTES.get(other_tf, 60)
+    span_minutes = primary_minutes * primary_limit
+    needed = int(span_minutes / other_minutes) + min_warmup
+    return max(needed, min_warmup)
+
+
 def compute_regime_series(df_regime: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     regime_cfg = cfg.get("regime_filter", {})
     adx_threshold = regime_cfg.get("adx_min", 25)
@@ -75,6 +85,49 @@ def align_regime_to(primary_df: pd.DataFrame, regime_df: pd.DataFrame) -> pd.Ser
     return merged.sort_index()["regime"].reset_index(drop=True)
 
 
+def _build_mtf_direction_series(
+    primary_df: pd.DataFrame,
+    other_df: pd.DataFrame,
+    other_tf: str,
+    symbol: str,
+    cfg: dict,
+    warmup: int = 250,
+) -> pd.Series:
+    """
+    For every bar on the primary timeframe, look up the most recent closed bar
+    on `other_tf` and run score_at on it. Returns a Series of direction strings
+    aligned to primary_df index ("LONG" / "SHORT" / "NONE").
+    """
+    if other_df is None or other_df.empty:
+        return pd.Series("NONE", index=primary_df.index)
+
+    ind_other = compute_indicators(other_df, cfg)
+    # Pre-compute direction for every bar on the other TF (after warmup)
+    directions = []
+    times = []
+    for j in range(warmup, len(other_df)):
+        sig = score_at(other_df, ind_other, j, symbol, cfg, timeframe=other_tf)
+        directions.append(sig.direction)
+        times.append(other_df["close_time"].iloc[j])
+
+    if not times:
+        return pd.Series("NONE", index=primary_df.index)
+
+    other_dir_df = pd.DataFrame({
+        "close_time": times,
+        "direction": directions,
+    }).sort_values("close_time")
+
+    left = primary_df[["open_time"]].reset_index(drop=True).sort_values("open_time")
+    merged = pd.merge_asof(
+        left, other_dir_df,
+        left_on="open_time", right_on="close_time",
+        direction="backward",
+    )
+    merged["direction"] = merged["direction"].fillna("NONE")
+    return merged.sort_index()["direction"].reset_index(drop=True)
+
+
 @dataclass
 class Trade:
     symbol: str
@@ -89,14 +142,26 @@ class Trade:
     entry_time: str = ""
     exit_time: str = ""
     both_touched: bool = False
+    mtf_bonus: float = 0.0
+    mtf_agree_tfs: list = field(default_factory=list)
 
 
 def backtest_symbol(
-    df: pd.DataFrame, symbol: str, cfg: dict, timeframe: str = "", warmup: int = 250,
+    df: pd.DataFrame,
+    symbol: str,
+    cfg: dict,
+    timeframe: str = "",
+    warmup: int = 250,
     regime_series: pd.Series | None = None,
+    mtf_direction_map: dict[str, pd.Series] | None = None,
 ) -> list[Trade]:
+    """
+    mtf_direction_map: optional dict of {other_tf: Series of directions aligned to df}.
+    When present, MTF agreement bonus is applied exactly like in the live scanner.
+    """
     trades: list[Trade] = []
     fee_pct = cfg.get("backtest", {}).get("fee_round_trip_pct", 0.0)
+    mtf_weight = cfg.get("scoring", {}).get("weights", {}).get("mtf_agreement", 0)
     ind = compute_indicators(df, cfg)
 
     i = warmup
@@ -112,6 +177,25 @@ def backtest_symbol(
             if not passes_regime_filter(signal.direction, regime, cfg):
                 i += 1
                 continue
+
+        # --- MTF agreement bonus (mirrors live scanner logic) ---
+        mtf_bonus = 0.0
+        agree_tfs: list[str] = []
+        if mtf_direction_map and mtf_weight:
+            for other_tf, dir_series in mtf_direction_map.items():
+                if i < len(dir_series) and dir_series.iloc[i] == signal.direction:
+                    agree_tfs.append(other_tf)
+            if agree_tfs:
+                mtf_bonus = mtf_weight * len(agree_tfs)
+                signal.score = round(signal.score + mtf_bonus, 1)
+                signal.reasons.append(
+                    f"Searah dengan TF {', '.join(agree_tfs)} (+{mtf_bonus} MTF agreement)"
+                )
+
+        # Re-check min_score after MTF bonus (same as live)
+        if signal.score < cfg["scoring"]["min_score_to_trigger"]:
+            i += 1
+            continue
 
         risk = abs(signal.entry - signal.sl)
         reward = abs(signal.tp - signal.entry)
@@ -136,6 +220,7 @@ def backtest_symbol(
                 sl=signal.sl, tp=signal.tp, result=result, r_multiple=r_mult,
                 timeframe=signal.timeframe, setup_type=signal.setup_type,
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
+                mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs,
             )
         )
 
@@ -189,15 +274,19 @@ def _resolve_tie(tie_break: str, signal, bar) -> bool:
 def summarize(trades: list[Trade]) -> dict:
     closed = [t for t in trades if t.result != "OPEN"]
     if not closed:
-        return {"total": 0, "win_rate": 0.0, "avg_r": 0.0}
+        return {"total": 0, "win_rate": 0.0, "avg_r": 0.0, "tie_count": 0, "tie_pct": 0.0,
+                "mtf_trades": 0, "mtf_pct": 0.0}
     wins = [t for t in closed if t.result == "WIN"]
     ties = [t for t in closed if t.both_touched]
+    mtf_trades = [t for t in closed if t.mtf_bonus > 0]
     return {
         "total": len(closed),
         "win_rate": round(len(wins) / len(closed) * 100, 1),
         "avg_r": round(sum(t.r_multiple for t in closed) / len(closed), 3),
         "tie_count": len(ties),
         "tie_pct": round(len(ties) / len(closed) * 100, 1),
+        "mtf_trades": len(mtf_trades),
+        "mtf_pct": round(len(mtf_trades) / len(closed) * 100, 1),
     }
 
 
@@ -230,13 +319,60 @@ async def _fetch_regime_df(client: BinanceFuturesClient, timeframe: str, limit: 
     return compute_regime_series(regime_kline.df, cfg)
 
 
-async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None:
+async def _fetch_mtf_data(
+    client: BinanceFuturesClient,
+    symbol: str,
+    primary_tf: str,
+    primary_limit: int,
+    cfg: dict,
+) -> dict[str, pd.DataFrame]:
+    """Fetch klines for all other configured timeframes (for MTF agreement)."""
+    all_tfs = cfg.get("timeframes", ["15m", "1h", "4h"])
+    other_tfs = [tf for tf in all_tfs if tf != primary_tf]
+    result = {}
+    for tf in other_tfs:
+        lim = _mtf_limit_for(primary_tf, primary_limit, tf)
+        try:
+            kline = await fetch_klines(client, symbol, tf, lim)
+            result[tf] = kline.df
+        except Exception as exc:
+            print(f"  [MTF] gagal fetch {symbol} {tf}: {exc}")
+    return result
+
+
+def _build_mtf_map(
+    primary_df: pd.DataFrame,
+    mtf_dfs: dict[str, pd.DataFrame],
+    symbol: str,
+    cfg: dict,
+    warmup: int = 250,
+) -> dict[str, pd.Series]:
+    mtf_map = {}
+    for tf, odf in mtf_dfs.items():
+        mtf_map[tf] = _build_mtf_direction_series(
+            primary_df, odf, tf, symbol, cfg, warmup=warmup
+        )
+    return mtf_map
+
+
+async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
+                     use_mtf: bool = True) -> None:
     async with BinanceFuturesClient() as client:
         kline = await fetch_klines(client, symbol, timeframe, limit)
         regime_df = await _fetch_regime_df(client, timeframe, limit, cfg)
 
+        mtf_dfs = {}
+        if use_mtf:
+            print(f"Fetching MTF data for {symbol} ...")
+            mtf_dfs = await _fetch_mtf_data(client, symbol, timeframe, limit, cfg)
+
     regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
-    trades = backtest_symbol(kline.df, symbol, cfg, timeframe=timeframe, regime_series=regime_series)
+    mtf_map = _build_mtf_map(kline.df, mtf_dfs, symbol, cfg) if mtf_dfs else None
+
+    trades = backtest_symbol(
+        kline.df, symbol, cfg, timeframe=timeframe,
+        regime_series=regime_series, mtf_direction_map=mtf_map,
+    )
     summary = summarize(trades)
     setup_breakdown = summarize_by_setup(trades)
     direction_breakdown = summarize_by_direction(trades)
@@ -251,13 +387,20 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
     with open("backtest_result.md", "w") as f:
         f.write(f"# Backtest — {symbol} ({timeframe})\n\n")
         if regime_series is not None:
-            f.write("_Market regime filter: **aktif** (BTCUSDT)_\n\n")
+            f.write("_Market regime filter: **aktif** (BTCUSDT)_\n")
+        if mtf_map:
+            f.write("_MTF agreement bonus: **aktif**_\n")
+        f.write("\n")
         f.write(f"- Total trade tertutup: **{summary['total']}**\n")
         f.write(f"- Win rate: **{summary['win_rate']}%**\n")
         f.write(f"- Rata-rata R multiple: **{summary['avg_r']}**\n")
         f.write(
             f"- Trade dengan SL & TP kesentuh di candle yang sama: "
-            f"**{summary['tie_count']}** ({summary['tie_pct']}%)\n\n"
+            f"**{summary['tie_count']}** ({summary['tie_pct']}%)\n"
+        )
+        f.write(
+            f"- Trade yang dapat MTF bonus: "
+            f"**{summary['mtf_trades']}** ({summary['mtf_pct']}%)\n\n"
         )
         f.write("## Breakdown per arah\n\n")
         f.write("| Arah | Trade | Win Rate | Avg R |\n")
@@ -271,14 +414,14 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict) -> None
             f.write(f"| {setup} | {s['total']} | {s['win_rate']}% | {s['avg_r']} |\n")
         f.write(
             "\n> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
-            "Detail per-trade ada di `trades_raw.json`. Angka di sini murni 1 "
-            "timeframe (tanpa bonus MTF agreement yang dipakai scanner.py saat "
-            "live), tapi SUDAH termasuk market regime filter kalau diaktifkan "
-            "di config.\n"
+            "Detail per-trade ada di `trades_raw.json`. "
+            "SUDAH termasuk market regime filter + MTF agreement bonus "
+            "(kalau diaktifkan di config / flag --mtf).\n"
         )
 
 
-async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -> None:
+async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict,
+                    use_mtf: bool = True) -> None:
     per_symbol_results: list[tuple[str, dict | None, str | None]] = []
     all_trades: list[Trade] = []
 
@@ -292,9 +435,17 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
                 per_symbol_results.append((symbol, None, str(exc)))
                 continue
 
+            mtf_dfs = {}
+            if use_mtf:
+                print(f"Fetching MTF data for {symbol} ...")
+                mtf_dfs = await _fetch_mtf_data(client, symbol, timeframe, limit, cfg)
+
             regime_series = align_regime_to(kline.df, regime_df) if regime_df is not None else None
+            mtf_map = _build_mtf_map(kline.df, mtf_dfs, symbol, cfg) if mtf_dfs else None
+
             trades = backtest_symbol(
-                kline.df, symbol, cfg, timeframe=timeframe, regime_series=regime_series
+                kline.df, symbol, cfg, timeframe=timeframe,
+                regime_series=regime_series, mtf_direction_map=mtf_map,
             )
             summary = summarize(trades)
             per_symbol_results.append((symbol, summary, None))
@@ -307,27 +458,36 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict) -
         json.dump([t.__dict__ for t in all_trades], f, indent=2)
     _write_batch_report(
         per_symbol_results, combined, combined_by_setup, combined_by_direction,
-        timeframe, regime_enabled=cfg.get("regime_filter", {}).get("enabled", False),
+        timeframe,
+        regime_enabled=cfg.get("regime_filter", {}).get("enabled", False),
+        mtf_enabled=use_mtf,
     )
 
 
 def _write_batch_report(
     per_symbol_results, combined: dict, combined_by_setup: dict[str, dict],
-    combined_by_direction: dict[str, dict], timeframe: str, regime_enabled: bool = False,
+    combined_by_direction: dict[str, dict], timeframe: str,
+    regime_enabled: bool = False, mtf_enabled: bool = False,
 ) -> None:
     lines = [f"# Backtest Gabungan ({timeframe})\n"]
     if regime_enabled:
-        lines.append("_Market regime filter: **aktif** (BTCUSDT)_\n")
-    lines.append("| Simbol | Trade | Win Rate | Avg R |")
-    lines.append("|---|---|---|---|")
+        lines.append("_Market regime filter: **aktif** (BTCUSDT)_")
+    if mtf_enabled:
+        lines.append("_MTF agreement bonus: **aktif**_")
+    lines.append("")
+    lines.append("| Simbol | Trade | Win Rate | Avg R | MTF% |")
+    lines.append("|---|---|---|---|---|")
 
     for symbol, summary, error in per_symbol_results:
         if error:
-            lines.append(f"| {symbol} | - | - | error: {error[:40]} |")
+            lines.append(f"| {symbol} | - | - | error: {error[:40]} | - |")
         elif summary["total"] == 0:
-            lines.append(f"| {symbol} | 0 | - | - |")
+            lines.append(f"| {symbol} | 0 | - | - | - |")
         else:
-            lines.append(f"| {symbol} | {summary['total']} | {summary['win_rate']}% | {summary['avg_r']} |")
+            lines.append(
+                f"| {symbol} | {summary['total']} | {summary['win_rate']}% | "
+                f"{summary['avg_r']} | {summary.get('mtf_pct', 0)}% |"
+            )
 
     lines.append("")
     lines.append("## Ringkasan Gabungan")
@@ -338,6 +498,10 @@ def _write_batch_report(
     lines.append(
         f"- Trade dengan SL & TP kesentuh di candle yang sama (ambigu): "
         f"**{combined['tie_count']}** ({combined['tie_pct']}%)"
+    )
+    lines.append(
+        f"- Trade yang dapat MTF bonus: "
+        f"**{combined.get('mtf_trades', 0)}** ({combined.get('mtf_pct', 0)}%)"
     )
 
     lines.append("")
@@ -358,13 +522,10 @@ def _write_batch_report(
     lines.append(
         "> ⚠️ Angka gabungan lebih bisa dipercaya dibanding angka per-simbol "
         "individual, tapi tetap bukan jaminan performa live — belum "
-        "memperhitungkan slippage atau funding rate, dan belum termasuk bonus "
-        "MTF agreement yang dipakai scanner.py saat live (regime filter SUDAH "
-        "termasuk kalau diaktifkan). Baris \"tie\" di atas menunjukkan seberapa "
-        "besar hasil bergantung pada asumsi tie-break intrabar (lihat "
-        "`backtest.intrabar_tie_break` di config.yaml). Kalau breakdown arah "
-        "atau setup masih timpang jauh, pertimbangkan tuning lebih lanjut di "
-        "config.yaml."
+        "memperhitungkan slippage atau funding rate. "
+        "Regime filter + MTF agreement bonus SUDAH termasuk (kalau diaktifkan). "
+        "Baris \"tie\" di atas menunjukkan seberapa besar hasil bergantung pada "
+        "asumsi tie-break intrabar (lihat `backtest.intrabar_tie_break` di config.yaml)."
     )
 
     report = "\n".join(lines)
@@ -377,28 +538,39 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch", action="store_true", help="Jalankan mode batch (banyak simbol)")
     parser.add_argument("--symbol", default="BTCUSDT", help="Simbol untuk mode single")
-    parser.add_argument("--symbols", default=",".join(DEFAULT_SYMBOLS), help="Simbol dipisah koma untuk mode batch")
+    parser.add_argument("--symbols", default=",".join(DEFAULT_SYMBOLS),
+                        help="Simbol dipisah koma untuk mode batch")
     parser.add_argument("--timeframe", default="1h")
     parser.add_argument("--limit", type=int, default=1000)
     parser.add_argument("--days", type=float, default=None,
-                         help="Target cakupan kalender (hari) buat window trading, "
-                              "sama rata lintas timeframe. Kalau diisi, override --limit.")
+                        help="Target cakupan kalender (hari) buat window trading, "
+                             "sama rata lintas timeframe. Kalau diisi, override --limit.")
     parser.add_argument("--config", default="config.yaml")
+    parser.add_argument("--mtf", action="store_true", default=True,
+                        help="Aktifkan MTF agreement bonus (default: on)")
+    parser.add_argument("--no-mtf", action="store_true",
+                        help="Matikan MTF agreement bonus")
     args = parser.parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
 
+    use_mtf = args.mtf and not args.no_mtf
+
     limit = limit_for_days(args.timeframe, args.days) if args.days is not None else args.limit
     if args.days is not None:
         print(f"--days {args.days} @ {args.timeframe} -> --limit {limit} "
               f"({args.days:.0f} hari trading + 250 warmup)")
+    if use_mtf:
+        print("MTF agreement bonus: AKTIF")
+    else:
+        print("MTF agreement bonus: MATI")
 
     if args.batch:
         symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
-        asyncio.run(run_batch(symbols, args.timeframe, limit, cfg))
+        asyncio.run(run_batch(symbols, args.timeframe, limit, cfg, use_mtf=use_mtf))
     else:
-        asyncio.run(run_single(args.symbol.upper(), args.timeframe, limit, cfg))
+        asyncio.run(run_single(args.symbol.upper(), args.timeframe, limit, cfg, use_mtf=use_mtf))
 
 
 if __name__ == "__main__":
