@@ -46,14 +46,27 @@ scoring:
     rsi_confluence: 20
     mtf_agreement: 15   # bonus skor PER timeframe lain yang searah (menggantikan filter biner lama)
     adx_strength: 15    # bonus skor bertingkat kalau ADX jauh di atas adx_min (tren kuat vs baru lolos gate)
+  # v3.3: setup_bonus sekarang per-ARAH (long/short terpisah), bukan flat.
+  # Sumber: trades_raw_batch.json, 175 trade closed, 17 Jul - 5 Sep 2026 (1h).
+  # Setup yang SAMA bisa berkebalikan hasilnya tergantung arah -- flat bonus
+  # lama tidak bisa menangkap ini (lihat get_setup_bonus() di scanner.py).
+  # Skema lama (flat, key setup langsung tanpa long/short) masih didukung
+  # sebagai fallback kalau belum sempat migrasi.
   setup_bonus:
-    breakout: 10        # harga menembus struktur N-bar terakhir searah sinyal
-    pullback: 10         # harga dekat/menyentuh EMA200 sebelum lanjut searah tren
-    continuation: -10     # v3.2: 0 -> data batch 174 trade nunjukkin ini pecundang
-                           # terbesar (avg R -0.349, t=-1.90, n=39 -- sampel terbesar)
-    extended: 0            # v3.2: -15 -> 0. Data TIDAK mendukung penalti ini (avg R
-                           # justru +0.277, t=+1.04) -- tapi n=23 kecil, jangan buru-
-                           # buru kasih bonus positif juga sebelum ada lebih banyak data
+    long:
+      breakout: 10        # avg R +0.257 (n=58) -- setup terbaik, pertahankan bonus penuh
+      extended: 10        # avg R +0.251 (n=39) -- sama kuatnya dgn breakout, sebelumnya
+                           # cuma dapat bonus 0 (v3.2), sekarang disamakan
+      pullback: 5          # avg R -0.001 (n=19) -- praktis breakeven, turunkan dari 10
+                           # karena tidak terbukti seunggul breakout/extended
+      continuation: -10   # avg R -0.053 (n=10, sampel kecil) -- tetap ditahan turun
+    short:
+      breakout: -5         # avg R -0.043 (n=15) -- breakeven di TERBAIK dari semua
+                           # setup SHORT, tidak layak dapat bonus positif lagi
+      pullback: -25        # avg R -0.586 (n=11) -- buruk, tekan keras
+      continuation: -20    # avg R -0.411 (n=8) -- buruk, tekan lebih dalam dari sebelumnya
+      extended: -30        # avg R -0.714 (n=15) -- TERBURUK dari semua kombinasi
+                           # arah x setup, praktis harus hampir tidak pernah lolos
   min_score_to_trigger: 85
 
 risk:
@@ -75,11 +88,23 @@ setup_engine:
 # simbol yang dites -- ciri khas market lagi bull luas, bukan kebetulan 1-2
 # coin. Filter ini menyaring sinyal yang melawan rezim BTCUSDT biar tidak
 # terus-terusan ambil sinyal di sisi yang secara historis lemah.
+#
+# v3.3: filter lama ("blokir SHORT cuma kalau regime BULL") ternyata BELUM
+# cukup ketat -- batch 175 trade (17 Jul - 5 Sep 2026) nunjukkin SHORT tetap
+# rugi di semua jenis setup (win rate 13-40%, avg R -0.04 s/d -0.71) bahkan
+# saat regime cuma "NEUTRAL", dan makin parah di paruh kedua periode (win
+# rate SHORT turun ke 13.3%, avg R -0.704) justru saat LONG sedang bagus-
+# bagusnya (win rate 58.9%, avg R +0.441) -- pola klasik market lagi tren
+# naik kuat yang ADX 4h-nya belum tentu >=25 terus-menerus. short_mode
+# "bear_only" mengetatkan ini: SHORT cuma lolos kalau regime SUDAH
+# terkonfirmasi "BEAR", bukan sekadar "bukan BULL".
 regime_filter:
   enabled: true
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 25   # BTC dianggap BULL/BEAR cuma kalau ADX di timeframe ini >= segini, selain itu NEUTRAL (tidak menyaring apa pun)
+  short_mode: "bear_only"   # "bear_only" (v3.3, direkomendasikan) | "not_bull" (perilaku lama v3.2)
+  long_mode: "not_bear"     # "not_bear" (default, tidak berubah) | "bull_only" (belum ada bukti data perlu ini)
 
 notify:
   telegram:
