@@ -139,8 +139,24 @@ regime_filter:
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 27
-  short_mode: "bear_only"
-  long_mode: "bull_or_neutral"
+  # short_mode was "bear_only": SHORT only allowed when BTC 4h is
+  # simultaneously EMA-down + Supertrend-down + ADX>=27. Across all 3
+  # backtest batches (558 trades, Feb-Sep 2026) that condition never once
+  # occurred, so direction=SHORT was filtered out 100% of the time and the
+  # short side of the engine has effectively never been tested. "not_bull"
+  # keeps SHORT blocked in a real BULL regime but lets it through in BEAR
+  # and NEUTRAL so it can finally accumulate a sample.
+  short_mode: "not_bull"
+  # long_mode was "bull_or_neutral": LONG was allowed any time BTC wasn't
+  # in a clean BEAR, i.e. almost always (this is why 100% of trades ended
+  # up LONG). The monthly breakdown of the same backtests shows win rate
+  # collapsing to ~20-29% in months that were likely NEUTRAL/choppy on BTC
+  # (Mar-Jul 2026) vs 35-50% in the more clearly trending months
+  # (Feb, Aug-Sep). Restricting LONG to a confirmed BULL regime is a
+  # direct, testable response to that pattern — re-run backtest.py after
+  # this change and compare win rate / avg R and trade count before
+  # keeping it.
+  long_mode: "bull_only"
 
 symbol_filter:
   blacklist: []
