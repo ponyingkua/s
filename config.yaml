@@ -46,7 +46,7 @@ scoring:
   setup_bonus:
     "15m":
       long:
-        extended: -20
+        extended: -35
         pullback: 15
     "1h":
       long:
