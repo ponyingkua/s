@@ -45,7 +45,7 @@ SPINE = "#4A4A4A"
 UP = "#26A69A"
 DOWN = "#EF5350"
 
-EMA_COLOR = "#42A5F5"
+EMA_COLOR = "#FFD54F"  # kuning biar lebih kontras & mudah terlihat
 
 ST_UP = "#66BB6A"
 ST_DOWN = "#EF5350"
@@ -57,9 +57,9 @@ SL = "#EF5350"
 VOLUME_MA = "#FFB74D"
 
 STRUCT_TEXT = "#BDBDBD"
-DEMAND_FILL = "#1E7A52"
+DEMAND_FILL = "#1B5E40"
 DEMAND_EDGE = "#26A69A"
-SUPPLY_FILL = "#7A2626"
+SUPPLY_FILL = "#6B1F1F"
 SUPPLY_EDGE = "#EF5350"
 BOS_BULL = "#4FC3F7"
 BOS_BEAR = "#FFB74D"
@@ -352,40 +352,44 @@ def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int,
 
 
 def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span: float) -> None:
-    pad_zone = max(y_span, 1e-9) * 0.055
     for z in zones:
         bos_px = z["bos_idx"] - offset
         if bos_px < -0.5:
             continue
         start_px = max(z["start"] - offset, -0.4)
-        end_px = min(bos_px + 3, last_x + 0.4)
+        end_px = min(bos_px + 4, last_x + 0.4)
         if end_px <= start_px:
-            end_px = start_px + 1
+            end_px = start_px + 1.5
 
         is_demand = z["type"] == "demand"
         fill = DEMAND_FILL if is_demand else SUPPLY_FILL
         edge = DEMAND_EDGE if is_demand else SUPPLY_EDGE
         label = "Demand" if is_demand else "Supply"
 
+        # Box lebih tebal & lebih terlihat
         ax.add_patch(Rectangle(
             (start_px, z["bottom"]), end_px - start_px, z["top"] - z["bottom"],
-            facecolor=fill, edgecolor=edge, alpha=0.24, linewidth=0.8,
+            facecolor=fill, edgecolor=edge, alpha=0.38, linewidth=1.1,
             zorder=1.2,
         ))
-        label_y = (z["bottom"] - pad_zone) if is_demand else (z["top"] + pad_zone)
-        va = "top" if is_demand else "bottom"
-        ax.text(max(start_px, 0), label_y, f" {label} ", color=edge,
-                fontsize=6.0, fontweight="bold", ha="left", va=va,
-                alpha=0.90, zorder=1.5, clip_on=False)
+
+        # Label di dalam box, font putih, bold
+        mid_x = (start_px + end_px) / 2
+        mid_y = (z["top"] + z["bottom"]) / 2
+        ax.text(mid_x, mid_y, label, color="#FFFFFF",
+                fontsize=6.5, fontweight="bold", ha="center", va="center",
+                alpha=0.95, zorder=1.6, clip_on=False)
 
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame) -> None:
     plot_len = len(plot_df)
     high = plot_df["high"].values
     low = plot_df["low"].values
+    close = plot_df["close"].values
+    open_ = plot_df["open"].values
     y_span = float(plot_df["high"].max() - plot_df["low"].min())
-    pad_marker = max(y_span, 1e-9) * 0.012
-    pad_label = max(y_span, 1e-9) * 0.075
+    pad_marker = max(y_span, 1e-9) * 0.018
+    pad_label = max(y_span, 1e-9) * 0.09
 
     for ev in bos_events:
         idx_px = ev["idx"] - offset
@@ -393,25 +397,33 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
             continue
         origin_px = max(ev["origin"] - offset, -0.4)
         is_bull = ev["direction"] == "bull"
+
+        # Warna BOS mengikuti arah (lebih jelas dari warna candle)
         color = BOS_BULL if is_bull else BOS_BEAR
 
+        # Garis level BOS lebih tebal & jelas
         ax.plot([origin_px, idx_px], [ev["level"], ev["level"]], color=color,
-                 linestyle=(0, (5, 3)), linewidth=1.0, alpha=0.80, zorder=4)
+                 linestyle=(0, (6, 3)), linewidth=1.35, alpha=0.90, zorder=4)
 
-        marker_color = CONFIRM_BULL if is_bull else CONFIRM_BEAR
+        # Marker lebih besar & menonjol
         if is_bull:
-            ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=marker_color,
-                     markersize=5.0, zorder=10, clip_on=False)
+            ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=color,
+                     markersize=7.5, zorder=10, clip_on=False,
+                     markeredgecolor="#FFFFFF", markeredgewidth=0.6)
             label_y = max(ev["level"], high[idx_px]) + pad_label
         else:
-            ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=marker_color,
-                     markersize=5.0, zorder=10, clip_on=False)
+            ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=color,
+                     markersize=7.5, zorder=10, clip_on=False,
+                     markeredgecolor="#FFFFFF", markeredgewidth=0.6)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
-        ax.text(idx_px + 0.9, label_y, "BOS", color=color,
-                fontsize=5.8, fontweight="bold",
+        # Teks BOS dengan background kecil biar lebih terbaca
+        ax.text(idx_px + 1.1, label_y, " BOS ", color="#FFFFFF",
+                fontsize=6.2, fontweight="bold",
                 ha="left", va="center",
-                zorder=9, clip_on=False)
+                bbox=dict(facecolor=color, edgecolor="none",
+                          boxstyle="round,pad=0.25", alpha=0.92),
+                zorder=11, clip_on=False)
 
 
 def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int) -> None:
@@ -478,43 +490,59 @@ def _calculate_visible_range(
     structure: dict,
     timeframe: str,
     max_candles: int,
-    left_padding: int = 10,
+    left_padding: int = 8,
 ) -> tuple[int, int]:
     """
-    Menghitung start_idx dan end_idx supaya zone + BOS + label struktur penting
-    selalu masuk frame, sambil tetap membatasi jumlah candle maksimum.
+    Fokus lebih agresif ke struktur terakhir (BOS + Zone terkait).
+    Label lama yang terlalu jauh diabaikan supaya chart tidak ke-kiri berlebihan.
     """
     n = len(work_df)
     end_idx = n - 1
 
     important = []
 
-    # Zone (Demand / Supply)
-    for z in structure.get("zones", []):
-        important.append(z["start"])
-        important.append(z["bos_idx"])
+    # Prioritas utama: BOS terbaru + zone yang terkait
+    bos_events = structure.get("bos_events", [])
+    zones = structure.get("zones", [])
 
-    # BOS events
-    for ev in structure.get("bos_events", []):
-        important.append(ev["origin"])
-        important.append(ev["idx"])
+    if bos_events:
+        # Ambil BOS paling kanan (terbaru)
+        latest_bos = max(bos_events, key=lambda e: e["idx"])
+        important.append(latest_bos["origin"])
+        important.append(latest_bos["idx"])
 
-    # Beberapa label struktur terbaru (HH/HL/LH/LL)
+        # Zone yang terkait dengan BOS tersebut
+        for z in zones:
+            if abs(z["bos_idx"] - latest_bos["idx"]) <= 3:
+                important.append(z["start"])
+                important.append(z["bos_idx"])
+
+    # Cadangan: kalau tidak ada BOS, pakai zone terakhir
+    if not important and zones:
+        latest_zone = max(zones, key=lambda z: z["bos_idx"])
+        important.append(latest_zone["start"])
+        important.append(latest_zone["bos_idx"])
+
+    # Tambahkan hanya label yang dekat dengan struktur utama (maks 2 label terakhir)
     labeled = structure.get("labeled_points", [])
-    if labeled:
-        recent_labels = sorted(labeled, key=lambda p: p["index"])[-4:]
+    if labeled and important:
+        rightmost_important = max(important)
+        recent_labels = [
+            p for p in labeled
+            if p["index"] >= rightmost_important - 25
+        ]
+        recent_labels = sorted(recent_labels, key=lambda p: p["index"])[-2:]
         for p in recent_labels:
             important.append(p["index"])
 
     if not important:
-        # Fallback kalau deteksi gagal
         start_idx = max(0, n - max_candles)
         return start_idx, end_idx
 
     leftmost = min(important)
     start_idx = max(0, leftmost - left_padding)
 
-    # Batasi supaya tidak melebihi max_candles
+    # Batasi maksimum candle
     if (end_idx - start_idx + 1) > max_candles:
         start_idx = max(0, end_idx - max_candles + 1)
 
@@ -539,7 +567,7 @@ def build_chart(
     structure = _compute_structure(work_df)
 
     # Hitung range visible yang cerdas berdasarkan structure
-    left_pad = 12 if timeframe == "15m" else 8
+    left_pad = 10 if timeframe == "15m" else 7
     start_idx, end_idx = _calculate_visible_range(
         work_df,
         structure,
