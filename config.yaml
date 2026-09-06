@@ -71,7 +71,7 @@ scoring:
         breakout: 15
         pullback: 10
         continuation: -15
-        extended: 5
+        extended: -25
       short:
         breakout: 10
         pullback: -10
@@ -97,6 +97,10 @@ risk:
   adx_min: 22
   adx_strong: 35
   structure_sl_max_atr_mult: 2.3
+  # Cap khusus setup BREAKOUT — dibuat lebih longgar dari cap generik di atas
+  # (lihat komentar di scanner.py score_at()) karena stop breakout secara
+  # alami lebih lebar tanpa berarti struktur salah baca.
+  structure_sl_max_atr_mult_breakout: 4.0
   max_signals_per_regime_episode: 2
 
 setup_engine:
@@ -104,12 +108,20 @@ setup_engine:
   pullback_atr_mult: 1.0
   extended_atr_mult: 3.2
   structure_sl_buffer_atr_mult: 0.25
+  # Lookback buat cari level resistance/support riil sebagai kandidat TP.
+  # Kalau tidak diisi per-TF, default-nya 2x structure_lookback TF tsb.
+  target_lookback: 40
   "15m":
     structure_lookback: 40
+    extended_atr_mult: 2.5
   "1h":
     structure_lookback: 25
+    extended_atr_mult: 3.0
   "4h":
     structure_lookback: 30
+    # EMA200 di 4h jauh lebih lambat mengikuti trend kuat, jadi butuh
+    # ambang lebih longgar biar trend sehat tidak salah ke-tag EXTENDED
+    extended_atr_mult: 4.5
 
 regime_filter:
   enabled: true
