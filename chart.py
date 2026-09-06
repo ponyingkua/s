@@ -71,9 +71,9 @@ ARROW_BEAR = "#FFB74D"
 CANDLE_WIDTH = 0.72
 
 MAX_CANDLES_BY_TF = {
-    "15m": 60,
-    "1h": 48,
-    "4h": 50,
+    "15m": 55,
+    "1h": 42,
+    "4h": 45,
 }
 
 STRUCTURE_CONTEXT = 30
@@ -473,6 +473,54 @@ def _compute_structure(work_df: pd.DataFrame) -> dict:
     }
 
 
+def _calculate_visible_range(
+    work_df: pd.DataFrame,
+    structure: dict,
+    timeframe: str,
+    max_candles: int,
+    left_padding: int = 10,
+) -> tuple[int, int]:
+    """
+    Menghitung start_idx dan end_idx supaya zone + BOS + label struktur penting
+    selalu masuk frame, sambil tetap membatasi jumlah candle maksimum.
+    """
+    n = len(work_df)
+    end_idx = n - 1
+
+    important = []
+
+    # Zone (Demand / Supply)
+    for z in structure.get("zones", []):
+        important.append(z["start"])
+        important.append(z["bos_idx"])
+
+    # BOS events
+    for ev in structure.get("bos_events", []):
+        important.append(ev["origin"])
+        important.append(ev["idx"])
+
+    # Beberapa label struktur terbaru (HH/HL/LH/LL)
+    labeled = structure.get("labeled_points", [])
+    if labeled:
+        recent_labels = sorted(labeled, key=lambda p: p["index"])[-4:]
+        for p in recent_labels:
+            important.append(p["index"])
+
+    if not important:
+        # Fallback kalau deteksi gagal
+        start_idx = max(0, n - max_candles)
+        return start_idx, end_idx
+
+    leftmost = min(important)
+    start_idx = max(0, leftmost - left_padding)
+
+    # Batasi supaya tidak melebihi max_candles
+    if (end_idx - start_idx + 1) > max_candles:
+        start_idx = max(0, end_idx - max_candles + 1)
+
+    return start_idx, end_idx
+
+
 def build_chart(
     df: pd.DataFrame,
     symbol: str,
@@ -481,22 +529,40 @@ def build_chart(
     cfg: dict,
     out_path: str,
 ) -> str:
-    n_show = get_candles_shown(timeframe, cfg)
+    n_show_max = get_candles_shown(timeframe, cfg)
 
-    work_df = df.tail(n_show + STRUCTURE_CONTEXT).reset_index(drop=True)
-    offset = max(len(work_df) - n_show, 0)
-    plot_df = work_df.tail(n_show).reset_index(drop=True)
+    # Ambil window lebih lebar untuk deteksi structure
+    work_len = n_show_max + STRUCTURE_CONTEXT + 50
+    work_df = df.tail(work_len).reset_index(drop=True)
 
+    # Hitung structure dulu
     structure = _compute_structure(work_df)
+
+    # Hitung range visible yang cerdas berdasarkan structure
+    left_pad = 12 if timeframe == "15m" else 8
+    start_idx, end_idx = _calculate_visible_range(
+        work_df,
+        structure,
+        timeframe,
+        max_candles=n_show_max,
+        left_padding=left_pad,
+    )
+
+    plot_df = work_df.iloc[start_idx : end_idx + 1].reset_index(drop=True)
+    offset = start_idx
 
     ema_period = cfg["indicators"]["ema"]["period"]
     st_period = cfg["indicators"]["supertrend"]["period"]
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
-    ema_full = ema(df["close"], ema_period).tail(n_show).reset_index(drop=True)
+    ema_full = ema(df["close"], ema_period).tail(len(plot_df)).reset_index(drop=True)
+    # Pastikan panjang EMA sama dengan plot_df
+    if len(ema_full) != len(plot_df):
+        ema_full = ema(work_df["close"], ema_period).iloc[start_idx:end_idx+1].reset_index(drop=True)
+
     st_level_work, st_trend_work = _supertrend_trailing(work_df, st_period, st_mult)
-    st_level_full = st_level_work.tail(n_show).reset_index(drop=True)
-    st_trend_full = st_trend_work.tail(n_show).reset_index(drop=True)
+    st_level_full = st_level_work.iloc[start_idx:end_idx+1].reset_index(drop=True)
+    st_trend_full = st_trend_work.iloc[start_idx:end_idx+1].reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
