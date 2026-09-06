@@ -829,5 +829,11 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-06T15:26:52.642418+00:00"
+  },
+  "GIGGLEUSDT|1h": {
+    "symbol": "GIGGLEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-06T21:44:35.176432+00:00"
   }
 }
