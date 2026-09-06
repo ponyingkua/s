@@ -975,6 +975,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             "risk_rejected": 0, "cooldown_rejected": 0, "passed": 0,
         }
         none_reason_totals: dict[str, int] = {}
+        near_miss_scores: list[float] = []
 
         def _classify_none_reason(reasons: list[str]) -> str:
             last = reasons[-1] if reasons else ""
@@ -1009,6 +1010,8 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     diag_totals["score_none"] += 1
                     reason_key = _classify_none_reason(signal.reasons)
                     none_reason_totals[reason_key] = none_reason_totals.get(reason_key, 0) + 1
+                    if reason_key == "score_below_threshold":
+                        near_miss_scores.append(signal.score)
                     continue
                 if not passes_regime_filter(signal.direction, regime, cfg):
                     diag_totals["regime_rejected"] += 1
@@ -1030,6 +1033,20 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             f"passed={diag_totals['passed']}"
         )
         print(f"[diag] rincian score_none: {none_reason_totals}")
+        if near_miss_scores:
+            current_min = cfg["scoring"]["min_score_to_trigger"]
+            candidate_thresholds = sorted(
+                {current_min, current_min - 2, current_min - 5, current_min - 8, current_min - 10}
+            )
+            impact = {
+                thr: sum(1 for s in near_miss_scores if s >= thr)
+                for thr in candidate_thresholds
+            }
+            print(
+                f"[diag] near-miss scores (n={len(near_miss_scores)}), "
+                f"min={min(near_miss_scores):.1f} max={max(near_miss_scores):.1f} | "
+                f"tambahan lolos kalau threshold diturunkan: {impact}"
+            )
 
         direction_map: dict[str, dict[str, str]] = {}
         for tf, cands in per_tf_candidates.items():
