@@ -46,25 +46,44 @@ scoring:
     rsi_confluence: 20
     mtf_agreement: 15   # bonus skor PER timeframe lain yang searah (menggantikan filter biner lama)
     adx_strength: 15    # bonus skor bertingkat kalau ADX jauh di atas adx_min (tren kuat vs baru lolos gate)
-  # v3.3: setup_bonus sekarang per-ARAH (long/short terpisah), bukan flat.
+  # v3.3: setup_bonus per-ARAH (long/short terpisah), bukan flat.
   # Sumber: trades_raw_batch.json, 175 trade closed, 17 Jul - 5 Sep 2026 (1h).
   # Setup yang SAMA bisa berkebalikan hasilnya tergantung arah -- flat bonus
   # lama tidak bisa menangkap ini (lihat get_setup_bonus() di scanner.py).
   # Skema lama (flat, key setup langsung tanpa long/short) masih didukung
   # sebagai fallback kalau belum sempat migrasi.
+  #
+  # v3.4: bisa juga 3 LEVEL, per-TIMEFRAME -- <tf>.<direction>.<setup> --
+  # untuk override SEBAGIAN kombinasi saja (lihat blok "4h" di bawah). TF
+  # yang tidak dibuatkan blok sendiri, atau blok TF-nya ada tapi setup
+  # tertentu belum diisi di situ, otomatis fallback ke skema flat long/short
+  # di bawah (pola fallback lama, dipakai ulang apa adanya -- lihat
+  # get_setup_bonus()).
   setup_bonus:
+    "4h":
+      # Cuma override CONTINUATION di 4h (diperbesar penaltinya) -- breakout/
+      # pullback/extended 4h SENGAJA dibiarkan kosong di sini supaya fallback
+      # ke angka flat long/short di bawah, sama seperti 15m & 1h. Angka di
+      # bawah ini titik awal (belum divalidasi backtest per-TF terpisah) --
+      # sesuaikan lagi begitu ada cukup data CONTINUATION 4h sendiri.
+      long:
+        continuation: -20   # diperbesar dari -10 (flat) khusus 4h
+      short:
+        continuation: -35   # diperbesar dari -20 (flat) khusus 4h
+    # CONTINUATION 15m/1h SENGAJA ditahan dulu di angka flat di bawah (n
+    # per-TF masih kecil) -- jangan dipisah sampai backtest per-TF cukup data.
     long:
       breakout: 10        # avg R +0.257 (n=58) -- setup terbaik, pertahankan bonus penuh
       extended: 10        # avg R +0.251 (n=39) -- sama kuatnya dgn breakout, sebelumnya
                            # cuma dapat bonus 0 (v3.2), sekarang disamakan
       pullback: 5          # avg R -0.001 (n=19) -- praktis breakeven, turunkan dari 10
                            # karena tidak terbukti seunggul breakout/extended
-      continuation: -10   # avg R -0.053 (n=10, sampel kecil) -- tetap ditahan turun
+      continuation: -10   # avg R -0.053 (n=10, sampel kecil) -- dipakai 15m/1h + fallback 4h
     short:
       breakout: -5         # avg R -0.043 (n=15) -- breakeven di TERBAIK dari semua
                            # setup SHORT, tidak layak dapat bonus positif lagi
       pullback: -25        # avg R -0.586 (n=11) -- buruk, tekan keras
-      continuation: -20    # avg R -0.411 (n=8) -- buruk, tekan lebih dalam dari sebelumnya
+      continuation: -20    # avg R -0.411 (n=8) -- dipakai 15m/1h + fallback 4h
       extended: -30        # avg R -0.714 (n=15) -- TERBURUK dari semua kombinasi
                            # arah x setup, praktis harus hampir tidak pernah lolos
   min_score_to_trigger: 85
@@ -76,6 +95,16 @@ risk:
   adx_min: 20   # di bawah ambang ini pasar dianggap choppy/sideways, sinyal ditolak duluan
   adx_strong: 35   # ADX >= ini dianggap tren sangat kuat -> bonus adx_strength penuh (di antara adx_min & ini, bonus dislkala linear)
   structure_sl_max_atr_mult: 2.5   # SL berbasis struktur di-cap maksimal segini x ATR, jaga R:R tetap wajar saat structure jauh
+  # v3.4: throttle tambahan, TERPISAH dari max_signals_per_run di atas.
+  # max_signals_per_run cuma membatasi PER RUN; ini membatasi lintas BANYAK
+  # run selama BTCUSDT masih di rezim yang SAMA (lihat get_regime_gated_direction
+  # & update_regime_episode di scanner.py). Cuma berlaku untuk arah yang
+  # di-gate KETAT oleh mode "_only" (bear_only/bull_only) -- default cuma
+  # SHORT (short_mode: bear_only di bawah), karena itulah arah yang paling
+  # rawan muncul serentak di banyak simbol sekaligus tiap kali regime BTCUSDT
+  # baru saja flip ke BEAR (semuanya pada dasarnya taruhan yang sama,
+  # bukan sinyal independen per simbol). bear_only sendiri TIDAK dilonggarkan.
+  max_signals_per_regime_episode: 3
 
 setup_engine:
   structure_lookback: 20    # jumlah bar ke belakang buat cek breakout struktur & referensi SL struktural
