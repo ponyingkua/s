@@ -120,20 +120,41 @@ setup_engine:
   breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
   block_extended: true
+  # 4h BREAKOUT: 0% WR (0/5, avgR -1.022) di batch trade terbaru, dan
+  # sebelumnya juga sudah underperform (16.7% WR menurut backtest lama).
+  # Sample masih kecil, tapi konsisten jelek di 2 batch berbeda - diblokir
+  # total dulu (sama seperti EXTENDED) daripada cuma dikasih bonus rendah,
+  # sampai ada sample lebih besar yang membuktikan sebaliknya.
+  block_setups:
+    "4h": ["BREAKOUT"]
   structure_sl_buffer_atr_mult: 0.25
   # Lookback buat cari level resistance/support riil sebagai kandidat TP.
-  # Kalau tidak diisi per-TF, default-nya 2x structure_lookback TF tsb.
+  # Dulu ada 1 nilai global (40) yang niatnya cuma fallback "kalau TF tidak
+  # override" - tapi get_setup_engine_param() cek dict per-TF DULU, baru
+  # jatuh ke sini. Karena key global ini selalu ada, default python
+  # (struct_lookback*2) di score_at() jadi tidak pernah kepakai sama sekali:
+  # semua TF diam-diam pakai 40 bar, termasuk 4h yang seharusnya 60 (30*2)
+  # dan 1h yang seharusnya 50 (25*2). Sekarang di-override eksplisit per TF
+  # di bawah supaya nilainya benar-benar sesuai lookback masing-masing TF.
   target_lookback: 40
   "15m":
     structure_lookback: 40
     stop_lookback: 10
     breakout_buffer_atr_mult: 0.12
     extended_atr_mult: 2.5
+    target_lookback: 80
   "1h":
     structure_lookback: 25
     stop_lookback: 8
     breakout_buffer_atr_mult: 0.10
     extended_atr_mult: 3.0
+    target_lookback: 50
+    # 1h PULLBACK WR jelek (18.2%, avgR -0.487) sementara 1h BREAKOUT bagus
+    # (50%, avgR +0.576). pullback_atr_mult sebelumnya cuma 1 nilai global
+    # (1.0) buat semua TF, padahal breakout_buffer_atr_mult & extended_atr_mult
+    # sudah di-tune per TF. Diperketat di sini supaya "dekat EMA200" tidak
+    # terlalu longgar. PERLU re-backtest buat validasi angka 0.8 ini.
+    pullback_atr_mult: 0.8
   "4h":
     structure_lookback: 30
     stop_lookback: 6
@@ -141,6 +162,12 @@ setup_engine:
     # EMA200 di 4h jauh lebih lambat mengikuti trend kuat, jadi butuh
     # ambang lebih longgar biar trend sehat tidak salah ke-tag EXTENDED
     extended_atr_mult: 4.5
+    target_lookback: 60
+    # Sama alasan seperti di atas, tapi 4h PULLBACK bahkan lebih lemah
+    # relatif (33.3% WR tapi avgR -0.104, hampir breakeven negatif) karena
+    # EMA200 di 4h mencakup rentang harga jauh lebih lebar per unit ATR.
+    # Diperketat lebih agresif dari 1h. PERLU re-backtest.
+    pullback_atr_mult: 0.6
 
 regime_filter:
   enabled: true
