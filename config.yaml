@@ -125,8 +125,15 @@ setup_engine:
   # Sample masih kecil, tapi konsisten jelek di 2 batch berbeda - diblokir
   # total dulu (sama seperti EXTENDED) daripada cuma dikasih bonus rendah,
   # sampai ada sample lebih besar yang membuktikan sebaliknya.
+  #
+  # 1h PULLBACK: konsisten jelek di 2 setting pullback_atr_mult berbeda
+  # (1.0 -> 18.2% WR/avgR -0.487, n=11; 0.8 -> 11.1% WR/avgR -0.700, n=9).
+  # Sudah dicoba diperketat, hasilnya makin buruk bukan makin baik - berarti
+  # bukan soal ambang klasifikasi, setupnya sendiri lemah di TF ini.
+  # Diblokir total juga, sama seperti 4h BREAKOUT.
   block_setups:
     "4h": ["BREAKOUT"]
+    "1h": ["PULLBACK"]
   structure_sl_buffer_atr_mult: 0.25
   # Lookback buat cari level resistance/support riil sebagai kandidat TP.
   # Dulu ada 1 nilai global (40) yang niatnya cuma fallback "kalau TF tidak
@@ -149,12 +156,12 @@ setup_engine:
     breakout_buffer_atr_mult: 0.10
     extended_atr_mult: 3.0
     target_lookback: 50
-    # 1h PULLBACK WR jelek (18.2%, avgR -0.487) sementara 1h BREAKOUT bagus
-    # (50%, avgR +0.576). pullback_atr_mult sebelumnya cuma 1 nilai global
-    # (1.0) buat semua TF, padahal breakout_buffer_atr_mult & extended_atr_mult
-    # sudah di-tune per TF. Diperketat di sini supaya "dekat EMA200" tidak
-    # terlalu longgar. PERLU re-backtest buat validasi angka 0.8 ini.
-    pullback_atr_mult: 0.8
+    # Sempat dicoba pullback_atr_mult: 0.8 di sini (dari global 1.0), tapi
+    # re-backtest (n=9) malah lebih jelek: 0.8 memfilter keluar ADAUSDT yang
+    # justru winner (+2.02R), bukan cuma loss-nya. Dibalikin ke default
+    # global 1.0 (dengan menghapus override ini). Sampel masih kecil jadi
+    # belum tentu 1.0 optimal juga — kalau mau tuning lagi, kumpulkan
+    # sampel lebih besar dulu sebelum ubah ambang ini lagi.
   "4h":
     structure_lookback: 30
     stop_lookback: 6
