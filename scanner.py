@@ -316,7 +316,6 @@ def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
         if mode == "bull_only":
             return regime == "BULL"
         if mode == "bull_or_neutral":
-            # New stricter mode: block LONG only when regime is clearly BEAR
             return regime != "BEAR"
         if mode == "not_bear":
             return regime != "BEAR"
@@ -410,7 +409,7 @@ def score_at(
     long_score, short_score = trend_long, trend_short
     alignment = alignment_long if direction == "LONG" else alignment_short
 
-    # Hard confluence filter: require minimum trend alignment
+    # Hard confluence filter
     min_alignment = cfg.get("scoring", {}).get("min_trend_alignment", 2)
     if alignment < min_alignment:
         return SignalResult(
@@ -435,14 +434,13 @@ def score_at(
     reasons.append(f"Konfluensi tren: {alignment}/3 indikator inti searah")
 
     r = ind["rsi"].iloc[i]
-    if direction == "LONG" and 50 < r <= 68:          # tightened upper bound
+    if direction == "LONG" and 50 < r <= 68:
         long_score += w["rsi_confluence"]
         reasons.append(f"RSI ({r:.0f}) menguatkan momentum naik")
-    elif direction == "SHORT" and 32 <= r < 50:      # tightened lower bound
+    elif direction == "SHORT" and 32 <= r < 50:
         short_score += w["rsi_confluence"]
         reasons.append(f"RSI ({r:.0f}) menguatkan momentum turun")
     elif direction == "LONG" and r > 70:
-        # Stronger penalty for chasing extended moves
         long_score -= 10
         reasons.append(f"RSI ({r:.0f}) overbought — penalti chasing (-10)")
     elif direction == "SHORT" and r < 30:
@@ -482,7 +480,7 @@ def score_at(
 
     setup_type = classify_setup(df, ind, i, direction, cfg, timeframe)
 
-    # Hard block EXTENDED setups on lower timeframes (data showed they are toxic)
+    # Hard block EXTENDED on lower timeframes
     if setup_type == "EXTENDED" and timeframe in ("15m", "1h"):
         return SignalResult(
             symbol=symbol,
@@ -531,13 +529,12 @@ def score_at(
     elif sl_dist > atr_sl_dist:
         reasons.append(f"SL digeser ke luar struktur {struct_lookback}-bar terakhir (bukan cuma ATR flat)")
 
-    rr = cfg["risk"]["risk_reward_min"]
     if direction == "LONG":
         sl = price - sl_dist
-        tp = price + sl_dist * rr
+        tp = price + sl_dist * cfg["risk"]["risk_reward_min"]
     else:
         sl = price + sl_dist
-        tp = price - sl_dist * rr
+        tp = price - sl_dist * cfg["risk"]["risk_reward_min"]
 
     return SignalResult(
         symbol=symbol,
