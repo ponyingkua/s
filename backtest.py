@@ -30,6 +30,21 @@ Catatan penting soal parity dengan scanner.py (live):
   logika BULL/BEAR simetris yang di-hardcode di sini. Jalankan ulang
   --batch setelah update config untuk lihat apakah short_mode="bear_only"
   benar-benar memperbaiki angka SHORT yang sebelumnya minus di semua setup.
+- v3.4: setup_bonus 3-level (per-timeframe) di get_setup_bonus() otomatis
+  ikut kepakai di sini juga, karena backtest_symbol() manggil score_at()
+  yang sama persis dengan scanner.py live (parameter timeframe sudah
+  diteruskan sejak v3.1) — tidak perlu perubahan apa pun di file ini untuk
+  itu. TAPI throttle "N sinyal per regime-flip episode" (risk baru di
+  scanner.py v3.4) SENGAJA TIDAK direplikasi di sini, dengan alasan yang
+  sama seperti MTF agreement di atas: backtest_symbol() jalan per SIMBOL
+  sendiri-sendiri (dipanggil terpisah per simbol di mode --batch), tidak
+  ada jam bersama lintas-simbol untuk tahu "berapa sinyal lain yang sudah
+  diambil simbol lain di titik waktu yang sama" — meniru ini secara naif
+  berisiko implementasi yang salah kaprah, bukan cuma tidak lengkap. Angka
+  win-rate/avg-R per setup+arah dari backtest ini jadi sedikit lebih
+  optimis untuk arah yang di-gate ketat (mis. SHORT) dibanding hasil live
+  sungguhan, karena live-nya sudah ditahan throttle ini sementara backtest
+  belum.
 """
 from __future__ import annotations
 
