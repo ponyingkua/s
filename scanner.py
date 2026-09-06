@@ -63,6 +63,40 @@ Perubahan v3.3 (dari analisis trades_raw_batch.json, 175 trade closed,
     (+0.192) dan tidak menunjukkan pola separah/sekonsisten SHORT yang
     minus di KEDUA paruh waktu. Lihat passes_regime_filter().
 
+Perubahan v3.4:
+11. setup_bonus sekarang bisa 3 LEVEL: <timeframe>.<direction>.<setup>,
+    bukan cuma 2 level (direction.setup) -- karena setup yang sama juga bisa
+    beda hasilnya antar-TF, bukan cuma antar-arah. Skema 2-level v3.3 tetap
+    jadi FALLBACK persis apa adanya: kalau TF tidak ada entry-nya di config,
+    atau TF ada tapi setup spesifik itu belum diisi, turun ke direction.setup
+    yang lama. Jadi config boleh cuma override SEBAGIAN kombinasi TF x arah x
+    setup (mis. cuma continuation di 4h), sisanya otomatis pakai baseline
+    lama. Lihat get_setup_bonus().
+12. Penalti CONTINUATION 4h diperbesar (lihat scoring.setup_bonus."4h" di
+    config) karena setup CONTINUATION di TF tinggi dianggap lebih rawan
+    "telat masuk" tren yang sudah jalan lama. CONTINUATION 15m/1h SENGAJA
+    ditahan dulu di angka lama (fallback ke skema flat v3.3) karena jumlah
+    sampel per-TF untuk keduanya masih terlalu kecil untuk dipisah dengan
+    percaya diri -- baru dipisah kalau backtest per-TF sudah cukup data.
+13. Tambah pengaman risk-management baru: throttle "N sinyal per regime-flip
+    episode", TERPISAH dari risk.max_signals_per_run. bear_only untuk SHORT
+    TIDAK dilonggarkan (tetap seperti v3.3) -- tapi begitu regime BTCUSDT
+    flip ke BEAR, berpotensi BANYAK simbol sekaligus lolos SHORT di run yang
+    sama maupun run-run berikutnya selama regime itu bertahan (cron jalan
+    tiap 15 menit), padahal semuanya pada dasarnya taruhan yang SAMA
+    (mengikuti macro trend BTCUSDT), bukan sinyal independen per simbol.
+    max_signals_per_run cuma membatasi PER RUN, tidak lintas run. Sekarang
+    ada "episode" rezim yang dilacak persisten di signal_state.json (reset
+    tiap kali regime berubah dari yang tercatat terakhir), dan cuma arah
+    yang memang di-gate KHUSUS oleh mode "_only" (mis. SHORT saat bear_only
+    aktif & regime == BEAR) yang kena throttle ini -- arah yang tidak
+    di-gate ketat (mis. LONG dengan mode "not_bear") tidak terpengaruh.
+    Lihat get_regime_gated_direction() & update_regime_episode(). CATATAN:
+    ini TIDAK direplikasi di backtest.py -- backtest_symbol() jalan per
+    simbol sendiri-sendiri tanpa jam bersama antar-simbol, jadi tidak bisa
+    meniru "N sinyal dari 1 run lintas-simbol" tanpa berisiko implementasi
+    yang salah kaprah (sama seperti alasan MTF agreement tidak direplikasi).
+
 Dijalankan lewat: python scanner.py --out synaptic_candidates.json
 """
 from __future__ import annotations
@@ -399,20 +433,40 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     return "CONTINUATION"
 
 
-def get_setup_bonus(cfg: dict, direction: str, setup_type: str) -> float:
-    """Ambil bonus/penalti skor setup — skema v3.3 per-ARAH.
+def get_setup_bonus(cfg: dict, direction: str, setup_type: str, timeframe: str = "") -> float:
+    """Ambil bonus/penalti skor setup — sekarang bisa 3 level (v3.4):
+    scoring.setup_bonus.<timeframe>.<direction>.<setup>.
 
-    Config baru: scoring.setup_bonus.long.<setup> / .short.<setup>, karena
-    setup yang sama terbukti (lihat trades_raw_batch.json) bisa sangat
-    berbeda hasilnya tergantung arah (contoh paling ekstrem: EXTENDED
-    LONG +0.251 avg R vs EXTENDED SHORT -0.714 avg R — kebalikan total).
-    Kalau config masih pakai skema lama (flat, key langsung nama setup
-    tanpa "long"/"short"), fallback ke situ supaya tidak breaking change."""
+    Alasan: setup yang sama juga bisa beda hasilnya antar-TIMEFRAME, bukan
+    cuma antar-arah (contoh: CONTINUATION di 4h dianggap lebih rawan "telat
+    masuk" tren yang sudah jalan lama dibanding CONTINUATION di 15m/1h).
+    Tapi baru sebagian kombinasi TF yang punya cukup data untuk dipisah,
+    jadi fallback-nya berlapis dua:
+
+    1. Kalau ada config.setup_bonus.<timeframe> DAN setup spesifik ini
+       terisi di situ -> pakai itu.
+    2. Kalau tidak (TF tidak ada entry-nya sama sekali, ATAU TF ada tapi
+       setup ini belum diisi di situ) -> turun ke skema v3.3 (2 level,
+       flat lintas semua TF): scoring.setup_bonus.<direction>.<setup>.
+       Pola fallback ini PERSIS yang sudah ada sebelumnya, dipakai ulang
+       apa adanya supaya config lama/sebagian-terisi tetap jalan.
+    3. Kalau config masih skema lama sekali (flat, key langsung nama setup
+       tanpa "long"/"short") -> fallback paling akhir ke situ (v3.2 ke bawah).
+    """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
+
+    tf_cfg = sb_cfg.get(timeframe, {}) if timeframe else {}
+    if isinstance(tf_cfg, dict) and ("long" in tf_cfg or "short" in tf_cfg):
+        dir_cfg = tf_cfg.get(direction.lower(), {})
+        if setup_type.lower() in dir_cfg:
+            return dir_cfg[setup_type.lower()]
+        # TF ada tapi kombinasi arah+setup ini belum diisi -> lanjut ke
+        # fallback flat di bawah, JANGAN diam-diam anggap 0.
+
     if "long" in sb_cfg or "short" in sb_cfg:
         dir_cfg = sb_cfg.get(direction.lower(), {})
         return dir_cfg.get(setup_type.lower(), 0)
-    return sb_cfg.get(setup_type.lower(), 0)  # skema lama (v3.2 ke bawah)
+    return sb_cfg.get(setup_type.lower(), 0)  # skema lama flat (v3.2 ke bawah)
 
 
 def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
@@ -445,6 +499,48 @@ def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
             return regime == "BULL"
         return regime != "BEAR"  # mode == "not_bear"
     return True
+
+
+def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
+    """Arah mana (kalau ada) yang HANYA lolos karena rezim spesifik ini
+    sedang aktif lewat mode ketat "_only" (bear_only/bull_only) — bukan yang
+    lolos lewat mode longgar "not_bear"/"not_bull".
+
+    Ini penting buat throttle_regime_episode(): arah yang di-gate ketat oleh
+    SATU rezim tertentu adalah arah yang paling rawan muncul serentak di
+    banyak simbol sekaligus tiap kali rezim itu baru saja flip — semuanya
+    breakout searah BTCUSDT di momen yang sama, bukan sinyal independen per
+    simbol. Arah dengan mode longgar (mis. LONG default "not_bear", lolos
+    di BULL maupun NEUTRAL) tidak dianggap "milik" satu rezim tunggal,
+    jadi tidak ikut di-throttle di sini."""
+    regime_cfg = cfg.get("regime_filter", {})
+    if regime == "BEAR" and regime_cfg.get("short_mode", "bear_only") == "bear_only":
+        return "SHORT"
+    if regime == "BULL" and regime_cfg.get("long_mode", "not_bear") == "bull_only":
+        return "LONG"
+    return None
+
+
+def update_regime_episode(state: dict, regime: str) -> dict:
+    """Lacak "episode" rezim saat ini di state persisten (signal_state.json)
+    lewat key reserved "_regime_episode" (aman dari bentrok dengan key
+    cooldown per-symbol, yang selalu berbentuk "{symbol}|{timeframe}").
+
+    Sebuah episode dimulai tiap kali regime BERUBAH dari yang tercatat
+    terakhir kali run_scan() dipanggil, dan mencatat berapa sinyal yang
+    sudah diambil selama episode itu bertahan — dipakai supaya cluster
+    sinyal berkorelasi dari SATU regime-flip tidak terus menumpuk lintas
+    banyak run selama regime itu belum berubah lagi (beda dengan
+    max_signals_per_run yang cuma membatasi PER RUN)."""
+    episode = state.get("_regime_episode")
+    if not isinstance(episode, dict) or episode.get("regime") != regime:
+        episode = {
+            "regime": regime,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "signal_count": 0,
+        }
+        state["_regime_episode"] = episode
+    return episode
 
 
 def score_at(
@@ -576,7 +672,7 @@ def score_at(
 
     # --- 5. Setup Engine: label jenis setup + bonus/penalti skor ---------
     setup_type = classify_setup(df, ind, i, direction, cfg)
-    setup_bonus = get_setup_bonus(cfg, direction, setup_type)
+    setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
     else:
@@ -923,6 +1019,15 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         regime_cfg = cfg.get("regime_filter", {})
         regime = await get_market_regime(client, cfg) if regime_cfg.get("enabled", False) else "NEUTRAL"
 
+        # --- Regime-flip episode: dilacak persisten di `state`, dipakai buat
+        # throttle_regime_episode di seleksi top_candidates di bawah (lihat
+        # get_regime_gated_direction & update_regime_episode). Direction yang
+        # None berarti rezim saat ini tidak sedang "memiliki" satu arah
+        # spesifik lewat mode ketat "_only" -> tidak ada yang di-throttle.
+        regime_episode = update_regime_episode(state, regime)
+        regime_gated_direction = get_regime_gated_direction(regime, cfg)
+        max_signals_per_episode = cfg.get("risk", {}).get("max_signals_per_regime_episode")
+
         # --- Scan SETIAP timeframe secara independen ------------------------
         # Sebelumnya cuma timeframes[0] (15m) yang pernah menghasilkan sinyal;
         # 1h cuma jadi filter biner dan 4h sama sekali tidak pernah dipakai.
@@ -983,7 +1088,34 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 best_per_symbol[kline.symbol] = (signal, kline)
 
         candidates = sorted(best_per_symbol.values(), key=lambda c: c[0].score, reverse=True)
-        top_candidates = candidates[: cfg["risk"]["max_signals_per_run"]]
+
+        # --- Ambil top N per run, TAPI arah yang di-gate ketat oleh regime
+        # ("_only" mode) juga dibatasi terpisah oleh sisa budget episode
+        # rezim saat ini (lihat update_regime_episode & docstring v3.4 poin
+        # 13). Kandidat yang kena throttle dilewati, digantikan kandidat
+        # berikutnya di urutan skor supaya slot max_signals_per_run tetap
+        # terisi penuh oleh sinyal yang TIDAK kena batasan ini.
+        max_per_run = cfg["risk"]["max_signals_per_run"]
+        top_candidates: list[tuple[SignalResult, Kline]] = []
+        for signal, kline in candidates:
+            if len(top_candidates) >= max_per_run:
+                break
+            if (
+                regime_gated_direction
+                and signal.direction == regime_gated_direction
+                and max_signals_per_episode is not None
+                and regime_episode["signal_count"] >= max_signals_per_episode
+            ):
+                signal.reasons.append(
+                    f"Ditahan: sudah {regime_episode['signal_count']} sinyal "
+                    f"{regime_gated_direction} diambil di episode regime "
+                    f"{regime} ini (limit {max_signals_per_episode}, terpisah "
+                    "dari max_signals_per_run) — cegah cluster sinyal berkorelasi"
+                )
+                continue
+            top_candidates.append((signal, kline))
+            if regime_gated_direction and signal.direction == regime_gated_direction:
+                regime_episode["signal_count"] += 1
 
         for signal, kline in top_candidates:
             results.append(signal.__dict__)
