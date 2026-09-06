@@ -685,5 +685,35 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-06T10:22:04.214398+00:00"
+  },
+  "STRKUSDT|15m": {
+    "symbol": "STRKUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:36:40.448489+00:00"
+  },
+  "DOTUSDT|15m": {
+    "symbol": "DOTUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:36:41.464793+00:00"
+  },
+  "ROSEUSDT|4h": {
+    "symbol": "ROSEUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:36:41.834725+00:00"
+  },
+  "INTCUSDT|15m": {
+    "symbol": "INTCUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:36:42.095281+00:00"
+  },
+  "FFUSDT|15m": {
+    "symbol": "FFUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-06T10:36:42.372564+00:00"
   }
 }
