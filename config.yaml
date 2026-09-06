@@ -12,7 +12,7 @@ scanning:
   cooldown_hours: 6
   state_path: "signal_state.json"
   klines_limit: 300
-  min_history_bars: 250
+  min_history_bars: 260
 
 indicators:
   ema:
@@ -37,45 +37,45 @@ indicators:
 scoring:
   weights:
     ema_trend: 20
-    macd_cross: 20
+    macd_cross: 18
     supertrend: 25
-    volume_spike: 15
-    rsi_confluence: 20
+    volume_spike: 12
+    rsi_confluence: 18
     mtf_agreement: 15
     adx_strength: 15
   setup_bonus:
     "15m":
       long:
-        breakout: 15
-        pullback: 20
-        continuation: -25
+        breakout: 8
+        pullback: 12
+        continuation: -20
         extended: -60
       short:
-        breakout: 10
-        pullback: -10
-        continuation: -30
+        breakout: 8
+        pullback: 8
+        continuation: -18
         extended: -50
     "1h":
       long:
-        breakout: 25
-        pullback: -5
-        continuation: -20
+        breakout: 12
+        pullback: 8
+        continuation: -18
         extended: -45
       short:
-        breakout: 5
-        pullback: -15
-        continuation: -25
+        breakout: 10
+        pullback: 6
+        continuation: -18
         extended: -40
     "4h":
       long:
-        breakout: 15
-        pullback: 10
+        breakout: 10
+        pullback: 8
         continuation: -15
         extended: -25
       short:
         breakout: 10
-        pullback: -10
-        continuation: -30
+        pullback: 8
+        continuation: -20
         extended: -20
     long:
       breakout: 12
@@ -87,38 +87,49 @@ scoring:
       pullback: -15
       continuation: -25
       extended: -35
-  min_score_to_trigger: 95
+  min_score_to_trigger: 92
   min_trend_alignment: 2
+  min_direction_margin: 15
 
 risk:
-  atr_multiplier_sl: 1.6
-  risk_reward_min: 1.6
+  atr_multiplier_sl: 1.8
+  risk_reward_min: 1.8
   max_signals_per_run: 4
-  adx_min: 22
+  adx_min: 24
   adx_strong: 35
-  structure_sl_max_atr_mult: 2.3
+  structure_sl_max_atr_mult: 2.5
   # Cap khusus setup BREAKOUT — dibuat lebih longgar dari cap generik di atas
   # (lihat komentar di scanner.py score_at()) karena stop breakout secara
   # alami lebih lebar tanpa berarti struktur salah baca.
-  structure_sl_max_atr_mult_breakout: 4.0
+  structure_sl_max_atr_mult_breakout: 3.5
+  reject_structural_stop_too_wide: true
   max_signals_per_regime_episode: 2
 
 setup_engine:
   structure_lookback: 20
+  stop_lookback: 10
   pullback_atr_mult: 1.0
+  breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
+  block_extended: true
   structure_sl_buffer_atr_mult: 0.25
   # Lookback buat cari level resistance/support riil sebagai kandidat TP.
   # Kalau tidak diisi per-TF, default-nya 2x structure_lookback TF tsb.
   target_lookback: 40
   "15m":
     structure_lookback: 40
+    stop_lookback: 10
+    breakout_buffer_atr_mult: 0.12
     extended_atr_mult: 2.5
   "1h":
     structure_lookback: 25
+    stop_lookback: 8
+    breakout_buffer_atr_mult: 0.10
     extended_atr_mult: 3.0
   "4h":
     structure_lookback: 30
+    stop_lookback: 6
+    breakout_buffer_atr_mult: 0.08
     # EMA200 di 4h jauh lebih lambat mengikuti trend kuat, jadi butuh
     # ambang lebih longgar biar trend sehat tidak salah ke-tag EXTENDED
     extended_atr_mult: 4.5
@@ -143,6 +154,9 @@ notify:
 backtest:
   fee_round_trip_pct: 0.001
   intrabar_tie_break: "conservative"
+  # 0 = no timeout.  A finite holding period prevents a position that never
+  # reaches SL/TP from silently disappearing for weeks in the report.
+  max_holding_bars: 64
 
 chart:
   auto_generate: true
