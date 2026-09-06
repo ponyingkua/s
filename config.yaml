@@ -102,8 +102,8 @@ scoring:
 risk:
   atr_multiplier_sl: 1.8
   risk_reward_min: 1.8
-  max_signals_per_run: 5
-  adx_min: 24
+  max_signals_per_run: 4
+  adx_min: 23
   adx_strong: 35
   structure_sl_max_atr_mult: 2.5
   # Cap khusus setup BREAKOUT — dibuat lebih longgar dari cap generik di atas
