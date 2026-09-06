@@ -23,6 +23,11 @@ on:
       days:
         description: "Cakupan kalender (hari) - override limit biar sama rata lintas timeframe (kosongkan buat pakai limit biasa)"
         default: ""
+      mtf:
+        description: "Aktifkan MTF agreement bonus (mirip live scanner)"
+        type: choice
+        options: ["true", "false"]
+        default: "true"
 
 jobs:
   backtest:
@@ -42,6 +47,13 @@ jobs:
           else
             EXTRA_ARGS=(--limit "${{ github.event.inputs.limit }}")
           fi
+
+          if [ "${{ github.event.inputs.mtf }}" = "false" ]; then
+            EXTRA_ARGS+=(--no-mtf)
+          else
+            EXTRA_ARGS+=(--mtf)
+          fi
+
           if [ "${{ github.event.inputs.mode }}" = "batch" ]; then
             if [ -z "${{ github.event.inputs.symbols }}" ]; then
               python backtest.py --batch --timeframe "${{ github.event.inputs.timeframe }}" "${EXTRA_ARGS[@]}"
@@ -65,5 +77,5 @@ jobs:
           git config user.name "vsynapse-bot"
           git config user.email "bot@users.noreply.github.com"
           git add backtest_result.md backtest_batch_result.md 2>/dev/null || true
-          git diff --quiet --cached || git commit -m "chore: backtest ${{ github.event.inputs.mode }} ${{ github.event.inputs.timeframe }}"
+          git diff --quiet --cached || git commit -m "chore: backtest ${{ github.event.inputs.mode }} ${{ github.event.inputs.timeframe }} (mtf=${{ github.event.inputs.mtf }})"
           git push
