@@ -590,7 +590,7 @@ def build_chart(
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 3000)
     height_ratio = chart_cfg.get("height_ratio", 9 / 20)
-    dpi = 150
+    dpi = 200
     output_scale = 1  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
