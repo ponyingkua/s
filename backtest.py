@@ -18,8 +18,7 @@ from scanner import (
 )
 
 DEFAULT_SYMBOLS = [
-    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
-    "LTCUSDT", "ADAUSDT", "DOGEUSDT", "LINKUSDT", "AVAXUSDT",
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "AVAXUSDT",
 ]
 
 TF_MINUTES = {
@@ -189,11 +188,7 @@ class Trade:
     both_touched: bool = False
     mtf_bonus: float = 0.0
     mtf_agree_tfs: list = field(default_factory=list)
-    # Skor akhir sinyal (setelah MTF bonus, sebelum dibulatkan lagi). Sebelumnya
-    # tidak direkam sama sekali di trade log, jadi analisis "apakah skor lebih
-    # tinggi = performa lebih baik" tidak bisa dilakukan dari trades_raw*.json
-    # yang lama. Field ini mengisi celah itu untuk backtest ke depan.
-    score: float = 0.0
+    score: float = 0.0  # skor akhir sinyal setelah MTF bonus
 
 
 def backtest_symbol(
