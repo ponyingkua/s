@@ -196,11 +196,11 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
 def _draw_supertrend(ax, level: pd.Series, trend: pd.Series,
                       period: int, multiplier) -> None:
     x = range(len(level))
-    ax.plot(x, level.where(trend == 1), color=ST_UP, linewidth=1.1, alpha=0.75,
+    ax.plot(x, level.where(trend == 1), color=ST_UP, linewidth=1.4, alpha=0.90,
              drawstyle="steps-post", solid_joinstyle="round",
-             label=f"Supertrend {period}/{multiplier}", zorder=3)
-    ax.plot(x, level.where(trend == -1), color=ST_DOWN, linewidth=1.1, alpha=0.75,
-             drawstyle="steps-post", solid_joinstyle="round", zorder=3)
+             label=f"Supertrend {period}/{multiplier}", zorder=7)
+    ax.plot(x, level.where(trend == -1), color=ST_DOWN, linewidth=1.4, alpha=0.90,
+             drawstyle="steps-post", solid_joinstyle="round", zorder=7)
 
 
 # ============================================================
@@ -652,9 +652,13 @@ def build_chart(
         zone_values.append(z["top"])
         zone_values.append(z["bottom"])
 
+    # Level Supertrend ikut dihitung supaya garisnya tidak ke-clip oleh
+    # set_ylim ketika band-nya melebar keluar dari range harga/level/zone.
+    st_values = [v for v in st_level_full.tolist() if pd.notna(v)]
+
     level_values = [item["level"] for item in levels]
-    y_low = min([float(plot_df["low"].min())] + level_values + zone_values)
-    y_high = max([float(plot_df["high"].max())] + level_values + zone_values)
+    y_low = min([float(plot_df["low"].min())] + level_values + zone_values + st_values)
+    y_high = max([float(plot_df["high"].max())] + level_values + zone_values + st_values)
     y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
     y_padding = y_span * 0.18
     ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
