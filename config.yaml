@@ -41,13 +41,22 @@ scoring:
     supertrend: 25
     volume_spike: 12
     rsi_confluence: 18
-    mtf_agreement: 15
+    mtf_agreement: 20  # naik dari 15 — trade dgn MTF agreement avg R -0.028 vs -0.133 tanpa (947 trade, Mar-Sep 2026)
     adx_strength: 15
+  # Setup_bonus di-tuning ulang berdasarkan backtest 947 trade (Mar-Sep 2026,
+  # trades-raw-batch-{15m,1h,4h}.json):
+  #   BREAKOUT:      n=30,  win rate 33.3%, avg R +0.181, sum R +5.42  -> terbaik
+  #   PULLBACK:      n=138, win rate 26.1%, avg R +0.016, sum R +2.23  -> positif tipis
+  #   CONTINUATION:  n=244, win rate 23.8%, avg R -0.218, sum R -53.23 -> TERBURUK
+  #   EXTENDED:      n=530, win rate 32.3%, avg R -0.083, sum R -43.88 -> volume terbesar (56%), net rugi
+  # CONTINUATION+EXTENDED = 82% dari semua trade dan keduanya net rugi, jadi
+  # penalti diperbesar supaya butuh konfluensi ekstra (RSI/volume/ADX/MTF) buat
+  # tembus min_score_to_trigger, bukan cuma modal 3/3 alignment dasar (=63).
   setup_bonus:
-    breakout: 5
-    pullback: 0
-    continuation: -8
-    extended: 0
+    breakout: 8       # dari 5
+    pullback: 4       # dari 0
+    continuation: -12 # dari -8
+    extended: -8      # dari 0 — sebelumnya netral padahal net rugi terbesar
   min_score_to_trigger: 63
   min_trend_alignment: 2
   min_direction_margin: 8
@@ -69,6 +78,13 @@ setup_engine:
   pullback_atr_mult: 1.0
   breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
+  # Guardrail BARU: di atas ambang ini, setup diklasifikasikan OVEREXTENDED dan
+  # sinyal DITOLAK langsung (bukan cuma dapat bonus 0 seperti EXTENDED biasa).
+  # Backtest tidak mencatat jarak-ke-EMA per trade, jadi angka ini belum
+  # divalidasi lewat re-run — defaultnya sengaja longgar (~1.8x extended_atr_mult)
+  # supaya cuma menyaring kasus blow-off/capitulation paling ekstrem. Cek ulang
+  # setelah backtest ulang; naikkan kalau ternyata kebanyakan menolak trade sehat.
+  overextended_atr_mult: 5.5
   structure_sl_buffer_atr_mult: 0.25
   target_lookback: 40
   "15m":
@@ -76,18 +92,21 @@ setup_engine:
     stop_lookback: 10
     breakout_buffer_atr_mult: 0.12
     extended_atr_mult: 2.5
+    overextended_atr_mult: 4.5
     target_lookback: 80
   "1h":
     structure_lookback: 25
     stop_lookback: 8
     breakout_buffer_atr_mult: 0.10
     extended_atr_mult: 3.0
+    overextended_atr_mult: 5.5
     target_lookback: 50
   "4h":
     structure_lookback: 30
     stop_lookback: 6
     breakout_buffer_atr_mult: 0.08
     extended_atr_mult: 4.5
+    overextended_atr_mult: 8.0
     target_lookback: 60
     pullback_atr_mult: 0.6
 
@@ -96,7 +115,18 @@ regime_filter:
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 27
-  short_mode: "bear_only"
+  # PERUBAHAN: dari "bear_only" -> "not_bull". Temuan kunci dari 947 trade
+  # backtest (10 simbol x 3 TF, Mar-Sep 2026): SHORT = 0 trade sama sekali.
+  # Dengan "bear_only", SHORT cuma boleh kalau regime BTC 4h = BEAR (ADX>=27,
+  # EMA & Supertrend sama-sama turun) — kondisi itu rupanya nyaris tidak pernah
+  # terjadi sepanjang 6 bulan data ini, jadi sisi SHORT jadi mati total meski
+  # ada altcoin yang boleh jadi punya struktur turun sendiri saat BTC ranging.
+  # "not_bull" membolehkan SHORT saat regime BEAR ATAU NEUTRAL (cuma diblokir
+  # saat BTC jelas-jelas BULL) — lebih seimbang, tapi CATATAN: karena SHORT
+  # tidak pernah aktif di data lama, performa mode baru ini belum tervalidasi
+  # lewat backtest. Uji ulang (backtest.py --batch) sebelum percaya penuh, dan
+  # kembalikan ke "bear_only" kalau ternyata SHORT di regime NEUTRAL hasilnya jelek.
+  short_mode: "not_bull"
   long_mode: "bull_only"
 
 symbol_filter:
