@@ -1,11 +1,7 @@
-"""vSynapse v3 — chart generator, 1 file.
+"""vSynapse chart generator — candlestick + EMA/Supertrend/volume + market
+structure (HH/HL/LH/LL, zona Demand/Supply, BOS, panah target TP).
 
-Chart candlestick gaya vSch.py (rasio 3549:1600 ≈ 2.218:1): EMA, Supertrend, volume +
-volume MA, level Entry/SL/TP, dan markup market structure (HH/HL/LH/LL,
-zona Demand/Supply, BOS, confirmation candle, arrow target ke TP).
-
-Contoh:
-  python chart.py --symbol BTCUSDT --timeframe 1h
+Contoh: python chart.py --symbol BTCUSDT --timeframe 1h
 """
 from __future__ import annotations
 
@@ -45,7 +41,7 @@ SPINE = "#4A4A4A"
 UP = "#26A69A"
 DOWN = "#EF5350"
 
-EMA_COLOR = "#FFD54F"  # kuning biar lebih kontras & mudah terlihat
+EMA_COLOR = "#FFD54F"
 
 ST_UP = "#66BB6A"
 ST_DOWN = "#EF5350"
@@ -58,15 +54,16 @@ VOLUME_MA = "#FFB74D"
 
 STRUCT_TEXT = "#BDBDBD"
 DEMAND_FILL = "#1B5E40"
-DEMAND_EDGE = "#26A69A"
+DEMAND_EDGE = UP
 SUPPLY_FILL = "#6B1F1F"
-SUPPLY_EDGE = "#EF5350"
-BOS_BULL = "#4FC3F7"
-BOS_BEAR = "#FFB74D"
-CONFIRM_BULL = "#4FC3F7"
-CONFIRM_BEAR = "#FFB74D"
-ARROW_BULL = "#4FC3F7"
-ARROW_BEAR = "#FFB74D"
+SUPPLY_EDGE = DOWN
+
+# Penanda arah (BOS, panah target) memakai warna candle yang sama supaya
+# konsisten: bull = hijau (UP), bear = merah (DOWN).
+BOS_BULL = UP
+BOS_BEAR = DOWN
+ARROW_BULL = UP
+ARROW_BEAR = DOWN
 
 CANDLE_WIDTH = 0.8
 
@@ -484,10 +481,10 @@ def _calculate_visible_range(
     max_candles: int,
     left_padding: int = 8,
 ) -> tuple[int, int]:
-    """
-    Fokus lebih agresif ke struktur terakhir (BOS + Zone terkait).
-    Label lama yang terlalu jauh diabaikan supaya chart tidak ke-kiri berlebihan.
-    """
+    """Window selalu tetap `max_candles` lebar (kalau histori cukup) supaya
+    jumlah candle yang tampil konsisten antar chart. Struktur terbaru (BOS +
+    zone terkait) dipastikan tetap terlihat; kalau strukturnya dekat ujung
+    kanan, sisa ruang di kiri diisi candle histori biasa, bukan dipersempit."""
     n = len(work_df)
     end_idx = n - 1
 
@@ -537,6 +534,12 @@ def _calculate_visible_range(
     # Batasi maksimum candle
     if (end_idx - start_idx + 1) > max_candles:
         start_idx = max(0, end_idx - max_candles + 1)
+
+    # Isi penuh sampai max_candles: kalau struktur terbaru dekat ujung kanan,
+    # window jangan sampai lebih sempit dari chart lain — geser start_idx ke
+    # kiri sejauh histori memungkinkan.
+    full_window_start = max(0, end_idx - max_candles + 1)
+    start_idx = min(start_idx, full_window_start)
 
     return start_idx, end_idx
 
