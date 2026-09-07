@@ -57,10 +57,17 @@ scoring:
     short:
       extended: 3
     "15m":
-      pullback: -9
+      pullback: -9   # tetap berlaku untuk SHORT (n=10, avg R -0.03 — masih tipis, belum diubah)
       long:
         extended: -40
         breakout: -8
+        # LONG pullback 15m dua-puncak seperti 1h short-extended: skor 65-75
+        # avg R -0.22 (n=23) vs skor 75-85 avg R +0.75 (n=9). Flat -9 (baris di
+        # atas) kurang tajam untuk LONG -> override lebih dalam supaya klaster
+        # lemah tersaring. Simulasi: n=18, avg R +0.44, win 44.4% (dari n=36,
+        # avg R +0.04, win 33.3%). n makin turun jadi terlalu tipis untuk
+        # penalti lebih dalam lagi (di -20 avg R malah balik negatif, n=4).
+        pullback: -17
       short:
         extended: -8
       continuation: -24
@@ -68,15 +75,30 @@ scoring:
       breakout: 16
       short:
         breakout: -10   # LONG breakout avg R +0.65 (n=22) vs SHORT avg R -0.09 (n=47) -> dipisah
-        extended: 6      # sebelumnya -4; data baru avg R +0.21 (n=70), arah penalti salah
+        # 6 sebelumnya (avg R +0.21, n=70) tidak lagi konsisten di data terbaru:
+        # keseluruhan turun ke avg R +0.02 (n=127), 58% dari semua sinyal 1h.
+        # Breakdown skor jelas dua-puncak (65-70: R -0.40 n=31; 70-75: R -0.04 n=36;
+        # 75-80: R +0.33 n=56) -> bonus diturunkan ke -2 supaya klaster lemah di
+        # bawah ambang tersaring, klaster 75-80 yang bagus tetap lolos.
+        # Hasil simulasi n=74, avg R +0.31, win 47.3% (dari n=127, avg R +0.02, win 35.4%).
+        extended: -2
         pullback: -22    # -6 sebelumnya belum cukup: masih avg R -0.27 (n=16), makin buruk di skor tinggi
     "4h":
       continuation: -35
       breakout: 0
       long:
         breakout: -22
+        # -22 (top-level long.extended) masih net negatif: avg R -0.11 (n=12),
+        # dan TIDAK ada zona skor yang membaik (flat ~-0.10 di skor rendah maupun
+        # tinggi) -> beda pola dari 1h short-extended, jadi bukan soal ambang,
+        # setup ini memang lemah di 4h. Didekatkan ke perlakuan 4h continuation
+        # (-35) / 15m long-extended (-40): efektif nyaris exclude, bukan filter halus.
+        extended: -38
       short:
-        extended: -14
+        # -14 sebelumnya: n=3 saja, avg R -1.04, win 0% — sample sangat tipis,
+        # diperdalam sebagai langkah konservatif, BUKAN hasil pencarian ambang
+        # optimal (datanya tidak cukup untuk itu). Cek ulang begitu n bertambah.
+        extended: -24
   # BREAKOUT & EXTENDED: sinyal yang "disetujui" TF lain justru avg R lebih buruk
   # (telat masuk rame-rame, bukan konfirmasi kualitas) -> dikecualikan dari bonus MTF.
   mtf_agreement_excluded_setups:
