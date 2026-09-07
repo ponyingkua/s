@@ -575,8 +575,8 @@
   "COTIUSDT|15m": {
     "symbol": "COTIUSDT",
     "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-06T07:20:26.432507+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T14:53:45.391547+00:00"
   },
   "SNDKUSDT|15m": {
     "symbol": "SNDKUSDT",
