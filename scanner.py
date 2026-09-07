@@ -181,13 +181,7 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 
 def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 2.5) -> pd.Series:
-    """Return the direction of the standard Supertrend calculation.
-
-    The previous implementation compared price to the *raw* previous ATR
-    bands.  Those bands are not the Supertrend bands: they must be carried
-    forward and only move in the direction allowed by the prior close.  The
-    old version therefore flipped too easily in noisy markets.
-    """
+    """Return the trend direction (1 = up, -1 = down) of the Supertrend indicator."""
     if df.empty:
         return pd.Series(dtype="int64", index=df.index)
 
@@ -235,10 +229,7 @@ def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 2.5) -> p
     return trend
 
 
-def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.5) -> pd.Series:
-    # Compare the current candle against completed candles only.  Including
-    # the current volume in its own baseline makes a genuine spike harder to
-    # detect and makes the feature inconsistent with a live alert.
+def volume_spike(volume: pd.Series, lookback: int = 20, factor: float = 1.6) -> pd.Series:
     avg = volume.shift(1).rolling(lookback, min_periods=lookback).mean()
     return volume > (avg * factor)
 
@@ -297,7 +288,7 @@ def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
         "supertrend": supertrend(df, ind_cfg["supertrend"]["period"], ind_cfg["supertrend"]["multiplier"]),
         "rsi": rsi(close, ind_cfg["rsi"]["period"]),
         "vol_spike": volume_spike(
-            df["volume"], vol_cfg.get("lookback", 20), vol_cfg.get("factor", 1.5)
+            df["volume"], vol_cfg.get("lookback", 20), vol_cfg.get("factor", 1.6)
         ),
         "atr": atr(df, ind_cfg["atr"]["period"]),
         "adx": adx(df, adx_cfg.get("period", 14)),
@@ -348,18 +339,14 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     return "CONTINUATION"
 
 
-def get_setup_bonus(cfg: dict, direction: str, setup_type: str, timeframe: str = "") -> float:
+def get_setup_bonus(cfg: dict, setup_type: str) -> float:
+    """
+    Ambil bonus/penalti skor untuk kombinasi setup_type saat ini.
+    Config saat ini (scoring.setup_bonus) selalu flat per setup_type
+    (breakout/pullback/continuation/extended), sama untuk semua arah &
+    timeframe — jadi cukup satu jalur lookup.
+    """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
-
-    tf_cfg = sb_cfg.get(timeframe, {}) if timeframe else {}
-    if isinstance(tf_cfg, dict) and ("long" in tf_cfg or "short" in tf_cfg):
-        dir_cfg = tf_cfg.get(direction.lower(), {})
-        if setup_type.lower() in dir_cfg:
-            return dir_cfg[setup_type.lower()]
-
-    if "long" in sb_cfg or "short" in sb_cfg:
-        dir_cfg = sb_cfg.get(direction.lower(), {})
-        return dir_cfg.get(setup_type.lower(), 0)
     return sb_cfg.get(setup_type.lower(), 0)
 
 
@@ -372,7 +359,7 @@ def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
             return regime == "BEAR"
         if mode == "not_bull":
             return regime != "BULL"
-        return True  # allow_all
+        return True
     if direction == "LONG":
         mode = regime_cfg.get("long_mode", "not_bear")
         if mode == "bull_only":
@@ -390,10 +377,6 @@ def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
     regime_cfg = cfg.get("regime_filter", {})
     short_mode = regime_cfg.get("short_mode", "bear_only")
     if regime == "BEAR" and short_mode in ("bear_only", "not_bull"):
-        # Both modes treat BEAR as SHORT's "home" regime, so a long BEAR
-        # episode still needs the cluster cap - not just the strict
-        # bear_only case. Without this, loosening short_mode to not_bull
-        # would silently disable episode capping for shorts.
         return "SHORT"
     long_mode = regime_cfg.get("long_mode", "not_bear")
     if regime == "BULL" and long_mode in ("bull_only", "bull_or_neutral", "not_bear"):
@@ -450,7 +433,6 @@ def score_at(
             ],
         )
 
-    # Optional symbol blacklist
     blacklist = cfg.get("symbol_filter", {}).get("blacklist", [])
     if symbol in blacklist:
         return SignalResult(
@@ -497,7 +479,6 @@ def score_at(
     long_score, short_score = trend_long, trend_short
     alignment = alignment_long if direction == "LONG" else alignment_short
 
-    # Hard confluence filter
     min_alignment = cfg.get("scoring", {}).get("min_trend_alignment", 2)
     min_direction_margin = cfg.get("scoring", {}).get("min_direction_margin", 0)
     direction_margin = abs(trend_long - trend_short)
@@ -583,7 +564,7 @@ def score_at(
             reasons=["Setup tidak dapat diklasifikasikan karena nilai indikator invalid"],
         )
 
-    setup_bonus = get_setup_bonus(cfg, direction, setup_type, timeframe)
+    setup_bonus = get_setup_bonus(cfg, setup_type)
     if direction == "LONG":
         long_score += setup_bonus
     else:
@@ -616,9 +597,6 @@ def score_at(
 
     risk_cfg = cfg.get("risk", {})
     base_cap_mult = risk_cfg.get("structure_sl_max_atr_mult", 2.5)
-    # These settings are multiples of raw ATR, not multiples of the already
-    # multiplied ATR stop. The old code effectively allowed
-    # 2.3 * 1.6 = 3.68 ATR while the config said 2.3 ATR.
     cap_mult = base_cap_mult
     if setup_type == "BREAKOUT":
         cap_mult = risk_cfg.get("structure_sl_max_atr_mult_breakout", base_cap_mult)
@@ -632,25 +610,23 @@ def score_at(
         structural_level = df["high"].iloc[lb_start:i].max() if i > lb_start else None
         structural_dist = (structural_level - price) + sl_buffer if pd.notna(structural_level) else atr_sl_dist
 
-    if (
-        structural_dist > max_sl_dist
-        and risk_cfg.get("reject_structural_stop_too_wide", True)
-    ):
-        return SignalResult(
-            symbol=symbol, direction="NONE", score=final_score,
-            timeframe=timeframe, setup_type=setup_type,
-            reasons=reasons + [
-                f"Stop struktur terlalu jauh ({structural_dist / ind['atr'].iloc[i]:.2f} ATR "
-                f"> batas {cap_mult:.2f} ATR) — setup ditolak"
-            ],
-        )
-
-    sl_dist = max(atr_sl_dist, structural_dist)
-    if sl_dist > max_sl_dist:
+    if structural_dist > max_sl_dist:
+        if risk_cfg.get("reject_structural_stop_too_wide", True):
+            return SignalResult(
+                symbol=symbol, direction="NONE", score=final_score,
+                timeframe=timeframe, setup_type=setup_type,
+                reasons=reasons + [
+                    f"Stop struktur terlalu jauh ({structural_dist / ind['atr'].iloc[i]:.2f} ATR "
+                    f"> batas {cap_mult:.2f} ATR) — setup ditolak"
+                ],
+            )
         sl_dist = max_sl_dist
         reasons.append(f"SL struktur di-cap {cap_mult}x ATR")
-    elif sl_dist > atr_sl_dist:
+    elif structural_dist > atr_sl_dist:
+        sl_dist = structural_dist
         reasons.append(f"SL digeser ke luar struktur {stop_lookback}-bar terakhir")
+    else:
+        sl_dist = atr_sl_dist
 
     rr_min = cfg["risk"]["risk_reward_min"]
     target_lookback = int(get_setup_engine_param(cfg, "target_lookback", timeframe, struct_lookback * 2))
@@ -725,14 +701,6 @@ def passes_risk_filter_detailed(signal: SignalResult, cfg: dict) -> tuple[bool, 
     if rr >= cfg["risk"]["risk_reward_min"] - 1e-6:
         return True, "ok"
     return False, "rr_too_low"
-
-
-def position_size(equity: float, risk_pct: float, entry: float, sl: float) -> float:
-    risk_amount = equity * risk_pct
-    per_unit_risk = abs(entry - sl)
-    if per_unit_risk == 0:
-        return 0.0
-    return risk_amount / per_unit_risk
 
 
 def load_state(path: str) -> dict:
@@ -926,7 +894,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
     state_path = scan_cfg.get("state_path", "signal_state.json")
     cooldown_hours = scan_cfg.get("cooldown_hours", 4)
     klines_limit = scan_cfg.get("klines_limit", 300)
-    min_history_bars = scan_cfg.get("min_history_bars", 250)
+    min_history_bars = scan_cfg.get("min_history_bars", 260)
     state = load_state(state_path)
 
     auto_generate_charts = cfg.get("chart", {}).get("auto_generate", True)
