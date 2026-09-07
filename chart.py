@@ -707,7 +707,7 @@ def build_chart(
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
               fontsize=7, color=AXIS, ha="left", va="bottom")
-    fig.text(0.96, 0.027, "⚠️ CHART-Based analysis for educational purposes only,",
+    fig.text(0.96, 0.027, "ᝰChart-based analysis for educational purposes only,",
               fontsize=6.5, color=AXIS, ha="right", va="bottom")
     fig.text(0.96, 0.013, "NOT FINANCIAL ADVICE—do your own research and manage your risk.",
               fontsize=6.5, color=AXIS, ha="right", va="bottom")
