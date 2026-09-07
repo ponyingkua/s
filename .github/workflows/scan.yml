@@ -1,8 +1,8 @@
 name: vSynapse Scan
 
 on:
-  # schedule:
-  #   - cron: "0 */4 * * *"   # aktifkan lagi kalau sudah yakin stabil
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch: {}
 
 jobs:
