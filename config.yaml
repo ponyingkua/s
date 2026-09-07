@@ -187,7 +187,7 @@ backtest:
 
 chart:
   auto_generate: true
-  width_px: 2000
+  width_px: 3000
   height_ratio: 0.45
   # Fallback untuk timeframe di luar 15m/1h/4h; ketiga TF utama sudah override
   # lewat MAX_CANDLES_BY_TF di chart.py.
