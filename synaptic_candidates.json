@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "symbol": "KITEUSDT",
+    "direction": "SHORT",
+    "score": 83.3,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (27.8) tren kuat (+7.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.118,
+    "sl": 0.120339,
+    "tp": 0.113789
+  }
+]
