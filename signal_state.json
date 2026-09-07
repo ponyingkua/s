@@ -871,5 +871,11 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-07T07:40:00.431692+00:00"
+  },
+  "CYSUSDT|1h": {
+    "symbol": "CYSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T09:04:38.345032+00:00"
   }
 }
