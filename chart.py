@@ -175,10 +175,21 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
     n = len(df)
     final_upper = basic_upper.copy()
     final_lower = basic_lower.copy()
-    trend = pd.Series(index=df.index, dtype=int)
-    trend.iloc[0] = 1
+    trend = pd.Series(1, index=df.index, dtype=int)
 
-    for i in range(1, n):
+    # ATR butuh `period` candle pertama untuk "pemanasan" dan bernilai NaN
+    # sebelum itu. Rekursi trailing-band di bawah cuma valid begitu ATR
+    # sudah terisi — kalau dipaksa mulai dari index 0 yang NaN, band jadi
+    # macet permanen di NaN (perbandingan apa pun dengan NaN selalu False,
+    # jadi cabang else "bawa nilai lama" yang selalu kepilih selamanya).
+    # Ini penyebab garis Supertrend tidak pernah muncul di chart. Fix-nya:
+    # rekursi baru mulai dari candle pertama yang ATR-nya sudah valid.
+    first_valid = atr_val.first_valid_index()
+    if first_valid is None:
+        return pd.Series(np.nan, index=df.index), trend
+    start_pos = df.index.get_loc(first_valid)
+
+    for i in range(start_pos + 1, n):
         if basic_upper.iloc[i] < final_upper.iloc[i - 1] or close.iloc[i - 1] > final_upper.iloc[i - 1]:
             final_upper.iloc[i] = basic_upper.iloc[i]
         else:
@@ -197,6 +208,7 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
             trend.iloc[i] = trend.iloc[i - 1]
 
     level = final_lower.where(trend == 1, final_upper)
+    level.iloc[:start_pos] = np.nan  # belum ada ATR valid, jangan digambar
     return level, trend
 
 
@@ -585,10 +597,11 @@ def build_chart(
     st_period = cfg["indicators"]["supertrend"]["period"]
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
+    # EMA dihitung dari `df` penuh (bukan work_df) supaya warm-up-nya lebih
+    # panjang dan lebih akurat, lalu diambil `len(plot_df)` candle terakhir.
+    # plot_df selalu berakhir di candle paling akhir dari df, jadi .tail()
+    # ini selalu align dengan window yang ditampilkan.
     ema_full = ema(df["close"], ema_period).tail(len(plot_df)).reset_index(drop=True)
-    # Pastikan panjang EMA sama dengan plot_df
-    if len(ema_full) != len(plot_df):
-        ema_full = ema(work_df["close"], ema_period).iloc[start_idx:end_idx+1].reset_index(drop=True)
 
     st_level_work, st_trend_work = _supertrend_trailing(work_df, st_period, st_mult)
     st_level_full = st_level_work.iloc[start_idx:end_idx+1].reset_index(drop=True)
@@ -598,7 +611,8 @@ def build_chart(
     width_px = chart_cfg.get("width_px", 2800)
     height_ratio = chart_cfg.get("height_ratio", 9 / 20)
     dpi = 200
-    output_scale = 2  # output final 1x, layout/proporsi tidak berubah
+    output_scale = 2  # render 2x lalu disimpan di dpi lebih tinggi supaya
+                       # hasil PNG lebih tajam; proporsi/layout tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
@@ -710,18 +724,25 @@ def build_chart(
     )
     legend.get_frame().set_linewidth(0.7)
 
-    header_extra = pd.Timestamp.utcnow().strftime("Updated %d %b %H:%M UTC")
+    header_extra = pd.Timestamp.now(tz="UTC").strftime("Updated %d %b %H:%M UTC")
     setup_label = f"  ·  {signal.setup_type}" if signal.setup_type else ""
 
     fig.text(0.07, 0.965,
               f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}  ·  {header_extra}",
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
-              fontsize=6, color=AXIS, ha="left", va="bottom")
-    fig.text(0.96, 0.032, "⚠️ Chart-based analysis,for educational purposes only,",
-              fontsize=7, color=TEXT, ha="right", va="bottom")
-    fig.text(0.96, 0.013, "NOT FINANCIAL ADVICE, DYOR.",
-              fontsize=10, color=TEXT, ha="right", va="bottom")
+              fontsize=7, color=AXIS, ha="left", va="bottom")
+
+    # Disclaimer kanan-bawah: satu blok teks 2 baris, font & alignment
+    # seragam supaya rapi (sebelumnya 2 fig.text terpisah dengan ukuran
+    # font berbeda-beda dan emoji yang bisa tampil sebagai kotak kosong
+    # kalau font sistem tidak dukung emoji).
+    fig.text(
+        0.96, 0.013,
+        "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
+        fontsize=7.5, fontweight="bold", color=TEXT, ha="right", va="bottom",
+        linespacing=1.7,
+    )
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * output_scale)
     plt.close(fig)
