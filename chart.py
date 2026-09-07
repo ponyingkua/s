@@ -71,9 +71,9 @@ ARROW_BEAR = "#FFB74D"
 CANDLE_WIDTH = 0.8
 
 MAX_CANDLES_BY_TF = {
-    "15m": 55,
-    "1h": 42,
-    "4h": 45,
+    "15m": 50,   # ideal 45-55
+    "1h": 60,    # ideal 55-65
+    "4h": 45,    # ideal 40-50
 }
 
 STRUCTURE_CONTEXT = 30
@@ -118,7 +118,7 @@ def _place_level_labels(ax, levels: list, label_x: float) -> None:
     for item in levels:
         ax.text(
             label_x, item["level"], f" {item['text']} ",
-            color="#ffffff",
+            color="#121417",  # hitam (sama dengan background)
             bbox=dict(facecolor=item["color"], edgecolor="none",
                       boxstyle="round,pad=0.32", alpha=0.95),
             va="center", ha="left", fontweight="bold", fontsize=8,
@@ -364,32 +364,30 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         is_demand = z["type"] == "demand"
         fill = DEMAND_FILL if is_demand else SUPPLY_FILL
         edge = DEMAND_EDGE if is_demand else SUPPLY_EDGE
-        label = "Demand" if is_demand else "Supply"
+        label = "D" if is_demand else "S"
 
-        # Box lebih tebal & lebih terlihat
         ax.add_patch(Rectangle(
             (start_px, z["bottom"]), end_px - start_px, z["top"] - z["bottom"],
-            facecolor=fill, edgecolor=edge, alpha=0.38, linewidth=1.1,
+            facecolor=fill, edgecolor=edge, alpha=0.40, linewidth=1.1,
             zorder=1.2,
         ))
 
-        # Label di dalam box, font putih, bold
+        # Teks S/D — warna hitam (sama dengan background gelap)
         mid_x = (start_px + end_px) / 2
         mid_y = (z["top"] + z["bottom"]) / 2
-        ax.text(mid_x, mid_y, label, color="#FFFFFF",
-                fontsize=6.5, fontweight="bold", ha="center", va="center",
+        ax.text(mid_x, mid_y, label, color="#121417",
+                fontsize=7.5, fontweight="bold", ha="center", va="center",
                 alpha=0.95, zorder=1.6, clip_on=False)
 
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame) -> None:
+    """Penanda BOS sederhana: garis level + segitiga kecil + teks BOS."""
     plot_len = len(plot_df)
     high = plot_df["high"].values
     low = plot_df["low"].values
-    close = plot_df["close"].values
-    open_ = plot_df["open"].values
     y_span = float(plot_df["high"].max() - plot_df["low"].min())
-    pad_marker = max(y_span, 1e-9) * 0.018
-    pad_label = max(y_span, 1e-9) * 0.09
+    pad_marker = max(y_span, 1e-9) * 0.015
+    pad_label = max(y_span, 1e-9) * 0.07
 
     for ev in bos_events:
         idx_px = ev["idx"] - offset
@@ -397,32 +395,26 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
             continue
         origin_px = max(ev["origin"] - offset, -0.4)
         is_bull = ev["direction"] == "bull"
-
-        # Warna BOS mengikuti arah (lebih jelas dari warna candle)
         color = BOS_BULL if is_bull else BOS_BEAR
 
-        # Garis level BOS lebih tebal & jelas
+        # Garis level sederhana
         ax.plot([origin_px, idx_px], [ev["level"], ev["level"]], color=color,
-                 linestyle=(0, (6, 3)), linewidth=1.35, alpha=0.90, zorder=4)
+                 linestyle=(0, (4, 3)), linewidth=1.1, alpha=0.85, zorder=4)
 
-        # Marker lebih besar & menonjol
+        # Segitiga kecil
         if is_bull:
             ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=color,
-                     markersize=7.5, zorder=10, clip_on=False,
-                     markeredgecolor="#FFFFFF", markeredgewidth=0.6)
+                     markersize=6.0, zorder=10, clip_on=False)
             label_y = max(ev["level"], high[idx_px]) + pad_label
         else:
             ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=color,
-                     markersize=7.5, zorder=10, clip_on=False,
-                     markeredgecolor="#FFFFFF", markeredgewidth=0.6)
+                     markersize=6.0, zorder=10, clip_on=False)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
-        # Teks BOS dengan background kecil biar lebih terbaca
-        ax.text(idx_px + 1.1, label_y, " BOS ", color="#FFFFFF",
-                fontsize=6.2, fontweight="bold",
+        # Teks BOS sederhana — warna hitam
+        ax.text(idx_px + 0.9, label_y, "BOS", color="#121417",
+                fontsize=6.0, fontweight="bold",
                 ha="left", va="center",
-                bbox=dict(facecolor=color, edgecolor="none",
-                          boxstyle="round,pad=0.25", alpha=0.92),
                 zorder=11, clip_on=False)
 
 
