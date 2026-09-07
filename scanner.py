@@ -306,14 +306,13 @@ def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: 
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
-    # overextended_atr_mult: ambang tambahan di ATAS extended_atr_mult. Backtest
-    # (947 trade, Mar-Sep 2026) menunjukkan EXTENDED adalah 56% dari semua trade
-    # tapi net merugi (sum R -43.88); tidak ada data granular seberapa jauh tiap
-    # trade dari EMA200 di dalam bucket EXTENDED itu, jadi ambang ini adalah
-    # guardrail berbasis akal sehat (blow-off/capitulation move) — bukan angka
-    # yang sudah divalidasi lewat re-run backtest. Default cukup longgar supaya
-    # cuma menyaring kasus paling ekstrem; sesuaikan/nonaktifkan (set sangat
-    # tinggi) kalau setelah backtest ulang ternyata terlalu agresif.
+    # overextended_atr_mult: ambang tambahan di ATAS extended_atr_mult. EXTENDED
+    # tetap porsi terbesar dari populasi trade (682/1496, backtest Feb-Sep 2026),
+    # tapi tidak ada data granular seberapa jauh tiap trade dari EMA200 di dalam
+    # bucket itu, jadi ambang ini tetap guardrail berbasis akal sehat (blow-off/
+    # capitulation move) — bukan angka yang sudah divalidasi lewat re-run
+    # backtest. Default cukup longgar supaya cuma menyaring kasus paling ekstrem;
+    # sesuaikan/nonaktifkan (set sangat tinggi) kalau ternyata terlalu agresif.
     overextended_atr_mult = get_setup_engine_param(
         cfg, "overextended_atr_mult", timeframe, max(extended_atr_mult * 1.8, extended_atr_mult + 2)
     )
@@ -356,30 +355,16 @@ def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: 
     """
     Ambil bonus/penalti skor untuk kombinasi setup_type + direction + timeframe.
 
-    Backtest gabungan 1564 trade (15m/1h/4h, 10 simbol) menunjukkan setup_bonus
-    FLAT (sama utk semua arah/TF) menyembunyikan asimetri besar:
-      - EXTENDED: LONG net rugi besar di semua TF (15m n=170 avg R -0.333,
-        1h n=96 avg R -0.224) — ciri khas "chasing pump". SHORT justru
-        netral/positif di 15m & 1h (n=191 avg +0.010, n=76 avg +0.092) —
-        momentum turun cenderung lanjut. 4h SHORT sampelnya kecil (n=16) dan
-        masih negatif, jadi TIDAK diberi bonus yang sama seperti 15m/1h.
-      - CONTINUATION: net rugi di semua TF, tapi paling parah di 4h
-        (n=53 avg R -0.207) — dapat penalti ekstra di TF itu.
-      - BREAKOUT: menang di semua TF, TAPI jauh lebih tajam di 1h
-        (n=94 avg R +0.283, LONG-nya sendiri n=27 avg R +0.520) — dapat
-        bonus ekstra khusus 1h.
-      - PULLBACK: bonus flat +4 lama membuat total populasi nyaris impas
-        (sum R backtest ulang ~0); diturunkan ke 0 supaya tidak lagi
-        "mensubsidi" setup yang sebenarnya tidak edge positif.
-    Simulasi ulang atas 1564 trade historis dengan skema di bawah:
-    sum R -108.05 -> +30.24 (avg R -0.069 -> +0.026), volume trade
-    tersisa ~74%. Precedence lookup (paling spesifik menang):
+    Precedence lookup (paling spesifik menang):
       1. setup_bonus[timeframe][direction][setup_type]
       2. setup_bonus[timeframe][setup_type]
       3. setup_bonus[direction][setup_type]
       4. setup_bonus[setup_type]  (flat, fallback)
-    Catatan: ini hasil in-sample dari satu window backtest, bukan
-    out-of-sample tervalidasi — cek ulang setelah ada data baru.
+
+    Nilai-nilai di config.yaml (scoring.setup_bonus) di-tuning dari backtest
+    gabungan trade tertutup (15m/1h/4h, 10 simbol) — lihat komentar di sana
+    untuk rincian & angka per kombinasi. Ini hasil in-sample dari satu window
+    backtest, bukan out-of-sample tervalidasi — cek ulang setelah ada data baru.
     """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
     st = setup_type.lower()
@@ -402,16 +387,13 @@ def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: 
 
 def mtf_bonus_eligible(setup_type: str, cfg: dict) -> bool:
     """
-    MTF agreement bonus dikecualikan untuk setup_type tertentu (default:
-    EXTENDED) via scoring.mtf_agreement_excluded_setups di config.
-
-    Temuan backtest (1564 trade): trade EXTENDED yang kebetulan searah
-    dengan TF lain justru avg R-nya LEBIH BURUK daripada yang tidak
-    (mis. LONG EXTENDED 15m: avg R -0.460 dengan MTF agreement vs -0.245
-    tanpa, n=170) — "TF lain juga sudah extended" adalah tanda telat
-    masuk rame-rame, bukan konfirmasi kualitas. Simulasi ulang: menonaktifkan
-    MTF bonus khusus utk EXTENDED menaikkan sum R gabungan (setelah fix
-    setup_bonus di atas) dari +30.24 -> +40.39.
+    MTF agreement bonus dikecualikan untuk setup_type tertentu via
+    scoring.mtf_agreement_excluded_setups di config (saat ini: EXTENDED,
+    BREAKOUT). Untuk kedua setup ini, sinyal yang kebetulan searah dengan TF
+    lain terbukti avg R-nya LEBIH BURUK daripada yang tidak dapat bonus —
+    "TF lain sudah searah" adalah tanda telat masuk rame-rame, bukan
+    konfirmasi kualitas. Lihat komentar mtf_agreement_excluded_setups di
+    config.yaml untuk angka pendukungnya.
     """
     excluded = cfg.get("scoring", {}).get("mtf_agreement_excluded_setups", [])
     return setup_type.upper() not in {s.upper() for s in excluded}
