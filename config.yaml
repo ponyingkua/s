@@ -200,18 +200,13 @@ chart:
   auto_generate: true
   width_px: 2000
   height_ratio: 0.45
+  # Fallback candles_shown untuk timeframe di luar 15m/1h/4h — ketiga TF yang
+  # dipakai (lihat `timeframes` di atas) sudah override lewat MAX_CANDLES_BY_TF
+  # di chart.py, jadi angka ini praktis cuma jaring pengaman.
   candles_shown: 120
-  theme:
-    background: "#0d0d0f"
-    grid: "#1c1c22"
-    text: "#d8d8e0"
-    bull: "#2ecc71"
-    bear: "#e74c3c"
-    ema: "#f5c542"
-    supertrend_up: "#2ecc71"
-    supertrend_down: "#e74c3c"
-    entry: "#3498db"
-    sl: "#e74c3c"
-    tp: "#2ecc71"
-    zone_fill: "#3498db"
-    zone_alpha: 0.12
+  # Palet warna chart (kandil, EMA, Supertrend, entry/SL/TP, zona demand/
+  # supply, dst) sengaja di-hardcode di chart.py sendiri, bukan dibaca dari
+  # sini — chart.py murni file visualisasi dan warnanya dikelola di satu
+  # tempat itu saja. Section `theme` yang dulu ada di sini tidak pernah benar-
+  # benar dipakai kode (dan nilainya juga sudah tidak sama dengan warna asli
+  # di chart.py), jadi dihapus supaya tidak menyesatkan.
