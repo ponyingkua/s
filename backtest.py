@@ -188,6 +188,11 @@ class Trade:
     both_touched: bool = False
     mtf_bonus: float = 0.0
     mtf_agree_tfs: list = field(default_factory=list)
+    # Skor akhir sinyal (setelah MTF bonus, sebelum dibulatkan lagi). Sebelumnya
+    # tidak direkam sama sekali di trade log, jadi analisis "apakah skor lebih
+    # tinggi = performa lebih baik" tidak bisa dilakukan dari trades_raw*.json
+    # yang lama. Field ini mengisi celah itu untuk backtest ke depan.
+    score: float = 0.0
 
 
 def backtest_symbol(
@@ -302,7 +307,7 @@ def backtest_symbol(
                 sl=signal.sl, tp=signal.tp, result=result, r_multiple=r_mult,
                 timeframe=signal.timeframe, setup_type=signal.setup_type,
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
-                mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs,
+                mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs, score=signal.score,
             )
         )
 
