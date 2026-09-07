@@ -739,7 +739,7 @@ def build_chart(
     # kalau font sistem tidak dukung emoji).
     fig.text(
         0.96, 0.013,
-        "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
+        "Chart-based analysis, for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
         fontsize=7.5, fontweight="bold", color=AXIS, ha="right", va="bottom",
         linespacing=1.7,
     )
