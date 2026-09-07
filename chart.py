@@ -588,10 +588,10 @@ def build_chart(
     st_trend_full = st_trend_work.iloc[start_idx:end_idx+1].reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
-    width_px = chart_cfg.get("width_px", 3549)
+    width_px = chart_cfg.get("width_px", 2800)
     height_ratio = chart_cfg.get("height_ratio", 9 / 20)
     dpi = 200
-    output_scale = 1  # output final 1x, layout/proporsi tidak berubah
+    output_scale = 2  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
