@@ -115,7 +115,7 @@ def _place_level_labels(ax, levels: list, label_x: float) -> None:
     for item in levels:
         ax.text(
             label_x, item["level"], f" {item['text']} ",
-            color="#121417",  # hitam (sama dengan background)
+            color="#F2F2F2",  # hitam (sama dengan background)
             bbox=dict(facecolor=item["color"], edgecolor="none",
                       boxstyle="round,pad=0.32", alpha=0.95),
             va="center", ha="left", fontweight="bold", fontsize=8,
@@ -372,7 +372,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         # Teks S/D — warna hitam (sama dengan background gelap)
         mid_x = (start_px + end_px) / 2
         mid_y = (z["top"] + z["bottom"]) / 2
-        ax.text(mid_x, mid_y, label, color="#121417",
+        ax.text(mid_x, mid_y, label, color="#F2F2F2",
                 fontsize=7.5, fontweight="bold", ha="center", va="center",
                 alpha=0.95, zorder=1.6, clip_on=False)
 
