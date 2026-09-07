@@ -901,5 +901,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-07T18:28:35.958308+00:00"
+  },
+  "BLUAIUSDT|1h": {
+    "symbol": "BLUAIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T21:07:24.165229+00:00"
   }
 }
