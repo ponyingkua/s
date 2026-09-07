@@ -46,26 +46,30 @@ scoring:
   # mtf_agreement TIDAK otomatis "selalu bagus" — lihat
   # mtf_agreement_excluded_setups di bawah.
   #
-  # setup_bonus di-tuning dari backtest gabungan 1496 trade tertutup
-  # (15m/1h/4h, 10 simbol, Feb-Sep 2026, trades-raw-batch-{15m,1h,4h}.json).
-  # Precedence lookup (paling spesifik menang): [timeframe][direction][setup]
-  # > [timeframe][setup] > [direction][setup] > [setup] flat.
-  # Perubahan dari tuning sebelumnya (data lama sudah tidak representatif
-  # setelah regime_filter.short_mode pindah ke "not_bull" — volume SHORT jauh
-  # lebih besar sekarang):
-  #   - SHORT EXTENDED di 15m & 1h dulu dikira netral/positif, di data baru ini
-  #     malah net rugi (15m n=425 avg R -0.057, 1h n=169 avg R -0.086) — bonus
-  #     dibalik dari fallback +3 jadi negatif per-TF di bawah.
-  #   - CONTINUATION di 4h (hampir semua LONG, n=30 avg R -0.387) tetap
-  #     terburuk meski sudah dipenalti -28; dinaikkan lagi sampai efektif
-  #     menyaring hampir semua kandidatnya.
-  #   - CONTINUATION di 15m (n=69 avg R -0.246) dapat override TF baru,
-  #     dari fallback -18.
-  #   - BREAKOUT di 4h (LONG n=14 avg R -0.122, SHORT n=22 avg R -0.082) tidak
-  #     mewarisi keunggulan BREAKOUT 15m/1h — bonus TF ini dilepas ke 0.
-  # CATATAN: ini hasil in-sample dari satu window backtest (bukan
-  # out-of-sample tervalidasi) — cek ulang setelah ada data baru, terutama
-  # kombinasi bersampel kecil (4h secara umum punya n paling tipis).
+  # setup_bonus di-tuning dari backtest gabungan 1070 trade tertutup
+  # (15m/1h/4h, 9 simbol aktif — DOGEUSDT sudah diblacklist sejak tuning
+  # sebelumnya jadi tidak muncul lagi, 19 Feb-6 Sep 2026,
+  # trades-raw-batch-{15m,1h,4h}.json). Precedence lookup (paling spesifik
+  # menang): [timeframe][direction][setup] > [timeframe][setup] >
+  # [direction][setup] > [setup] flat. Nilai dari tuning sebelumnya (extended,
+  # continuation) tetap dipakai; ini lapisan tambahan di atasnya:
+  #   - PULLBACK ternyata TIDAK netral seperti diasumsikan (bonus 0
+  #     sebelumnya): 15m PULLBACK rugi di kedua arah (LONG n=97 avg R -0.057,
+  #     SHORT n=161 avg R -0.029) dan 1h SHORT PULLBACK juga rugi (n=43 avg R
+  #     -0.065). 1h LONG PULLBACK (n=35 avg R +0.087) dan 4h PULLBACK kedua
+  #     arah (n=15/n=10, avg R +0.242/+0.114) tetap sehat — tidak disentuh.
+  #   - BREAKOUT ternyata timpang per arah, bukan flat baik seperti
+  #     diasumsikan: 15m LONG BREAKOUT rugi (n=49 avg R -0.039) sementara 15m
+  #     SHORT BREAKOUT tetap salah satu setup terbaik (n=124 avg R +0.157).
+  #     Pola sama di 4h: LONG rugi besar (n=17 avg R -0.282) sementara SHORT
+  #     justru setup terbaik di 4h (n=10 avg R +0.467). Split per-arah
+  #     ditambahkan; sisi yang sehat dibiarkan mewarisi bonus flat/TF yang
+  #     sudah ada (15m/global breakout: 8, 4h breakout: 0).
+  #   - 4h SHORT EXTENDED masih net rugi meski sudah dipenalti -6 dari tuning
+  #     sebelumnya (n=17 avg R -0.204) — dinaikkan jadi -14.
+  # CATATAN: tetap in-sample dari satu window backtest (bukan out-of-sample
+  # tervalidasi) — cek ulang setelah ada data baru, terutama kombinasi 4h
+  # (n paling tipis di seluruh dataset ini).
   setup_bonus:
     breakout: 8
     pullback: 0
@@ -76,20 +80,25 @@ scoring:
     short:
       extended: 3
     "15m":
+      pullback: -9      # baru — net rugi kedua arah, lihat catatan di atas
       long:
         extended: -40
+        breakout: -8    # baru — n=49 avg R -0.039, SHORT 15m breakout tidak disentuh
       short:
-        extended: -8    # dari fallback +3 — net rugi di data baru (n=425, avg R -0.057)
-      continuation: -24  # dari fallback -18 — LONG-nya sendiri (n=69) avg R -0.246
+        extended: -8
+      continuation: -24
     "1h":
       breakout: 16
       short:
-        extended: -4    # dari fallback +3 — net rugi di data baru (n=169, avg R -0.086)
+        extended: -4
+        pullback: -6    # baru — n=43 avg R -0.065, LONG 1h pullback tidak disentuh
     "4h":
-      continuation: -35  # dari -28 — tetap avg R -0.387 (n=30) meski sudah dipenalti
-      breakout: 0        # dari fallback +8 — BREAKOUT 4h tidak profitable (LONG n=14 avg R -0.122, SHORT n=22 avg R -0.082)
+      continuation: -35
+      breakout: 0        # tetap 0 — ini sekarang jadi fallback SHORT 4h breakout saja
+      long:
+        breakout: -22    # baru — n=17 avg R -0.282, jauh lebih buruk dari SHORT 4h breakout (+0.467)
       short:
-        extended: -6
+        extended: -14    # dari -6 — masih avg R -0.204 (n=17) meski sudah dipenalti
   # BREAKOUT ditambahkan ke daftar ini: sinyal yang "disetujui" TF lain
   # avg R-nya jauh lebih buruk (avg R -0.201, n=22) dibanding yang tidak
   # (avg R +0.179, n=273) — pola sama seperti EXTENDED, MTF agreement di sini
@@ -165,12 +174,16 @@ regime_filter:
   long_mode: "bull_only"
 
 symbol_filter:
-  # DOGEUSDT: net rugi paling besar & paling konsisten dari 10 simbol backtest
-  # (n=149, avg R -0.141, sum R -21.03 dari total sum R -39.06 sebelum
-  # perbaikan setup_bonus di atas — lebih dari separuh kerugian portofolio
-  # berasal dari satu simbol ini).
+  # DOGEUSDT: net rugi paling besar & paling konsisten pada window backtest
+  # sebelumnya — sudah diblacklist sejak itu, karena itu tidak lagi muncul di
+  # trades-raw-batch-*.json saat ini.
+  # LTCUSDT: sekarang jadi simbol paling rugi dari 9 simbol aktif tersisa
+  # (n=123, avg R -0.054, sum R -6.63 dari 1070 trade tertutup total, window
+  # 19 Feb-6 Sep 2026) — rugi hampir konsisten di semua kombinasi arah/setup/
+  # timeframe (bukan satu outlier), pola sama seperti DOGEUSDT dulu.
   blacklist:
     - DOGEUSDT
+    - LTCUSDT
 
 notify:
   telegram:
