@@ -11,6 +11,7 @@ import yaml
 from scanner import (
     BinanceFuturesClient,
     compute_indicators,
+    mtf_bonus_eligible,
     passes_regime_filter,
     passes_risk_filter,
     score_at,
@@ -257,7 +258,7 @@ def backtest_symbol(
         # --- MTF agreement bonus (mirrors live scanner logic) ---
         mtf_bonus = 0.0
         agree_tfs: list[str] = []
-        if mtf_direction_map and mtf_weight:
+        if mtf_direction_map and mtf_weight and mtf_bonus_eligible(signal.setup_type, cfg):
             for other_tf, dir_series in mtf_direction_map.items():
                 if i < len(dir_series) and dir_series.iloc[i] == signal.direction:
                     agree_tfs.append(other_tf)
