@@ -41,22 +41,55 @@ scoring:
     supertrend: 25
     volume_spike: 12
     rsi_confluence: 18
-    mtf_agreement: 20  # naik dari 15 — trade dgn MTF agreement avg R -0.028 vs -0.133 tanpa (947 trade, Mar-Sep 2026)
+    mtf_agreement: 20
     adx_strength: 15
-  # Setup_bonus di-tuning ulang berdasarkan backtest 947 trade (Mar-Sep 2026,
-  # trades-raw-batch-{15m,1h,4h}.json):
-  #   BREAKOUT:      n=30,  win rate 33.3%, avg R +0.181, sum R +5.42  -> terbaik
-  #   PULLBACK:      n=138, win rate 26.1%, avg R +0.016, sum R +2.23  -> positif tipis
-  #   CONTINUATION:  n=244, win rate 23.8%, avg R -0.218, sum R -53.23 -> TERBURUK
-  #   EXTENDED:      n=530, win rate 32.3%, avg R -0.083, sum R -43.88 -> volume terbesar (56%), net rugi
-  # CONTINUATION+EXTENDED = 82% dari semua trade dan keduanya net rugi, jadi
-  # penalti diperbesar supaya butuh konfluensi ekstra (RSI/volume/ADX/MTF) buat
-  # tembus min_score_to_trigger, bukan cuma modal 3/3 alignment dasar (=63).
+  # mtf_agreement TIDAK lagi otomatis "selalu bagus" — lihat
+  # mtf_agreement_excluded_setups di bawah untuk pengecualian EXTENDED.
+  #
+  # Setup_bonus di-tuning ulang berdasarkan backtest GABUNGAN 1564 trade
+  # tertutup (15m/1h/4h, 10 simbol, trades-raw-batch-{15m,1h,4h}.json,
+  # Feb-Sep 2026), dipecah per timeframe x direction x setup_type — bukan
+  # cuma per setup_type flat seperti sebelumnya, karena datanya menunjukkan
+  # flat itu menyembunyikan asimetri besar antar arah:
+  #   EXTENDED  15m LONG : n=170 avg R -0.333 sum -56.56  -> chasing pump, TERBURUK
+  #             1h  LONG : n=96  avg R -0.224 sum -21.51
+  #             15m SHORT: n=191 avg R +0.010 sum +1.91   -> netral, momentum turun lanjut
+  #             1h  SHORT: n=76  avg R +0.092 sum +6.96   -> positif
+  #             4h  SHORT: n=16  avg R -0.329 sum -5.26   -> sampel kecil, tetap negatif
+  #   CONTINUATION (semua arah digabung, sampel per-arah kecil): net rugi di
+  #             semua TF, terburuk di 4h (n=53 avg R -0.207 sum -10.95)
+  #   BREAKOUT  1h (LONG+SHORT): n=94 avg R +0.283 sum +26.60 -> jauh terbaik,
+  #             LONG-nya sendiri n=27 avg R +0.520
+  #             TF lain: 15m n=169 avg R +0.112, 4h n=32 avg R -0.037 (kecil, campur)
+  #   PULLBACK: bonus flat +4 lama membuat populasi nyaris impas (~breakeven),
+  #             diturunkan ke 0 di semua arah/TF
+  # Simulasi ulang skema di bawah atas 1564 trade historis: sum R -108.05 ->
+  # +30.24 (avg R -0.069 -> +0.026), volume trade tersisa ~74%. Precedence
+  # lookup (paling spesifik menang): [timeframe][direction][setup] >
+  # [timeframe][setup] > [direction][setup] > [setup] flat.
+  # CATATAN: ini hasil in-sample dari satu window backtest (bukan
+  # out-of-sample tervalidasi) — cek ulang setelah ada data baru, terutama
+  # angka-angka dengan n kecil (4h SHORT EXTENDED n=16, 4h BREAKOUT n=32).
   setup_bonus:
-    breakout: 8       # dari 5
-    pullback: 4       # dari 0
-    continuation: -12 # dari -8
-    extended: -8      # dari 0 — sebelumnya netral padahal net rugi terbesar
+    breakout: 8
+    pullback: 0        # dari 4 — populasi pullback nyaris impas, bukan edge positif
+    continuation: -18  # dari -12 — net rugi di semua TF
+    extended: -8       # dipakai sbg fallback (mis. 4h LONG, TF tanpa override eksplisit)
+    long:
+      extended: -22    # LONG EXTENDED net rugi besar di semua TF (fallback sebelum override TF)
+    short:
+      extended: 3      # SHORT EXTENDED netral/positif di 15m & 1h (lihat override 4h di bawah)
+    "15m":
+      long:
+        extended: -40  # kombinasi terburuk secara mutlak (n=170, sum R -56.56)
+    "1h":
+      breakout: 16     # kombinasi terbaik secara mutlak (n=94, avg R +0.283)
+    "4h":
+      continuation: -28  # continuation paling parah di 4h (n=53, avg R -0.207)
+      short:
+        extended: -6     # override "short.extended: 3" di atas — sampel 4h (n=16) masih negatif
+  mtf_agreement_excluded_setups:
+    - extended  # trade EXTENDED yg "disetujui" TF lain avg R-nya malah lebih buruk (lihat get_setup_bonus di scanner.py)
   min_score_to_trigger: 63
   min_trend_alignment: 2
   min_direction_margin: 8
