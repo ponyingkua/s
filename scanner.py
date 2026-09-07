@@ -306,6 +306,17 @@ def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: 
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
+    # overextended_atr_mult: ambang tambahan di ATAS extended_atr_mult. Backtest
+    # (947 trade, Mar-Sep 2026) menunjukkan EXTENDED adalah 56% dari semua trade
+    # tapi net merugi (sum R -43.88); tidak ada data granular seberapa jauh tiap
+    # trade dari EMA200 di dalam bucket EXTENDED itu, jadi ambang ini adalah
+    # guardrail berbasis akal sehat (blow-off/capitulation move) — bukan angka
+    # yang sudah divalidasi lewat re-run backtest. Default cukup longgar supaya
+    # cuma menyaring kasus paling ekstrem; sesuaikan/nonaktifkan (set sangat
+    # tinggi) kalau setelah backtest ulang ternyata terlalu agresif.
+    overextended_atr_mult = get_setup_engine_param(
+        cfg, "overextended_atr_mult", timeframe, max(extended_atr_mult * 1.8, extended_atr_mult + 2)
+    )
     pullback_atr_mult = get_setup_engine_param(cfg, "pullback_atr_mult", timeframe, 1.0)
     breakout_buffer_atr_mult = get_setup_engine_param(
         cfg, "breakout_buffer_atr_mult", timeframe, 0.10
@@ -334,6 +345,8 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     )
     if on_trend_side and dist_ema_atr <= pullback_atr_mult:
         return "PULLBACK"
+    if on_trend_side and dist_ema_atr >= overextended_atr_mult:
+        return "OVEREXTENDED"
     if on_trend_side and dist_ema_atr >= extended_atr_mult:
         return "EXTENDED"
     return "CONTINUATION"
@@ -475,7 +488,16 @@ def score_at(
         trend_short += w["supertrend"]
         alignment_short += 1
 
-    direction = "LONG" if trend_long >= trend_short else "SHORT"
+    if trend_long == trend_short:
+        # Tidak bisa terjadi dengan bobot default (20+18+25=63, ganjil, tidak
+        # bisa terbagi rata jadi dua sisi yang sama persis), tapi kalau bobot
+        # di-tuning nanti sampai bisa dasi, jangan diam-diam menang-kan LONG —
+        # anggap arah tidak jelas dan tolak sinyalnya.
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=["Skor LONG dan SHORT persis sama (dasi) — arah tidak jelas, ditolak"],
+        )
+    direction = "LONG" if trend_long > trend_short else "SHORT"
     long_score, short_score = trend_long, trend_short
     alignment = alignment_long if direction == "LONG" else alignment_short
 
@@ -562,6 +584,14 @@ def score_at(
         return SignalResult(
             symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
             reasons=["Setup tidak dapat diklasifikasikan karena nilai indikator invalid"],
+        )
+    if setup_type == "OVEREXTENDED":
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
+            reasons=[
+                "Harga terlalu jauh dari EMA200 (overextended) — risiko "
+                "mean-reversion/blow-off tinggi, sinyal ditolak"
+            ],
         )
 
     setup_bonus = get_setup_bonus(cfg, setup_type)
@@ -1106,7 +1136,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="vSynapse v3.1 scanner (multi-timeframe)")
+    parser = argparse.ArgumentParser(description="vSynapse v3.2 scanner (multi-timeframe)")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--out", default="synaptic_candidates.json")
     args = parser.parse_args()
