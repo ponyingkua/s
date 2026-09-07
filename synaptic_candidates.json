@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "symbol": "XAUTUSDT",
+    "direction": "SHORT",
+    "score": 66.6,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (30.9) tren kuat (+10.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior low 60-bar), RR aktual 1.91"
+    ],
+    "entry": 4381.37,
+    "sl": 4432.195362,
+    "tp": 4284.05
+  }
+]
