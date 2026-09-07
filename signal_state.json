@@ -895,5 +895,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-07T15:52:42.574319+00:00"
+  },
+  "LAUSDT|15m": {
+    "symbol": "LAUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T18:28:35.958308+00:00"
   }
 }
