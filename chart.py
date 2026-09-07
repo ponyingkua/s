@@ -409,7 +409,7 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
         # Teks BOS sederhana — warna hitam
-        ax.text(idx_px + 0.9, label_y, "BOS", color="#121417",
+        ax.text(idx_px + 0.9, label_y, "BOS", color="#F2F2F2",
                 fontsize=6.0, fontweight="bold",
                 ha="left", va="center",
                 zorder=11, clip_on=False)
