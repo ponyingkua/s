@@ -853,5 +853,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-06T23:41:33.273841+00:00"
+  },
+  "UNITREEUSDT|1h": {
+    "symbol": "UNITREEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T07:39:59.202265+00:00"
+  },
+  "XAUUSDT|4h": {
+    "symbol": "XAUUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T07:40:00.203495+00:00"
+  },
+  "PAXGUSDT|4h": {
+    "symbol": "PAXGUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T07:40:00.431692+00:00"
   }
 }

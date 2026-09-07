@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "symbol": "UNITREEUSDT",
+    "direction": "SHORT",
+    "score": 76.7,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (44) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (32.8) tren kuat (+12.7 skor)",
+      "Setup terdeteksi: EXTENDED (-4 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 1.88"
+    ],
+    "entry": 79.74,
+    "sl": 81.086982,
+    "tp": 77.21
+  },
+  {
+    "symbol": "XAUUSDT",
+    "direction": "SHORT",
+    "score": 74.9,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (38) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (27.5) tren kuat (+6.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior low 60-bar), RR aktual 3.19"
+    ],
+    "entry": 4407.34,
+    "sl": 4444.693954,
+    "tp": 4288.0
+  },
+  {
+    "symbol": "PAXGUSDT",
+    "direction": "SHORT",
+    "score": 64.9,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (37) menguatkan momentum turun",
+      "ADX (29.3) tren kuat (+8.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior low 60-bar), RR aktual 2.86"
+    ],
+    "entry": 4400.07,
+    "sl": 4437.90226,
+    "tp": 4291.95
+  }
+]
