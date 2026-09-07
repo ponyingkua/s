@@ -889,5 +889,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-07T14:41:04.964407+00:00"
+  },
+  "EPICUSDT|15m": {
+    "symbol": "EPICUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-07T15:52:42.574319+00:00"
   }
 }

@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "symbol": "EPICUSDT",
+    "direction": "SHORT",
+    "score": 87.4,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (31.6) tren kuat (+11.4 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.3737,
+    "sl": 0.387938,
+    "tp": 0.348071
+  }
+]
