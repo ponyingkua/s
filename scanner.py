@@ -352,15 +352,69 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     return "CONTINUATION"
 
 
-def get_setup_bonus(cfg: dict, setup_type: str) -> float:
+def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: str = "") -> float:
     """
-    Ambil bonus/penalti skor untuk kombinasi setup_type saat ini.
-    Config saat ini (scoring.setup_bonus) selalu flat per setup_type
-    (breakout/pullback/continuation/extended), sama untuk semua arah &
-    timeframe — jadi cukup satu jalur lookup.
+    Ambil bonus/penalti skor untuk kombinasi setup_type + direction + timeframe.
+
+    Backtest gabungan 1564 trade (15m/1h/4h, 10 simbol) menunjukkan setup_bonus
+    FLAT (sama utk semua arah/TF) menyembunyikan asimetri besar:
+      - EXTENDED: LONG net rugi besar di semua TF (15m n=170 avg R -0.333,
+        1h n=96 avg R -0.224) — ciri khas "chasing pump". SHORT justru
+        netral/positif di 15m & 1h (n=191 avg +0.010, n=76 avg +0.092) —
+        momentum turun cenderung lanjut. 4h SHORT sampelnya kecil (n=16) dan
+        masih negatif, jadi TIDAK diberi bonus yang sama seperti 15m/1h.
+      - CONTINUATION: net rugi di semua TF, tapi paling parah di 4h
+        (n=53 avg R -0.207) — dapat penalti ekstra di TF itu.
+      - BREAKOUT: menang di semua TF, TAPI jauh lebih tajam di 1h
+        (n=94 avg R +0.283, LONG-nya sendiri n=27 avg R +0.520) — dapat
+        bonus ekstra khusus 1h.
+      - PULLBACK: bonus flat +4 lama membuat total populasi nyaris impas
+        (sum R backtest ulang ~0); diturunkan ke 0 supaya tidak lagi
+        "mensubsidi" setup yang sebenarnya tidak edge positif.
+    Simulasi ulang atas 1564 trade historis dengan skema di bawah:
+    sum R -108.05 -> +30.24 (avg R -0.069 -> +0.026), volume trade
+    tersisa ~74%. Precedence lookup (paling spesifik menang):
+      1. setup_bonus[timeframe][direction][setup_type]
+      2. setup_bonus[timeframe][setup_type]
+      3. setup_bonus[direction][setup_type]
+      4. setup_bonus[setup_type]  (flat, fallback)
+    Catatan: ini hasil in-sample dari satu window backtest, bukan
+    out-of-sample tervalidasi — cek ulang setelah ada data baru.
     """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
-    return sb_cfg.get(setup_type.lower(), 0)
+    st = setup_type.lower()
+    d = direction.lower()
+
+    tf_cfg = sb_cfg.get(timeframe, {}) if timeframe else {}
+    if isinstance(tf_cfg, dict):
+        tf_dir_cfg = tf_cfg.get(d, {}) if d else {}
+        if isinstance(tf_dir_cfg, dict) and st in tf_dir_cfg:
+            return tf_dir_cfg[st]
+        if st in tf_cfg:
+            return tf_cfg[st]
+
+    dir_cfg = sb_cfg.get(d, {}) if d else {}
+    if isinstance(dir_cfg, dict) and st in dir_cfg:
+        return dir_cfg[st]
+
+    return sb_cfg.get(st, 0)
+
+
+def mtf_bonus_eligible(setup_type: str, cfg: dict) -> bool:
+    """
+    MTF agreement bonus dikecualikan untuk setup_type tertentu (default:
+    EXTENDED) via scoring.mtf_agreement_excluded_setups di config.
+
+    Temuan backtest (1564 trade): trade EXTENDED yang kebetulan searah
+    dengan TF lain justru avg R-nya LEBIH BURUK daripada yang tidak
+    (mis. LONG EXTENDED 15m: avg R -0.460 dengan MTF agreement vs -0.245
+    tanpa, n=170) — "TF lain juga sudah extended" adalah tanda telat
+    masuk rame-rame, bukan konfirmasi kualitas. Simulasi ulang: menonaktifkan
+    MTF bonus khusus utk EXTENDED menaikkan sum R gabungan (setelah fix
+    setup_bonus di atas) dari +30.24 -> +40.39.
+    """
+    excluded = cfg.get("scoring", {}).get("mtf_agreement_excluded_setups", [])
+    return setup_type.upper() not in {s.upper() for s in excluded}
 
 
 def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
@@ -594,7 +648,7 @@ def score_at(
             ],
         )
 
-    setup_bonus = get_setup_bonus(cfg, setup_type)
+    setup_bonus = get_setup_bonus(cfg, setup_type, direction, timeframe)
     if direction == "LONG":
         long_score += setup_bonus
     else:
@@ -1054,7 +1108,7 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     t for t, d in direction_map.get(kline.symbol, {}).items()
                     if t != tf and d == signal.direction
                 ]
-                if agree_tfs and mtf_bonus_weight:
+                if agree_tfs and mtf_bonus_weight and mtf_bonus_eligible(signal.setup_type, cfg):
                     bonus = mtf_bonus_weight * len(agree_tfs)
                     signal.score = round(signal.score + bonus, 1)
                     signal.reasons.append(
