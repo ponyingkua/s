@@ -28,6 +28,16 @@ TF_MINUTES = {
 }
 
 
+def get_warmup(cfg: dict, fallback: int = 250) -> int:
+    """
+    Jumlah bar warm-up sebelum backtest mulai cari sinyal. Dibaca dari
+    scanning.min_history_bars di config.yaml supaya konsisten dengan
+    syarat history minimum yang dipakai scanner.py (run_scan), bukan
+    angka hardcode terpisah yang gampang divergen dari config.
+    """
+    return int(cfg.get("scanning", {}).get("min_history_bars", fallback))
+
+
 def limit_for_days(timeframe: str, days: float, warmup: int = 250) -> int:
     minutes = TF_MINUTES.get(timeframe, 60)
     trading_bars = int(days * 24 * 60 / minutes)
@@ -116,7 +126,7 @@ def _build_mtf_direction_series(
     other_tf: str,
     symbol: str,
     cfg: dict,
-    warmup: int = 250,
+    warmup: int | None = None,
     regime_series: pd.Series | None = None,
 ) -> pd.Series:
     """
@@ -127,6 +137,7 @@ def _build_mtf_direction_series(
     if other_df is None or other_df.empty:
         return pd.Series("NONE", index=primary_df.index)
 
+    warmup = warmup if warmup is not None else get_warmup(cfg)
     ind_other = compute_indicators(other_df, cfg)
     # Pre-compute direction for every bar on the other TF (after warmup)
     directions = []
@@ -184,18 +195,38 @@ def backtest_symbol(
     symbol: str,
     cfg: dict,
     timeframe: str = "",
-    warmup: int = 250,
+    warmup: int | None = None,
     regime_series: pd.Series | None = None,
     mtf_direction_map: dict[str, pd.Series] | None = None,
 ) -> list[Trade]:
     """
     mtf_direction_map: optional dict of {other_tf: Series of directions aligned to df}.
     When present, MTF agreement bonus is applied exactly like in the live scanner.
+
+    Catatan paritas dengan live scanner (run_scan di scanner.py):
+    - cooldown_hours DIREPLIKASI di bawah (per arah, dalam simbol+timeframe ini),
+      supaya backtest tidak mengambil sinyal beruntun yang sebenarnya akan
+      ditahan cooldown di live.
+    - max_signals_per_regime_episode TIDAK direplikasi. Limit itu bersifat
+      lintas-simbol dan lintas-run (dihitung dari state persisten di
+      signal_state.json, digabung dari semua simbol dalam satu scan), jadi
+      tidak bisa direkonstruksi secara bermakna di backtest satu simbol.
+      Untuk simbol yang sinyalnya searah dengan regime_gated_direction, hasil
+      backtest bisa menunjukkan frekuensi trade sedikit lebih tinggi daripada
+      yang live akan izinkan.
     """
     trades: list[Trade] = []
     fee_pct = cfg.get("backtest", {}).get("fee_round_trip_pct", 0.0)
     mtf_weight = cfg.get("scoring", {}).get("weights", {}).get("mtf_agreement", 0)
+    cooldown_hours = cfg.get("scanning", {}).get("cooldown_hours", 0)
+    warmup = warmup if warmup is not None else get_warmup(cfg)
     ind = compute_indicators(df, cfg)
+
+    # Cooldown state in-memory: kapan terakhir kali arah ini diambil sebagai
+    # sinyal, di simbol+timeframe ini. Tidak pakai is_in_cooldown/mark_signaled
+    # dari scanner.py karena keduanya berbasis datetime.now() (wall clock),
+    # sedangkan di sini waktunya harus mengikuti waktu candle historis.
+    last_signal_time: dict[str, pd.Timestamp] = {}
 
     i = warmup
     while i < len(df) - 1:
@@ -208,6 +239,13 @@ def backtest_symbol(
         if regime_series is not None:
             regime = regime_series.iloc[i]
             if not passes_regime_filter(signal.direction, regime, cfg):
+                i += 1
+                continue
+
+        signal_time = df["close_time"].iloc[i] if "close_time" in df.columns else None
+        if cooldown_hours and signal_time is not None:
+            last_t = last_signal_time.get(signal.direction)
+            if last_t is not None and (signal_time - last_t) < pd.Timedelta(hours=cooldown_hours):
                 i += 1
                 continue
 
@@ -230,12 +268,15 @@ def backtest_symbol(
             i += 1
             continue
 
-        risk = abs(signal.entry - signal.sl)
-        reward = abs(signal.tp - signal.entry)
-        rr_min = cfg["risk"]["risk_reward_min"]
-        if risk == 0 or (reward / risk) < rr_min - 1e-6:
+        # Pakai passes_risk_filter yang sama dengan live scanner (bukan
+        # reimplement manual), supaya validasi no_entry/nan_price/invalid_order/
+        # zero_risk/rr_too_low selalu match kalau logikanya berubah di scanner.py.
+        if not passes_risk_filter(signal, cfg):
             i += 1
             continue
+
+        if cooldown_hours and signal_time is not None:
+            last_signal_time[signal.direction] = signal_time
 
         future = df.iloc[i + 1 :].reset_index(drop=True)
         tie_break = cfg.get("backtest", {}).get("intrabar_tie_break", "conservative")
@@ -402,9 +443,10 @@ def _build_mtf_map(
     mtf_dfs: dict[str, pd.DataFrame],
     symbol: str,
     cfg: dict,
-    warmup: int = 250,
+    warmup: int | None = None,
     regime_series: pd.Series | None = None,
 ) -> dict[str, pd.Series]:
+    warmup = warmup if warmup is not None else get_warmup(cfg)
     mtf_map = {}
     for tf, odf in mtf_dfs.items():
         other_regime = None
@@ -483,8 +525,13 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
         f.write(
             "\n> Dihasilkan otomatis lewat GitHub Actions workflow_dispatch. "
             "Detail per-trade ada di `trades_raw.json`. "
-            "SUDAH termasuk market regime filter + MTF agreement bonus "
-            "(kalau diaktifkan di config / flag --mtf).\n"
+            "SUDAH termasuk: market regime filter, MTF agreement bonus "
+            "(kalau diaktifkan di config / flag --mtf), dan cooldown_hours "
+            "per arah (sama seperti live scanner). BELUM termasuk: "
+            "`max_signals_per_regime_episode` — limit itu lintas-simbol dan "
+            "lintas-run di live scanner sehingga tidak direplikasi di sini; "
+            "untuk simbol yang searah dengan regime_gated_direction, frekuensi "
+            "trade live bisa sedikit lebih rendah dari yang ditunjukkan backtest ini.\n"
         )
 
 
@@ -597,7 +644,12 @@ def _write_batch_report(
         "> ⚠️ Angka gabungan lebih bisa dipercaya dibanding angka per-simbol "
         "individual, tapi tetap bukan jaminan performa live — belum "
         "memperhitungkan slippage atau funding rate. "
-        "Regime filter + MTF agreement bonus SUDAH termasuk (kalau diaktifkan). "
+        "Regime filter, MTF agreement bonus, dan cooldown_hours per arah SUDAH "
+        "termasuk (kalau diaktifkan). BELUM termasuk `max_signals_per_regime_episode` "
+        "— limit cluster-sinyal itu bersifat lintas-simbol & lintas-run di live "
+        "scanner, sehingga tidak direplikasi di backtest per-simbol ini; angka "
+        "\"jumlah trade\" gabungan di atas bisa sedikit lebih optimis dari yang "
+        "live akan izinkan untuk simbol-simbol yang searah regime. "
         "Baris \"tie\" di atas menunjukkan seberapa besar hasil bergantung pada "
         "asumsi tie-break intrabar (lihat `backtest.intrabar_tie_break` di config.yaml)."
     )
@@ -631,10 +683,11 @@ def main():
 
     use_mtf = args.mtf and not args.no_mtf
 
-    limit = limit_for_days(args.timeframe, args.days) if args.days is not None else args.limit
+    warmup = get_warmup(cfg)
+    limit = limit_for_days(args.timeframe, args.days, warmup=warmup) if args.days is not None else args.limit
     if args.days is not None:
         print(f"--days {args.days} @ {args.timeframe} -> --limit {limit} "
-              f"({args.days:.0f} hari trading + 250 warmup)")
+              f"({args.days:.0f} hari trading + {warmup} warmup, dari scanning.min_history_bars)")
     if use_mtf:
         print("MTF agreement bonus: AKTIF")
     else:
