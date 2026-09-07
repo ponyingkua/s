@@ -43,53 +43,60 @@ scoring:
     rsi_confluence: 18
     mtf_agreement: 20
     adx_strength: 15
-  # mtf_agreement TIDAK lagi otomatis "selalu bagus" — lihat
-  # mtf_agreement_excluded_setups di bawah untuk pengecualian EXTENDED.
+  # mtf_agreement TIDAK otomatis "selalu bagus" — lihat
+  # mtf_agreement_excluded_setups di bawah.
   #
-  # Setup_bonus di-tuning ulang berdasarkan backtest GABUNGAN 1564 trade
-  # tertutup (15m/1h/4h, 10 simbol, trades-raw-batch-{15m,1h,4h}.json,
-  # Feb-Sep 2026), dipecah per timeframe x direction x setup_type — bukan
-  # cuma per setup_type flat seperti sebelumnya, karena datanya menunjukkan
-  # flat itu menyembunyikan asimetri besar antar arah:
-  #   EXTENDED  15m LONG : n=170 avg R -0.333 sum -56.56  -> chasing pump, TERBURUK
-  #             1h  LONG : n=96  avg R -0.224 sum -21.51
-  #             15m SHORT: n=191 avg R +0.010 sum +1.91   -> netral, momentum turun lanjut
-  #             1h  SHORT: n=76  avg R +0.092 sum +6.96   -> positif
-  #             4h  SHORT: n=16  avg R -0.329 sum -5.26   -> sampel kecil, tetap negatif
-  #   CONTINUATION (semua arah digabung, sampel per-arah kecil): net rugi di
-  #             semua TF, terburuk di 4h (n=53 avg R -0.207 sum -10.95)
-  #   BREAKOUT  1h (LONG+SHORT): n=94 avg R +0.283 sum +26.60 -> jauh terbaik,
-  #             LONG-nya sendiri n=27 avg R +0.520
-  #             TF lain: 15m n=169 avg R +0.112, 4h n=32 avg R -0.037 (kecil, campur)
-  #   PULLBACK: bonus flat +4 lama membuat populasi nyaris impas (~breakeven),
-  #             diturunkan ke 0 di semua arah/TF
-  # Simulasi ulang skema di bawah atas 1564 trade historis: sum R -108.05 ->
-  # +30.24 (avg R -0.069 -> +0.026), volume trade tersisa ~74%. Precedence
-  # lookup (paling spesifik menang): [timeframe][direction][setup] >
-  # [timeframe][setup] > [direction][setup] > [setup] flat.
+  # setup_bonus di-tuning dari backtest gabungan 1496 trade tertutup
+  # (15m/1h/4h, 10 simbol, Feb-Sep 2026, trades-raw-batch-{15m,1h,4h}.json).
+  # Precedence lookup (paling spesifik menang): [timeframe][direction][setup]
+  # > [timeframe][setup] > [direction][setup] > [setup] flat.
+  # Perubahan dari tuning sebelumnya (data lama sudah tidak representatif
+  # setelah regime_filter.short_mode pindah ke "not_bull" — volume SHORT jauh
+  # lebih besar sekarang):
+  #   - SHORT EXTENDED di 15m & 1h dulu dikira netral/positif, di data baru ini
+  #     malah net rugi (15m n=425 avg R -0.057, 1h n=169 avg R -0.086) — bonus
+  #     dibalik dari fallback +3 jadi negatif per-TF di bawah.
+  #   - CONTINUATION di 4h (hampir semua LONG, n=30 avg R -0.387) tetap
+  #     terburuk meski sudah dipenalti -28; dinaikkan lagi sampai efektif
+  #     menyaring hampir semua kandidatnya.
+  #   - CONTINUATION di 15m (n=69 avg R -0.246) dapat override TF baru,
+  #     dari fallback -18.
+  #   - BREAKOUT di 4h (LONG n=14 avg R -0.122, SHORT n=22 avg R -0.082) tidak
+  #     mewarisi keunggulan BREAKOUT 15m/1h — bonus TF ini dilepas ke 0.
   # CATATAN: ini hasil in-sample dari satu window backtest (bukan
   # out-of-sample tervalidasi) — cek ulang setelah ada data baru, terutama
-  # angka-angka dengan n kecil (4h SHORT EXTENDED n=16, 4h BREAKOUT n=32).
+  # kombinasi bersampel kecil (4h secara umum punya n paling tipis).
   setup_bonus:
     breakout: 8
-    pullback: 0        # dari 4 — populasi pullback nyaris impas, bukan edge positif
-    continuation: -18  # dari -12 — net rugi di semua TF
-    extended: -8       # dipakai sbg fallback (mis. 4h LONG, TF tanpa override eksplisit)
+    pullback: 0
+    continuation: -18
+    extended: -8
     long:
-      extended: -22    # LONG EXTENDED net rugi besar di semua TF (fallback sebelum override TF)
+      extended: -22
     short:
-      extended: 3      # SHORT EXTENDED netral/positif di 15m & 1h (lihat override 4h di bawah)
+      extended: 3
     "15m":
       long:
-        extended: -40  # kombinasi terburuk secara mutlak (n=170, sum R -56.56)
-    "1h":
-      breakout: 16     # kombinasi terbaik secara mutlak (n=94, avg R +0.283)
-    "4h":
-      continuation: -28  # continuation paling parah di 4h (n=53, avg R -0.207)
+        extended: -40
       short:
-        extended: -6     # override "short.extended: 3" di atas — sampel 4h (n=16) masih negatif
+        extended: -8    # dari fallback +3 — net rugi di data baru (n=425, avg R -0.057)
+      continuation: -24  # dari fallback -18 — LONG-nya sendiri (n=69) avg R -0.246
+    "1h":
+      breakout: 16
+      short:
+        extended: -4    # dari fallback +3 — net rugi di data baru (n=169, avg R -0.086)
+    "4h":
+      continuation: -35  # dari -28 — tetap avg R -0.387 (n=30) meski sudah dipenalti
+      breakout: 0        # dari fallback +8 — BREAKOUT 4h tidak profitable (LONG n=14 avg R -0.122, SHORT n=22 avg R -0.082)
+      short:
+        extended: -6
+  # BREAKOUT ditambahkan ke daftar ini: sinyal yang "disetujui" TF lain
+  # avg R-nya jauh lebih buruk (avg R -0.201, n=22) dibanding yang tidak
+  # (avg R +0.179, n=273) — pola sama seperti EXTENDED, MTF agreement di sini
+  # menandakan telat masuk rame-rame, bukan konfirmasi kualitas.
   mtf_agreement_excluded_setups:
-    - extended  # trade EXTENDED yg "disetujui" TF lain avg R-nya malah lebih buruk (lihat get_setup_bonus di scanner.py)
+    - extended
+    - breakout
   min_score_to_trigger: 63
   min_trend_alignment: 2
   min_direction_margin: 8
@@ -148,22 +155,22 @@ regime_filter:
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 27
-  # PERUBAHAN: dari "bear_only" -> "not_bull". Temuan kunci dari 947 trade
-  # backtest (10 simbol x 3 TF, Mar-Sep 2026): SHORT = 0 trade sama sekali.
-  # Dengan "bear_only", SHORT cuma boleh kalau regime BTC 4h = BEAR (ADX>=27,
-  # EMA & Supertrend sama-sama turun) — kondisi itu rupanya nyaris tidak pernah
-  # terjadi sepanjang 6 bulan data ini, jadi sisi SHORT jadi mati total meski
-  # ada altcoin yang boleh jadi punya struktur turun sendiri saat BTC ranging.
-  # "not_bull" membolehkan SHORT saat regime BEAR ATAU NEUTRAL (cuma diblokir
-  # saat BTC jelas-jelas BULL) — lebih seimbang, tapi CATATAN: karena SHORT
-  # tidak pernah aktif di data lama, performa mode baru ini belum tervalidasi
-  # lewat backtest. Uji ulang (backtest.py --batch) sebelum percaya penuh, dan
-  # kembalikan ke "bear_only" kalau ternyata SHORT di regime NEUTRAL hasilnya jelek.
+  # "not_bull" (bukan "bear_only") supaya SHORT juga boleh di regime NEUTRAL,
+  # tidak cuma BEAR murni — BEAR murni (ADX>=27, EMA & Supertrend BTC 4h
+  # sama-sama turun) nyaris tidak pernah terjadi, jadi "bear_only" mematikan
+  # sisi SHORT total. Sudah divalidasi lewat backtest gabungan 1496 trade
+  # (Feb-Sep 2026): SHORT jadi mayoritas volume (1054/1496) dan net positif
+  # (sum R +30.35) setelah tuning setup_bonus di atas.
   short_mode: "not_bull"
   long_mode: "bull_only"
 
 symbol_filter:
-  blacklist: []
+  # DOGEUSDT: net rugi paling besar & paling konsisten dari 10 simbol backtest
+  # (n=149, avg R -0.141, sum R -21.03 dari total sum R -39.06 sebelum
+  # perbaikan setup_bonus di atas — lebih dari separuh kerugian portofolio
+  # berasal dari satu simbol ini).
+  blacklist:
+    - DOGEUSDT
 
 notify:
   telegram:
