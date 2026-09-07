@@ -112,14 +112,21 @@ def format_price(value: float, decimals: int) -> str:
 
 
 def _place_level_labels(ax, levels: list, label_x: float) -> None:
+    # Kotak solid berwarna sesuai level (entry/tp/sl), teks putih tebal di
+    # dalamnya supaya tetap terbaca jelas dan menonjol di layar kecil (HP).
     for item in levels:
         ax.text(
-            label_x, item["level"], f" {item['text']} ",
-            color="#F2F2F2",  # hitam (sama dengan background)
-            bbox=dict(facecolor=item["color"], edgecolor="none",
-                      boxstyle="round,pad=0.32", alpha=0.95),
-            va="center", ha="left", fontweight="bold", fontsize=8,
+            label_x, item["level"], item["text"],
+            color=TEXT,
+            va="center", ha="left", fontweight="bold", fontsize=9.5,
             zorder=8, clip_on=False,
+            bbox=dict(
+                boxstyle="square,pad=0.35",
+                facecolor=item["color"],
+                edgecolor=item["color"],
+                linewidth=0,
+                alpha=0.92,
+            ),
         )
 
 
@@ -711,10 +718,10 @@ def build_chart(
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
               fontsize=7, color=AXIS, ha="left", va="bottom")
-    fig.text(0.96, 0.027, "ᝰChart-based analysis for educational purposes only,",
-              fontsize=6.5, color=AXIS, ha="right", va="bottom")
-    fig.text(0.96, 0.013, "NOT FINANCIAL ADVICE—do your own research and manage your risk.",
-              fontsize=6.5, color=AXIS, ha="right", va="bottom")
+    fig.text(0.96, 0.032, "⚠️ Chart-based analysis for educational purposes only,",
+              fontsize=7, fontweight="bold", color=TEXT, ha="right", va="bottom")
+    fig.text(0.96, 0.013, "NOT FINANCIAL ADVICE, DYOR.",
+              fontsize=10, fontweight="bold", color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * output_scale)
     plt.close(fig)
