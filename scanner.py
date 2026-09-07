@@ -306,13 +306,8 @@ def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: 
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
-    # overextended_atr_mult: ambang tambahan di ATAS extended_atr_mult. EXTENDED
-    # tetap porsi terbesar dari populasi trade (682/1496, backtest Feb-Sep 2026),
-    # tapi tidak ada data granular seberapa jauh tiap trade dari EMA200 di dalam
-    # bucket itu, jadi ambang ini tetap guardrail berbasis akal sehat (blow-off/
-    # capitulation move) — bukan angka yang sudah divalidasi lewat re-run
-    # backtest. Default cukup longgar supaya cuma menyaring kasus paling ekstrem;
-    # sesuaikan/nonaktifkan (set sangat tinggi) kalau ternyata terlalu agresif.
+    # Ambang tambahan di ATAS extended_atr_mult — guardrail blow-off/capitulation,
+    # belum divalidasi granular per-trade lewat backtest.
     overextended_atr_mult = get_setup_engine_param(
         cfg, "overextended_atr_mult", timeframe, max(extended_atr_mult * 1.8, extended_atr_mult + 2)
     )
@@ -362,9 +357,9 @@ def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: 
       4. setup_bonus[setup_type]  (flat, fallback)
 
     Nilai-nilai di config.yaml (scoring.setup_bonus) di-tuning dari backtest
-    gabungan trade tertutup (15m/1h/4h, 10 simbol) — lihat komentar di sana
-    untuk rincian & angka per kombinasi. Ini hasil in-sample dari satu window
-    backtest, bukan out-of-sample tervalidasi — cek ulang setelah ada data baru.
+    gabungan trade tertutup (15m/1h/4h) — lihat komentar di sana untuk rincian
+    & angka per kombinasi. Ini hasil in-sample dari satu window backtest,
+    bukan out-of-sample tervalidasi — cek ulang setelah ada data baru.
     """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
     st = setup_type.lower()
