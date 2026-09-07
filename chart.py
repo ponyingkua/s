@@ -147,12 +147,12 @@ def _draw_candles(ax, df: pd.DataFrame) -> list:
     return colors
 
 
-def _draw_volume(ax, df: pd.DataFrame, colors: list) -> None:
+def _draw_volume(ax, df: pd.DataFrame, colors: list, vol_ma_lookback: int = 20) -> None:
     for i in range(len(df)):
         ax.bar(i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
                width=CANDLE_WIDTH, linewidth=0, zorder=2)
 
-    vol_ma = df["volume"].rolling(20, min_periods=1).mean()
+    vol_ma = df["volume"].rolling(vol_ma_lookback, min_periods=1).mean()
     ax.plot(range(len(df)), vol_ma, color=VOLUME_MA, linewidth=1.2,
              alpha=0.80, zorder=3)
 
@@ -594,8 +594,7 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2000)
-    # Rasio output dikunci 20:9 ≈ 2.22:1 (height_ratio = tinggi/lebar = 9/20).
-    height_ratio = 9 / 20
+    height_ratio = chart_cfg.get("height_ratio", 9 / 20)
     dpi = 150
     output_scale = 1  # output final 1x, layout/proporsi tidak berubah
     fig_w = width_px / dpi
@@ -682,7 +681,8 @@ def build_chart(
 
     _place_level_labels(ax_price, levels, label_x)
 
-    _draw_volume(ax_vol, plot_df, colors)
+    vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
+    _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
     ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
     ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
 
@@ -704,15 +704,7 @@ def build_chart(
     )
     legend.get_frame().set_linewidth(0.7)
 
-    # Risk:Reward menggantikan Score di header (lebih relevan buat pembaca chart).
-    rr_text = None
-    if signal.entry is not None and signal.sl is not None and signal.tp is not None:
-        risk = abs(signal.entry - signal.sl)
-        reward = abs(signal.tp - signal.entry)
-        if risk > 0:
-            rr_text = f"RR 1:{reward / risk:.2f}"
-
-    header_extra = rr_text if rr_text else pd.Timestamp.utcnow().strftime("Updated %d %b %H:%M UTC")
+    header_extra = pd.Timestamp.utcnow().strftime("Updated %d %b %H:%M UTC")
     setup_label = f"  ·  {signal.setup_type}" if signal.setup_type else ""
 
     fig.text(0.07, 0.965,
