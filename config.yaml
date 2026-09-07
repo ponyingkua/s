@@ -44,68 +44,12 @@ scoring:
     mtf_agreement: 15
     adx_strength: 15
   setup_bonus:
-    "15m":
-      long:
-        breakout: 8
-        pullback: 12
-        continuation: -20
-        extended: -60
-      short:
-        breakout: 18
-        pullback: 8
-        continuation: -18
-        extended: -50
-    "1h":
-      long:
-        breakout: 12
-        # Backtest terbaru (bull_only, n=13): 1h PULLBACK 23.1% WR / avgR -0.360,
-        # jelas paling lemah di antara semua kombinasi TF+setup. Dulu ini juga
-        # di-hard-block lewat setup_engine.block_setups; sekarang hard-block-nya
-        # dihapus (biar EXTENDED/4h-BREAKOUT/1h-PULLBACK konsisten difilter
-        # lewat skor, bukan diveto total) jadi angkanya perlu benar-benar
-        # negatif, bukan cuma diturunkan sedikit dari default.
-        pullback: -25
-        continuation: -18
-        extended: -45
-      short:
-        breakout: 10
-        pullback: 6
-        continuation: -18
-        extended: -40
-    "4h":
-      long:
-        # Backtest terbaru (bull_only, n=6): 4h BREAKOUT 16.7% WR / avgR -0.556,
-        # kombinasi terlemah kedua. Sama seperti 1h PULLBACK di atas — dulu
-        # hard-blocked, sekarang murni penalti skor.
-        breakout: -25
-        pullback: 8
-        continuation: -15
-        extended: -25
-      short:
-        breakout: 10
-        pullback: 8
-        continuation: -20
-        extended: -20
-    long:
-      breakout: 12
-      pullback: 8
-      continuation: -15
-      extended: -25
-    short:
-      breakout: 0
-      pullback: -15
-      continuation: -25
-      extended: -35
+    breakout: 5
+    pullback: 0
+    continuation: -8
+    extended: 0
   min_score_to_trigger: 63
   min_trend_alignment: 2
-  # Dengan bobot ema_trend(20)/macd_cross(18)/supertrend(25), margin arah cuma
-  # bisa 4 nilai: 13, 23, 27, atau 63 — gak pernah ada nilai di antara 0-13.
-  # min_direction_margin=15 kemarin nolak SEMUA kasus margin=13 (ema+macd
-  # sepakat, supertrend beda arah) - padahal itu bukan kasus "ambigu", cuma
-  # kebetulan jatuh di bawah 15. Diturunkan ke bawah 13 biar gak nolak split
-  # 2-1 yang sah; min_trend_alignment=2 sendiri sudah otomatis selalu
-  # terpenuhi untuk arah yang menang (kombinasi 2 bobot terendah manapun >
-  # bobot tunggal tertinggi), jadi dibiarkan sebagai dokumentasi niat.
   min_direction_margin: 8
 
 risk:
@@ -115,9 +59,6 @@ risk:
   adx_min: 21
   adx_strong: 35
   structure_sl_max_atr_mult: 2.5
-  # Cap khusus setup BREAKOUT — dibuat lebih longgar dari cap generik di atas
-  # (lihat komentar di scanner.py score_at()) karena stop breakout secara
-  # alami lebih lebar tanpa berarti struktur salah baca.
   structure_sl_max_atr_mult_breakout: 3.5
   reject_structural_stop_too_wide: true
   max_signals_per_regime_episode: 2
@@ -129,14 +70,6 @@ setup_engine:
   breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
   structure_sl_buffer_atr_mult: 0.25
-  # Lookback buat cari level resistance/support riil sebagai kandidat TP.
-  # Dulu ada 1 nilai global (40) yang niatnya cuma fallback "kalau TF tidak
-  # override" - tapi get_setup_engine_param() cek dict per-TF DULU, baru
-  # jatuh ke sini. Karena key global ini selalu ada, default python
-  # (struct_lookback*2) di score_at() jadi tidak pernah kepakai sama sekali:
-  # semua TF diam-diam pakai 40 bar, termasuk 4h yang seharusnya 60 (30*2)
-  # dan 1h yang seharusnya 50 (25*2). Sekarang di-override eksplisit per TF
-  # di bawah supaya nilainya benar-benar sesuai lookback masing-masing TF.
   target_lookback: 40
   "15m":
     structure_lookback: 40
@@ -150,24 +83,12 @@ setup_engine:
     breakout_buffer_atr_mult: 0.10
     extended_atr_mult: 3.0
     target_lookback: 50
-    # Sempat dicoba pullback_atr_mult: 0.8 di sini (dari global 1.0), tapi
-    # re-backtest (n=9) malah lebih jelek: 0.8 memfilter keluar ADAUSDT yang
-    # justru winner (+2.02R), bukan cuma loss-nya. Dibalikin ke default
-    # global 1.0 (dengan menghapus override ini). Sampel masih kecil jadi
-    # belum tentu 1.0 optimal juga — kalau mau tuning lagi, kumpulkan
-    # sampel lebih besar dulu sebelum ubah ambang ini lagi.
   "4h":
     structure_lookback: 30
     stop_lookback: 6
     breakout_buffer_atr_mult: 0.08
-    # EMA200 di 4h jauh lebih lambat mengikuti trend kuat, jadi butuh
-    # ambang lebih longgar biar trend sehat tidak salah ke-tag EXTENDED
     extended_atr_mult: 4.5
     target_lookback: 60
-    # Sama alasan seperti di atas, tapi 4h PULLBACK bahkan lebih lemah
-    # relatif (33.3% WR tapi avgR -0.104, hampir breakeven negatif) karena
-    # EMA200 di 4h mencakup rentang harga jauh lebih lebar per unit ATR.
-    # Diperketat lebih agresif dari 1h. PERLU re-backtest.
     pullback_atr_mult: 0.6
 
 regime_filter:
@@ -175,23 +96,7 @@ regime_filter:
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 27
-  # short_mode was "bear_only": SHORT only allowed when BTC 4h is
-  # simultaneously EMA-down + Supertrend-down + ADX>=27. Across all 3
-  # backtest batches (558 trades, Feb-Sep 2026) that condition never once
-  # occurred, so direction=SHORT was filtered out 100% of the time and the
-  # short side of the engine has effectively never been tested. "not_bull"
-  # keeps SHORT blocked in a real BULL regime but lets it through in BEAR
-  # and NEUTRAL so it can finally accumulate a sample.
-  short_mode: "not_bull"
-  # long_mode was "bull_or_neutral": LONG was allowed any time BTC wasn't
-  # in a clean BEAR, i.e. almost always (this is why 100% of trades ended
-  # up LONG). The monthly breakdown of the same backtests shows win rate
-  # collapsing to ~20-29% in months that were likely NEUTRAL/choppy on BTC
-  # (Mar-Jul 2026) vs 35-50% in the more clearly trending months
-  # (Feb, Aug-Sep). Restricting LONG to a confirmed BULL regime is a
-  # direct, testable response to that pattern — re-run backtest.py after
-  # this change and compare win rate / avg R and trade count before
-  # keeping it.
+  short_mode: "bear_only"
   long_mode: "bull_only"
 
 symbol_filter:
@@ -206,8 +111,6 @@ notify:
 backtest:
   fee_round_trip_pct: 0.001
   intrabar_tie_break: "conservative"
-  # 0 = no timeout.  A finite holding period prevents a position that never
-  # reaches SL/TP from silently disappearing for weeks in the report.
   max_holding_bars: 64
 
 chart:
@@ -229,6 +132,3 @@ chart:
     tp: "#2ecc71"
     zone_fill: "#3498db"
     zone_alpha: 0.12
-
-storage:
-  db_path: "data/vsynapse.db"
