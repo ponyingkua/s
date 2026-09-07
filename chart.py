@@ -718,10 +718,10 @@ def build_chart(
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
               fontsize=6, color=AXIS, ha="left", va="bottom")
-    fig.text(0.96, 0.032, "⚠️ Chart-based analysis, for educational purposes only,",
+    fig.text(0.96, 0.032, "⚠️ Chart-based analysis,for educational purposes only,",
               fontsize=7, color=TEXT, ha="right", va="bottom")
     fig.text(0.96, 0.013, "NOT FINANCIAL ADVICE, DYOR.",
-              fontsize=10, fontweight="bold", color=TEXT, ha="right", va="bottom")
+              fontsize=10, color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * output_scale)
     plt.close(fig)
