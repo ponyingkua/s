@@ -1,1 +1,80 @@
-[]
+[
+  {
+    "symbol": "MINIMAXUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (40.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)"
+    ],
+    "entry": 42.21,
+    "sl": 43.462792,
+    "tp": 39.954974
+  },
+  {
+    "symbol": "HK1810USDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "ADX (40.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)"
+    ],
+    "entry": 27.07,
+    "sl": 27.456752,
+    "tp": 26.373846
+  },
+  {
+    "symbol": "PENGUUSDT",
+    "direction": "SHORT",
+    "score": 64.1,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (38) menguatkan momentum turun",
+      "ADX (30.4) tren kuat (+10.1 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)"
+    ],
+    "entry": 0.008219,
+    "sl": 0.008458,
+    "tp": 0.007788
+  },
+  {
+    "symbol": "KITEUSDT",
+    "direction": "SHORT",
+    "score": 63.7,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (26.3) tren kuat (+5.7 skor)",
+      "Setup terdeteksi: BREAKOUT (-10 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 0.11689,
+    "sl": 0.120735,
+    "tp": 0.109969
+  }
+]

@@ -1015,5 +1015,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T10:15:32.552752+00:00"
+  },
+  "MINIMAXUSDT|1h": {
+    "symbol": "MINIMAXUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T12:18:52.562355+00:00"
+  },
+  "HK1810USDT|1h": {
+    "symbol": "HK1810USDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T12:18:55.849617+00:00"
+  },
+  "PENGUUSDT|1h": {
+    "symbol": "PENGUUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T12:18:57.472546+00:00"
+  },
+  "KITEUSDT|1h": {
+    "symbol": "KITEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T12:18:59.196394+00:00"
   }
 }
