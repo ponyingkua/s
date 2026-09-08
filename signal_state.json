@@ -62,7 +62,7 @@
     "symbol": "PENGUUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-08T12:18:57.472546+00:00"
+    "timestamp": "2026-09-08T22:04:37.963441+00:00"
   },
   "KITEUSDT|1h": {
     "symbol": "KITEUSDT",
@@ -111,5 +111,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T20:48:01.430410+00:00"
+  },
+  "HEMIUSDT|15m": {
+    "symbol": "HEMIUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T22:04:40.787499+00:00"
   }
 }

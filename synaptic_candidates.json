@@ -8462,5 +8462,48 @@
     "sl": 0.053671,
     "tp": 0.051876,
     "scanned_at": "2026-09-08T20:46:47.509594+00:00"
+  },
+  {
+    "symbol": "PENGUUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "ADX (37.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 0.008055,
+    "sl": 0.008389,
+    "tp": 0.007453,
+    "scanned_at": "2026-09-08T22:03:47.964885+00:00"
+  },
+  {
+    "symbol": "HEMIUSDT",
+    "direction": "SHORT",
+    "score": 66.3,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (32), tidak menambah skor",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (28.7) tren kuat (+8.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.007715,
+    "sl": 0.008133,
+    "tp": 0.006962,
+    "scanned_at": "2026-09-08T22:03:47.964885+00:00"
   }
 ]
