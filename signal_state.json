@@ -8,19 +8,19 @@
     "symbol": "XAUUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-08T16:41:51.769534+00:00"
+    "timestamp": "2026-09-08T20:48:00.087963+00:00"
   },
   "PAXGUSDT|4h": {
     "symbol": "PAXGUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-08T16:41:48.306231+00:00"
+    "timestamp": "2026-09-08T20:47:56.519401+00:00"
   },
   "XAUTUSDT|4h": {
     "symbol": "XAUTUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-08T16:41:50.424803+00:00"
+    "timestamp": "2026-09-08T20:47:58.741921+00:00"
   },
   "JASMYUSDT|1h": {
     "symbol": "JASMYUSDT",
@@ -105,5 +105,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T17:14:36.695020+00:00"
+  },
+  "1000LUNCUSDT|15m": {
+    "symbol": "1000LUNCUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T20:48:01.430410+00:00"
   }
 }
