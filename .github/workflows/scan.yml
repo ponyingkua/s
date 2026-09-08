@@ -8,7 +8,7 @@ on:
       chart_format:
         description: "Format chart yang dikirim ke Telegram"
         required: false
-        default: "wide"
+        default: "square"
         type: choice
         options:
           - wide
