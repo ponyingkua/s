@@ -65,15 +65,6 @@ BOS_BEAR = DOWN
 ARROW_BULL = UP
 ARROW_BEAR = DOWN
 
-# Invalidation mode: ungu supaya tidak ketukar dengan ENTRY (biru),
-# TP (teal), atau SL (merah) yang sudah dipakai duluan.
-INVALID = "#AB47BC"
-INVALID_FILL = "#AB47BC"
-
-# Highlighted area (fitur konten: tandai zona/rentang harga untuk storytelling)
-HIGHLIGHT_FILL = "#4FC3F7"
-HIGHLIGHT_EDGE = "#4FC3F7"
-
 # Palet garis untuk comparison chart (multi-simbol), berurutan supaya tiap
 # simbol dapat warna beda dan tetap kebaca di background gelap.
 COMPARE_PALETTE = [
@@ -127,6 +118,42 @@ def format_price(value: float, decimals: int) -> str:
     return f"{float(value):.{int(decimals)}f}"
 
 
+def _calc_24h_change(df: pd.DataFrame) -> float | None:
+    """Persentase perubahan harga 24 jam terakhir, dihitung langsung dari
+    kline yang sudah di-fetch (tanpa request tambahan ke API). None kalau
+    histori yang tersedia belum menutup 24 jam penuh."""
+    if "open_time" not in df.columns or len(df) < 2:
+        return None
+    last_time = df["open_time"].iloc[-1]
+    last_close = float(df["close"].iloc[-1])
+    target_time = last_time - pd.Timedelta(hours=24)
+    if df["open_time"].iloc[0] > target_time:
+        return None
+    ref_rows = df[df["open_time"] <= target_time]
+    if ref_rows.empty:
+        return None
+    ref_close = float(ref_rows["close"].iloc[-1])
+    if ref_close == 0:
+        return None
+    return (last_close / ref_close - 1.0) * 100.0
+
+
+def _draw_change_badge(fig, x: float, y: float, change_pct: float | None,
+                        fontsize: float = 15) -> None:
+    """Badge % perubahan 24 jam, kotak solid warna hijau/merah di pojok
+    header -- menggantikan posisi teks 'Updated ...' yang lama."""
+    if change_pct is None:
+        return
+    color = UP if change_pct >= 0 else DOWN
+    text = f"{change_pct:+.2f}%  24H"
+    fig.text(
+        x, y, text, fontsize=fontsize, fontweight="bold", color=TEXT,
+        ha="right", va="top", zorder=10,
+        bbox=dict(boxstyle="round,pad=0.4", facecolor=color, edgecolor=color,
+                   linewidth=0, alpha=0.88),
+    )
+
+
 def _place_level_labels(ax, levels: list, label_x: float, min_gap: float) -> None:
     # Kotak solid berwarna sesuai level (entry/tp/sl), teks putih tebal di
     # dalamnya supaya tetap terbaca jelas dan menonjol di layar kecil (HP).
@@ -163,40 +190,6 @@ def _place_level_labels(ax, levels: list, label_x: float, min_gap: float) -> Non
                 alpha=0.92,
             ),
         )
-
-
-def _draw_highlight_zone(ax, top: float, bottom: float, x_start: float, x_end: float,
-                          label: str | None = None) -> None:
-    """Blok highlight generik untuk kebutuhan konten (mis. tandai zona
-    akumulasi/manipulasi/rentang tertentu). Ditaruh di bawah candle
-    (zorder rendah) supaya candle tetap kebaca di atasnya."""
-    ax.add_patch(Rectangle(
-        (x_start, bottom), x_end - x_start, top - bottom,
-        facecolor=HIGHLIGHT_FILL, edgecolor=HIGHLIGHT_EDGE,
-        alpha=0.14, linewidth=1.0, linestyle=(0, (4, 3)), zorder=0.85,
-    ))
-    if label:
-        ax.text(
-            (x_start + x_end) / 2, (top + bottom) / 2, label,
-            color=HIGHLIGHT_EDGE, fontsize=8.5, fontweight="bold",
-            ha="center", va="center", alpha=0.85, zorder=0.9, clip_on=False,
-        )
-
-
-def _draw_invalidation_zone(ax, invalid_price: float, ref_price: float,
-                             x_start: float, x_end: float) -> None:
-    """Zona bayangan di seberang level invalidation (arah yang berarti
-    setup gagal), murni visual untuk konten -- tidak memengaruhi SL/skor
-    yang dihitung scanner.py. Dipanggil setelah set_ylim supaya blok
-    kebagian penuh sampai tepi chart."""
-    y_low, y_high = ax.get_ylim()
-    is_below = invalid_price < ref_price
-    top = invalid_price if is_below else y_high
-    bottom = y_low if is_below else invalid_price
-    ax.add_patch(Rectangle(
-        (x_start, bottom), x_end - x_start, top - bottom,
-        facecolor=INVALID_FILL, edgecolor="none", alpha=0.09, zorder=0.8,
-    ))
 
 
 def _draw_candles(ax, df: pd.DataFrame) -> list:
@@ -667,17 +660,19 @@ def build_chart(
     cfg: dict,
     out_path: str,
     preset: str = "standard",
-    show_invalidation: bool = False,
-    invalidation_price: float | None = None,
-    highlight: tuple[float, float] | None = None,
-    highlight_label: str | None = None,
     hide_indicators: bool = False,
+    square: bool = False,
 ) -> str:
-    """preset "standard" = perilaku asli (default, tidak berubah).
-    preset "clean" = tanpa zona/BOS/label struktur/entry-tp-sl/panah target,
-    untuk chart bersih konten Binance Square. show_invalidation, highlight,
-    dan hide_indicators independen dari preset -- bisa ditambahkan ke chart
-    manapun."""
+    """Candle + EMA/Supertrend + volume + market structure (zona Demand/
+    Supply, BOS, label HH/HL/LH/LL, panah arah target) selalu digambar.
+    preset="clean" (dipakai jalur CLI/manual) menyembunyikan garis+label
+    ENTRY/TP/SL saja -- signature `signal`/`preset` dipertahankan supaya
+    pemanggilan langsung dari scanner.py (jalur otomatis) tidak perlu
+    berubah; default preset="standard" = ENTRY/TP/SL tetap tampil seperti
+    semula. hide_indicators dan square independen, bisa dipakai kapan saja.
+    square=True membuat kanvas rasio 1:1 (cocok untuk post feed Binance
+    Square/IG)."""
+    show_levels = preset != "clean"
     n_show_max = get_candles_shown(timeframe, cfg)
 
     # Ambil window lebih lebar untuk deteksi structure
@@ -724,7 +719,7 @@ def build_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
-    height_ratio = chart_cfg.get("height_ratio", 9 / 20)
+    height_ratio = 1.0 if square else chart_cfg.get("height_ratio", 9 / 20)
     dpi = 200
     output_scale = 2  # render 2x lalu disimpan di dpi lebih tinggi supaya
                        # hasil PNG lebih tajam; proporsi/layout tidak berubah
@@ -756,8 +751,6 @@ def build_chart(
 
     ax_price.tick_params(labelbottom=False)
 
-    is_clean = preset == "clean"
-
     colors = _draw_candles(ax_price, plot_df)
     if not hide_indicators:
         ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.6,
@@ -772,7 +765,7 @@ def build_chart(
     dec = decimals_from_price(ref_price)
 
     levels = []
-    if not is_clean:
+    if show_levels:
         if signal.entry is not None:
             levels.append({"level": signal.entry, "color": ENTRY,
                             "text": f"ENTRY  {format_price(signal.entry, dec)}"})
@@ -783,39 +776,22 @@ def build_chart(
             levels.append({"level": signal.sl, "color": SL,
                             "text": f"SL  {format_price(signal.sl, dec)}"})
 
-    # Invalidation mode: independen dari preset. Prioritas harga: override
-    # manual (--invalidation-price) > invalidation dari signal kalau
-    # scanner.py suatu saat menyediakannya > fallback ke SL sinyal.
-    invalid_price = None
-    if show_invalidation:
-        invalid_price = invalidation_price
-        if invalid_price is None:
-            invalid_price = getattr(signal, "invalidation", None)
-        if invalid_price is None:
-            invalid_price = signal.sl
-        if invalid_price is not None:
-            levels.append({"level": invalid_price, "color": INVALID,
-                            "text": f"INVALIDATION  {format_price(invalid_price, dec)}"})
-
     for item in levels:
         ax_price.axhline(y=item["level"], color=item["color"], linestyle="--",
                           linewidth=1.0, alpha=0.70, zorder=2)
 
     zone_values = []
-    if not is_clean:
-        for z in structure["zones"]:
-            zone_values.append(z["top"])
-            zone_values.append(z["bottom"])
-
-    highlight_values = list(highlight) if highlight else []
+    for z in structure["zones"]:
+        zone_values.append(z["top"])
+        zone_values.append(z["bottom"])
 
     # Level Supertrend ikut dihitung supaya garisnya tidak ke-clip oleh
     # set_ylim ketika band-nya melebar keluar dari range harga/level/zone.
     st_values = [] if hide_indicators else [v for v in st_level_full.tolist() if pd.notna(v)]
 
     level_values = [item["level"] for item in levels]
-    y_low = min([float(plot_df["low"].min())] + level_values + zone_values + st_values + highlight_values)
-    y_high = max([float(plot_df["high"].max())] + level_values + zone_values + st_values + highlight_values)
+    y_low = min([float(plot_df["low"].min())] + level_values + zone_values + st_values)
+    y_high = max([float(plot_df["high"].max())] + level_values + zone_values + st_values)
     y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
     y_padding = y_span * 0.18
     ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
@@ -829,21 +805,11 @@ def build_chart(
     ax_price.set_xlim(-0.6, last_x + extra_margin)
     ax_vol.set_xlim(-0.6, last_x + extra_margin)
 
-    zone_x_start, zone_x_end = -0.6, last_x + 0.4
-
-    if highlight:
-        top, bottom = max(highlight), min(highlight)
-        _draw_highlight_zone(ax_price, top, bottom, zone_x_start, zone_x_end, highlight_label)
-
-    if invalid_price is not None:
-        _draw_invalidation_zone(ax_price, invalid_price, ref_price, zone_x_start, zone_x_end)
-
     plot_len = len(plot_df)
-    if not is_clean:
-        _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span)
-        _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df)
-        _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
-        _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
+    _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span)
+    _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df)
+    _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
+    _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
 
     label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
     _place_level_labels(ax_price, levels, label_x, label_min_gap)
@@ -873,19 +839,13 @@ def build_chart(
         legend.get_frame().set_linewidth(0.7)
 
     header_extra = pd.Timestamp.now(tz="UTC").strftime("Updated %d %b %H:%M UTC")
-    invalid_tag = "  ·  INVALIDATION" if invalid_price is not None else ""
-
-    if is_clean:
-        # Preset clean sengaja tidak menonjolkan direction/setup sinyal --
-        # tujuannya chart netral buat konten umum, bukan sinyal spesifik.
-        header_title = f"{symbol}  ·  {timeframe}  ·  CLEAN{invalid_tag}  ·  {header_extra}"
-    else:
-        setup_label = f"  ·  {signal.setup_type}" if signal.setup_type else ""
-        header_title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}{invalid_tag}  ·  {header_extra}"
+    setup_label = f"  ·  {signal.setup_type}" if signal.setup_type else ""
+    header_title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}"
 
     fig.text(0.07, 0.965, header_title,
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
-    fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}",
+    _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df))
+    fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
               fontsize=7, color=AXIS, ha="left", va="bottom")
 
     # Disclaimer kanan-bawah: satu blok teks 2 baris, font & alignment
@@ -994,6 +954,8 @@ def build_multi_tf_card(
 
     fig.text(0.045, 0.95, f"{symbol}  ·  MULTI-TIMEFRAME", fontsize=17,
               fontweight="bold", color=TEXT, ha="left", va="top")
+    ref_df = dfs[timeframes[0]]
+    _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=14)
     fig.text(0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}", fontsize=7,
               color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
@@ -1011,15 +973,16 @@ def build_comparison_chart(
     timeframe: str,
     cfg: dict,
     out_path: str,
+    square: bool = False,
 ) -> str:
     """Comparison chart: performa % beberapa simbol dinormalisasi dari
     candle pertama di window yang sama, ditumpuk 1 axes -- untuk konten
-    "mana yang lebih kuat" di Binance Square."""
+    "mana yang lebih kuat" di Binance Square. square=True -> kanvas 1:1."""
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
     dpi = 200
     fig_w = width_px / dpi
-    fig_h = fig_w * (9 / 20)
+    fig_h = fig_w if square else fig_w * (9 / 20)
     fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(PANEL)
@@ -1095,12 +1058,8 @@ async def _fetch_and_build(
     timeframe: str,
     cfg: dict,
     out_path: str,
-    preset: str = "standard",
-    show_invalidation: bool = False,
-    invalidation_price: float | None = None,
-    highlight: tuple[float, float] | None = None,
-    highlight_label: str | None = None,
     hide_indicators: bool = False,
+    square: bool = False,
 ) -> str:
     async with BinanceFuturesClient() as client:
         n_show = get_candles_shown(timeframe, cfg)
@@ -1109,12 +1068,9 @@ async def _fetch_and_build(
     signal = score_symbol(kline.df, symbol, cfg, timeframe=timeframe)
     result_path = build_chart(
         kline.df, symbol, timeframe, signal, cfg, out_path,
-        preset=preset,
-        show_invalidation=show_invalidation,
-        invalidation_price=invalidation_price,
-        highlight=highlight,
-        highlight_label=highlight_label,
+        preset="clean",
         hide_indicators=hide_indicators,
+        square=square,
     )
 
     # Khusus jalur CLI/manual (mis. workflow "Chart Generator (manual)"):
@@ -1153,16 +1109,43 @@ async def _fetch_and_build_multi(symbol: str, timeframes: list, cfg: dict, out_p
 
 async def _fetch_and_build_compare(
     symbols: list, timeframe: str, cfg: dict, out_path: str, lookback: int,
+    square: bool = False,
 ) -> str:
+    # Setiap simbol di-fetch terpisah dan dibungkus try/except sendiri --
+    # kalau satu simbol invalid/gagal (mis. tidak listing di Binance
+    # Futures), simbol lain tetap lanjut diproses alih-alih seluruh mode
+    # compare langsung crash. Simbol yang gagal dicatat lalu dilaporkan
+    # jelas (satu per satu, bukan digabung jadi satu string membingungkan).
     series = {}
+    failed = []
     async with BinanceFuturesClient() as client:
         for sym in symbols:
-            kline = await client.get_klines(sym, timeframe, limit=lookback + 5)
+            try:
+                kline = await client.get_klines(sym, timeframe, limit=lookback + 5)
+            except Exception as exc:
+                failed.append((sym, str(exc)))
+                print(f"Lewati {sym}: gagal mengambil klines ({exc})")
+                continue
             series[sym] = kline.df.tail(lookback).reset_index(drop=True)
 
-    result_path = build_comparison_chart(series, symbols, timeframe, cfg, out_path)
+    ok_symbols = [s for s in symbols if s in series]
 
-    caption = "Comparison: " + " vs ".join(symbols) + f" ({timeframe})"
+    if len(ok_symbols) < 2:
+        detail = "; ".join(f"{sym}: {err}" for sym, err in failed) or "tidak ada data"
+        raise RuntimeError(
+            f"Mode compare butuh minimal 2 simbol valid, cuma dapat {len(ok_symbols)}. "
+            f"Detail kegagalan -> {detail}"
+        )
+
+    if failed:
+        skipped = ", ".join(sym for sym, _ in failed)
+        print(f"Compare tetap lanjut tanpa simbol yang gagal: {skipped}")
+
+    result_path = build_comparison_chart(series, ok_symbols, timeframe, cfg, out_path, square=square)
+
+    caption = "Comparison: " + " vs ".join(ok_symbols) + f" ({timeframe})"
+    if failed:
+        caption += "  |  Dilewati: " + ", ".join(sym for sym, _ in failed)
     try:
         await send_telegram_photo(result_path, caption, cfg)
     except Exception as exc:
@@ -1181,10 +1164,11 @@ def main():
     parser.add_argument("--timeframe", default="1h")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--out", default=None)
-    parser.add_argument("--mode", choices=["standard", "clean", "multi", "compare"],
-                          default="standard",
-                          help="standard = chart lengkap (default, tidak berubah). "
-                               "clean = preset bersih tanpa signal/structure markup. "
+    parser.add_argument("--mode", choices=["clean", "multi", "compare"],
+                          default="clean",
+                          help="clean = chart lengkap (candle+EMA/Supertrend+volume+zona Demand/"
+                               "Supply+BOS+label struktur+panah target) tanpa garis ENTRY/TP/SL "
+                               "(default -- mode 'standard' lama sudah digabung ke sini). "
                                "multi = kartu multi-timeframe 1 simbol. "
                                "compare = perbandingan % beberapa simbol.")
     parser.add_argument("--timeframes", default="15m,1h,4h",
@@ -1193,16 +1177,12 @@ def main():
                           help="Dipisah koma, min. 2 simbol, dipakai untuk --mode compare")
     parser.add_argument("--compare-lookback", type=int, default=100,
                           help="Jumlah candle untuk --mode compare")
-    parser.add_argument("--invalidation", action="store_true",
-                          help="Tampilkan garis + zona invalidation (default pakai SL sinyal)")
-    parser.add_argument("--invalidation-price", type=float, default=None,
-                          help="Override manual harga invalidation, mengaktifkan --invalidation otomatis")
-    parser.add_argument("--highlight", default=None,
-                          help="Highlight area harga, format top,bottom mis. 66000,64500")
-    parser.add_argument("--highlight-label", default=None,
-                          help="Label teks untuk area highlight (opsional)")
     parser.add_argument("--hide-indicators", action="store_true",
                           help="Sembunyikan EMA & Supertrend (biasa dipakai bareng --mode clean)")
+    parser.add_argument("--ratio", choices=["wide", "square"], default="wide",
+                          help="wide = rasio asli chart (default). "
+                               "square = kanvas 1:1 untuk post feed Binance Square/IG. "
+                               "Berlaku untuk mode standard/clean/compare.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -1225,29 +1205,19 @@ def main():
         out_path = args.out or f"charts/compare_{'_'.join(symbols)}_{args.timeframe}.png"
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         result_path = asyncio.run(
-            _fetch_and_build_compare(symbols, args.timeframe, cfg, out_path, args.compare_lookback)
+            _fetch_and_build_compare(
+                symbols, args.timeframe, cfg, out_path, args.compare_lookback,
+                square=(args.ratio == "square"),
+            )
         )
 
     else:
-        highlight = None
-        if args.highlight:
-            try:
-                a, b = (float(x) for x in args.highlight.split(","))
-            except ValueError:
-                parser.error("--highlight harus format top,bottom, mis. 66000,64500")
-            else:
-                highlight = (max(a, b), min(a, b))
-
         out_path = args.out or f"charts/{args.symbol.upper()}_{args.timeframe}.png"
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         result_path = asyncio.run(_fetch_and_build(
             args.symbol.upper(), args.timeframe, cfg, out_path,
-            preset=args.mode,
-            show_invalidation=args.invalidation or args.invalidation_price is not None,
-            invalidation_price=args.invalidation_price,
-            highlight=highlight,
-            highlight_label=args.highlight_label,
             hide_indicators=args.hide_indicators,
+            square=(args.ratio == "square"),
         ))
 
     print(f"Chart disimpan ke {result_path}")
