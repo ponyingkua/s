@@ -129,5 +129,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-08T22:41:27.203160+00:00"
+  },
+  "GRAMUSDT|1h": {
+    "symbol": "GRAMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-08T23:04:02.301028+00:00"
+  },
+  "SOXLUSDT|4h": {
+    "symbol": "SOXLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-08T23:04:04.534369+00:00"
+  },
+  "AIOUSDT|1h": {
+    "symbol": "AIOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-08T23:04:05.847168+00:00"
+  },
+  "ETCUSDT|1h": {
+    "symbol": "ETCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-08T23:04:07.242284+00:00"
   }
 }

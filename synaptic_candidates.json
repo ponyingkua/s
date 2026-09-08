@@ -8591,5 +8591,90 @@
     "sl": 170.448144,
     "tp": 187.48,
     "scanned_at": "2026-09-08T22:40:34.275044+00:00"
+  },
+  {
+    "symbol": "GRAMUSDT",
+    "direction": "LONG",
+    "score": 85.7,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (52) menguatkan momentum naik",
+      "ADX (25.4) tren kuat (+4.7 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.05"
+    ],
+    "entry": 1.401,
+    "sl": 1.382476,
+    "tp": 1.439,
+    "scanned_at": "2026-09-08T23:02:55.501185+00:00"
+  },
+  {
+    "symbol": "SOXLUSDT",
+    "direction": "LONG",
+    "score": 77.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (34.1) tren kuat (+14.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)"
+    ],
+    "entry": 123.51,
+    "sl": 117.734913,
+    "tp": 133.905156,
+    "scanned_at": "2026-09-08T23:02:55.501185+00:00"
+  },
+  {
+    "symbol": "AIOUSDT",
+    "direction": "LONG",
+    "score": 76.0,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (55) menguatkan momentum naik",
+      "ADX (33.1) tren kuat (+13.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 0.05267,
+    "sl": 0.04921,
+    "tp": 0.058898,
+    "scanned_at": "2026-09-08T23:02:55.501185+00:00"
+  },
+  {
+    "symbol": "ETCUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (39.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 8.611,
+    "sl": 8.209093,
+    "tp": 9.334433,
+    "scanned_at": "2026-09-08T23:02:55.501185+00:00"
   }
 ]
