@@ -779,8 +779,8 @@
   "SOLUSDT|15m": {
     "symbol": "SOLUSDT",
     "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-06T12:50:06.620607+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:31:48.884668+00:00"
   },
   "RAYSOLUSDT|15m": {
     "symbol": "RAYSOLUSDT",
@@ -973,5 +973,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T06:08:44.184702+00:00"
+  },
+  "ONDOUSDT|15m": {
+    "symbol": "ONDOUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:31:47.422776+00:00"
+  },
+  "TAOUSDT|15m": {
+    "symbol": "TAOUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:31:49.642266+00:00"
+  },
+  "JUPUSDT|15m": {
+    "symbol": "JUPUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:31:50.477110+00:00"
   }
 }

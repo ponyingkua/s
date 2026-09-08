@@ -1,43 +1,86 @@
 [
   {
-    "symbol": "SPXUSDT",
+    "symbol": "ONDOUSDT",
     "direction": "SHORT",
-    "score": 69.0,
-    "timeframe": "1h",
-    "setup_type": "EXTENDED",
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
-      "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (35) menguatkan momentum turun",
-      "ADX (37.6) tren kuat (+15.0 skor)",
-      "Setup terdeteksi: EXTENDED (-2 skor)",
-      "SL digeser ke luar struktur 8-bar terakhir"
-    ],
-    "entry": 0.5324,
-    "sl": 0.55372,
-    "tp": 0.494024
-  },
-  {
-    "symbol": "BTCUSDT",
-    "direction": "SHORT",
-    "score": 65.2,
-    "timeframe": "1h",
+    "score": 85.4,
+    "timeframe": "15m",
     "setup_type": "BREAKOUT",
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (35) menguatkan momentum turun",
+      "RSI (34) menguatkan momentum turun",
       "Volume spike di candle bearish (menguatkan sinyal SHORT)",
-      "ADX (27.7) tren kuat (+7.2 skor)",
-      "Setup terdeteksi: BREAKOUT (-10 skor)",
-      "SL digeser ke luar struktur 8-bar terakhir"
+      "ADX (29.8) tren kuat (+9.4 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
     ],
-    "entry": 78553.0,
-    "sl": 79552.889547,
-    "tp": 76753.198815
+    "entry": 0.3736,
+    "sl": 0.381002,
+    "tp": 0.360276
+  },
+  {
+    "symbol": "SOLUSDT",
+    "direction": "SHORT",
+    "score": 79.2,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (24.0) tren kuat (+3.2 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 102.57,
+    "sl": 103.568867,
+    "tp": 100.77204
+  },
+  {
+    "symbol": "TAOUSDT",
+    "direction": "SHORT",
+    "score": 77.7,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (22.6) tren kuat (+1.7 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 253.59,
+    "sl": 257.911274,
+    "tp": 245.811706
+  },
+  {
+    "symbol": "JUPUSDT",
+    "direction": "SHORT",
+    "score": 76.2,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (21.2) tren kuat (+0.2 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.2458,
+    "sl": 0.25081,
+    "tp": 0.236782
   }
 ]
