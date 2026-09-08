@@ -1069,5 +1069,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T15:56:46.787700+00:00"
+  },
+  "COINUSDT|1h": {
+    "symbol": "COINUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T17:14:36.695020+00:00"
   }
 }

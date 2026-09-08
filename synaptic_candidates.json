@@ -1,68 +1,23 @@
 [
   {
-    "symbol": "PAXGUSDT",
+    "symbol": "COINUSDT",
     "direction": "SHORT",
-    "score": 75.4,
-    "timeframe": "4h",
-    "setup_type": "PULLBACK",
+    "score": 65.0,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (43) menguatkan momentum turun",
+      "RSI (34) menguatkan momentum turun",
       "Volume spike di candle bearish (menguatkan sinyal SHORT)",
-      "ADX (27.9) tren kuat (+7.4 skor)",
-      "Setup terdeteksi: PULLBACK (+0 skor)",
-      "SL digeser ke luar struktur 6-bar terakhir",
-      "TP diambil dari level struktur (prior low 60-bar), RR aktual 1.92"
+      "ADX (44.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
     ],
-    "entry": 4394.45,
-    "sl": 4447.834384,
-    "tp": 4291.95
-  },
-  {
-    "symbol": "XAUTUSDT",
-    "direction": "SHORT",
-    "score": 75.1,
-    "timeframe": "4h",
-    "setup_type": "PULLBACK",
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
-      "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (43) menguatkan momentum turun",
-      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
-      "ADX (27.6) tren kuat (+7.1 skor)",
-      "Setup terdeteksi: PULLBACK (+0 skor)",
-      "SL digeser ke luar struktur 6-bar terakhir",
-      "TP diambil dari level struktur (prior low 60-bar), RR aktual 2.05"
-    ],
-    "entry": 4391.15,
-    "sl": 4443.400217,
-    "tp": 4284.05
-  },
-  {
-    "symbol": "XAUUSDT",
-    "direction": "SHORT",
-    "score": 74.0,
-    "timeframe": "4h",
-    "setup_type": "PULLBACK",
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
-      "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (43) menguatkan momentum turun",
-      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
-      "ADX (26.6) tren kuat (+6.0 skor)",
-      "Setup terdeteksi: PULLBACK (+0 skor)",
-      "SL digeser ke luar struktur 6-bar terakhir",
-      "TP diambil dari level struktur (prior low 60-bar), RR aktual 2.09"
-    ],
-    "entry": 4399.31,
-    "sl": 4452.608182,
-    "tp": 4288.0
+    "entry": 180.21,
+    "sl": 183.403449,
+    "tp": 174.461791
   }
 ]
