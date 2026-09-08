@@ -8505,5 +8505,91 @@
     "sl": 0.008133,
     "tp": 0.006962,
     "scanned_at": "2026-09-08T22:03:47.964885+00:00"
+  },
+  {
+    "symbol": "AIOUSDT",
+    "direction": "LONG",
+    "score": 103.4,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (23.2) tren kuat (+2.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "Searah dengan TF 1h (+20 MTF agreement)"
+    ],
+    "entry": 0.05299,
+    "sl": 0.047589,
+    "tp": 0.062712,
+    "scanned_at": "2026-09-08T22:40:34.275044+00:00"
+  },
+  {
+    "symbol": "MVLLUSDT",
+    "direction": "LONG",
+    "score": 96.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (55) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (36.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)"
+    ],
+    "entry": 26.89,
+    "sl": 25.261925,
+    "tp": 29.820535,
+    "scanned_at": "2026-09-08T22:40:34.275044+00:00"
+  },
+  {
+    "symbol": "DOGSUSDT",
+    "direction": "LONG",
+    "score": 78.0,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (50) menguatkan momentum naik",
+      "ADX (52.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.24"
+    ],
+    "entry": 5e-05,
+    "sl": 4.5e-05,
+    "tp": 6e-05,
+    "scanned_at": "2026-09-08T22:40:34.275044+00:00"
+  },
+  {
+    "symbol": "QCOMUSDT",
+    "direction": "LONG",
+    "score": 78.0,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "ADX (45.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.76"
+    ],
+    "entry": 174.98,
+    "sl": 170.448144,
+    "tp": 187.48,
+    "scanned_at": "2026-09-08T22:40:34.275044+00:00"
   }
 ]
