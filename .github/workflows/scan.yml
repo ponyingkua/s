@@ -1,8 +1,8 @@
 name: vSynapse Scan
 
 on:
-   schedule:
-     - cron: "0 * * * *"
+  schedule:
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       chart_format:
@@ -34,6 +34,7 @@ jobs:
         run: |
           git config user.name "vsynapse-bot"
           git config user.email "bot@users.noreply.github.com"
+          mkdir -p charts
           git add synaptic_candidates.json signal_state.json charts/
           git diff --quiet --cached || git commit -m "chore: update scan results"
           git push
