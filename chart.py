@@ -849,10 +849,16 @@ def build_chart(
     header_title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}"
 
     fig.text(0.07, 0.965, header_title,
-              fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
-    _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df))
-    fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
-              fontsize=(12.5 if square else 7), color=AXIS, ha="left", va="bottom")
+              fontsize=(22.0 if square else 18), fontweight="bold", color=TEXT, ha="left", va="top")
+    _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df), fontsize=(19.0 if square else 15))
+
+    if square:
+        footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
+        fig.text(0.07, 0.028, footer_left,
+                  fontsize=12.5, color=AXIS, ha="left", va="bottom", linespacing=1.6)
+    else:
+        fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
+                  fontsize=7, color=AXIS, ha="left", va="bottom")
 
     # Disclaimer kanan-bawah: satu blok teks 2 baris, font & alignment
     # seragam supaya rapi (sebelumnya 2 fig.text terpisah dengan ukuran
