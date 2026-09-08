@@ -1003,5 +1003,17 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T08:16:07.426472+00:00"
+  },
+  "TRIAUSDT|15m": {
+    "symbol": "TRIAUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T10:15:31.171914+00:00"
+  },
+  "AAPLUSDT|1h": {
+    "symbol": "AAPLUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T10:15:32.552752+00:00"
   }
 }
