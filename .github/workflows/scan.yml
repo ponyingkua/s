@@ -1,9 +1,19 @@
 name: vSynapse Scan
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
-  workflow_dispatch: {}
+  # Cron dimatikan sementara — uncomment 2 baris di bawah untuk mengaktifkan lagi
+  # schedule:
+  #   - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      chart_format:
+        description: "Format chart yang dikirim ke Telegram"
+        required: false
+        default: "wide"
+        type: choice
+        options:
+          - wide
+          - square
 
 jobs:
   scan:
@@ -20,7 +30,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scanner.py --out synaptic_candidates.json
+        run: python scanner.py --out synaptic_candidates.json --chart-format "${{ github.event.inputs.chart_format || 'wide' }}"
       - name: Commit hasil scan
         run: |
           git config user.name "vsynapse-bot"
