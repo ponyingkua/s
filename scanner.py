@@ -1086,59 +1086,45 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
             f"risk={diag_totals['risk_rejected']} cooldown={diag_totals['cooldown_rejected']}"
         )
 
-        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-        if summary_path:
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-            md = [
-                f"## 🔍 Scan Summary — {ts}",
-                "",
-                f"**Regime:** `{regime}` &nbsp;|&nbsp; **Diperiksa:** {total_checked} (simbol × TF) "
-                f"&nbsp;|&nbsp; **Lolos filter:** {diag_totals['passed']} ({pass_rate:.1f}%)",
-                "",
-                "### Corong filter — kenapa kandidat gugur",
-                "| Tahap | Jumlah | % dari total |",
-                "|---|---:|---:|",
-            ]
-            funnel = [
-                ("History terlalu pendek", diag_totals["history_too_short"]),
-                ("Score none (setup/skor gagal)", diag_totals["score_none"]),
-                ("Ditolak regime filter", diag_totals["regime_rejected"]),
-                ("Ditolak risk filter", diag_totals["risk_rejected"]),
-                ("Ditolak cooldown", diag_totals["cooldown_rejected"]),
-            ]
-            for label, val in funnel:
-                pct = (val / total_checked * 100) if total_checked else 0
-                md.append(f"| {label} | {val} | {pct:.1f}% |")
-            md.append(f"| **Lolos semua filter** | **{diag_totals['passed']}** | **{pass_rate:.1f}%** |")
+        # console: rincian diagnostik lengkap, langsung ke log mentah (bukan Step Summary)
+        # supaya kelihatan juga di GitHub mobile
+        print("[diag] Rincian filter:")
+        funnel = [
+            ("history_too_short", diag_totals["history_too_short"]),
+            ("score_none", diag_totals["score_none"]),
+            ("regime_rejected", diag_totals["regime_rejected"]),
+            ("risk_rejected", diag_totals["risk_rejected"]),
+            ("cooldown_rejected", diag_totals["cooldown_rejected"]),
+        ]
+        for label, val in funnel:
+            pct = (val / total_checked * 100) if total_checked else 0
+            print(f"  - {label}: {val} ({pct:.1f}%)")
 
-            if none_reason_totals:
-                md += ["", "### Rincian \"score none\"", "| Alasan | Jumlah |", "|---|---:|"]
-                for k, v in sorted(none_reason_totals.items(), key=lambda x: -x[1]):
-                    md.append(f"| {k} | {v} |")
+        if none_reason_totals:
+            detail = ", ".join(
+                f"{k}={v}" for k, v in sorted(none_reason_totals.items(), key=lambda x: -x[1])
+            )
+            print(f"  - Rincian score_none: {detail}")
 
-            if risk_reason_totals:
-                md += ["", "### Rincian risk_rejected", "| Alasan | Jumlah |", "|---|---:|"]
-                for k, v in sorted(risk_reason_totals.items(), key=lambda x: -x[1]):
-                    md.append(f"| {k} | {v} |")
+        if risk_reason_totals:
+            detail = ", ".join(
+                f"{k}={v}" for k, v in sorted(risk_reason_totals.items(), key=lambda x: -x[1])
+            )
+            print(f"  - Rincian risk_rejected: {detail}")
 
-            if near_miss_scores:
-                current_min = cfg["scoring"]["min_score_to_trigger"]
-                candidate_thresholds = sorted(
-                    {current_min, current_min - 2, current_min - 5, current_min - 8, current_min - 10}
-                )
-                md += [
-                    "",
-                    f"### Near-miss — {len(near_miss_scores)} kandidat di bawah threshold {current_min}",
-                    f"Rentang skor: {min(near_miss_scores):.1f} – {max(near_miss_scores):.1f}",
-                    "",
-                    "| Kalau threshold diturunkan ke | Tambahan lolos |",
-                    "|---:|---:|",
-                ]
-                for thr in candidate_thresholds:
-                    md.append(f"| {thr} | {sum(1 for s in near_miss_scores if s >= thr)} |")
-
-            with open(summary_path, "a") as f:
-                f.write("\n".join(md) + "\n\n")
+        if near_miss_scores:
+            current_min = cfg["scoring"]["min_score_to_trigger"]
+            candidate_thresholds = sorted(
+                {current_min, current_min - 2, current_min - 5, current_min - 8, current_min - 10}
+            )
+            extra = ", ".join(
+                f"{thr}:{sum(1 for s in near_miss_scores if s >= thr)}" for thr in candidate_thresholds
+            )
+            print(
+                f"  - Near-miss scores (n={len(near_miss_scores)}), "
+                f"min={min(near_miss_scores):.1f} max={max(near_miss_scores):.1f} — "
+                f"tambahan lolos kalau threshold diturunkan: {{{extra}}}"
+            )
 
 
         direction_map: dict[str, dict[str, str]] = {}
@@ -1216,19 +1202,13 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                 )
                 chart_paths.append(chart_path)
 
-        if summary_path:
-            with open(summary_path, "a") as f:
-                if results:
-                    f.write("### ✅ Sinyal ditemukan\n\n")
-                    f.write("| Symbol | TF | Arah | Score | Setup |\n|---|---|---|---:|---|\n")
-                    for r in results:
-                        f.write(
-                            f"| {r['symbol']} | {r['timeframe']} | {r['direction']} | "
-                            f"{r['score']:.1f} | {r['setup_type']} |\n"
-                        )
-                    f.write("\n")
-                else:
-                    f.write("### ✅ Sinyal ditemukan\n\nTidak ada sinyal lolos pada scan ini.\n\n")
+        if results:
+            print(f"[scan] Sinyal ditemukan ({len(results)}):")
+            for r in results:
+                print(
+                    f"  - {r['symbol']} {r['timeframe']} {r['direction']} "
+                    f"score={r['score']:.1f} setup={r['setup_type']}"
+                )
 
     save_state(state_path, state)
 
