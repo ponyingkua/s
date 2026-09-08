@@ -931,5 +931,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T03:07:02.525109+00:00"
+  },
+  "TUTUSDT|15m": {
+    "symbol": "TUTUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T03:26:33.065449+00:00"
   }
 }
