@@ -111,12 +111,31 @@ def format_price(value: float, decimals: int) -> str:
     return f"{float(value):.{int(decimals)}f}"
 
 
-def _place_level_labels(ax, levels: list, label_x: float) -> None:
+def _place_level_labels(ax, levels: list, label_x: float, min_gap: float) -> None:
     # Kotak solid berwarna sesuai level (entry/tp/sl), teks putih tebal di
     # dalamnya supaya tetap terbaca jelas dan menonjol di layar kecil (HP).
-    for item in levels:
+    # Kalau 2+ level berdekatan (mis. ENTRY & SL cuma beda dikit), kotak
+    # label bisa tumpang tindih kalau ditaruh persis di harga aslinya --
+    # jadi posisi label di-declutter vertikal (dorong-atas lalu dorong-bawah)
+    # supaya tidak saling menimpa. Level asli tetap ditunjukkan oleh garis
+    # putus-putus (axhline) yang warnanya sama dengan kotak labelnya.
+    if not levels:
+        return
+
+    ordered = sorted(levels, key=lambda item: item["level"])
+    positions = [item["level"] for item in ordered]
+
+    for i in range(1, len(positions)):
+        if positions[i] - positions[i - 1] < min_gap:
+            positions[i] = positions[i - 1] + min_gap
+
+    for i in range(len(positions) - 2, -1, -1):
+        if positions[i + 1] - positions[i] < min_gap:
+            positions[i] = positions[i + 1] - min_gap
+
+    for item, label_y in zip(ordered, positions):
         ax.text(
-            label_x, item["level"], item["text"],
+            label_x, label_y, item["text"],
             color=TEXT,
             va="center", ha="left", fontweight="bold", fontsize=9.5,
             zorder=8, clip_on=False,
@@ -349,6 +368,33 @@ def _find_zones(df: pd.DataFrame, bos_events: list, swing_high_idxs, swing_low_i
             })
 
     return zones
+
+
+def _pad_zone_bounds(z: dict, y_span: float) -> tuple[float, float]:
+    """Perbesar tinggi kotak S/D. Kotak mentah (persis wick candle OB) sering
+    terlalu tipis kalau candle-nya kecil / low volatility. Dikasih tinggi
+    minimum + padding ekstra, searah alami zona -- demand (beli) diperpanjang
+    ke bawah, supply (jual) diperpanjang ke atas -- jadi kotak tetap merujuk
+    ke candle OB yang sama persis, cuma lebih kelihatan jelas di chart."""
+    top, bottom = z["top"], z["bottom"]
+    is_demand = z["type"] == "demand"
+    min_height = y_span * 0.10
+    extra_pad = y_span * 0.045
+
+    height = top - bottom
+    if height < min_height:
+        deficit = min_height - height
+        if is_demand:
+            bottom -= deficit
+        else:
+            top += deficit
+
+    if is_demand:
+        bottom -= extra_pad
+    else:
+        top += extra_pad
+
+    return top, bottom
 
 
 def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int, y_span: float) -> None:
@@ -593,6 +639,14 @@ def build_chart(
     plot_df = work_df.iloc[start_idx : end_idx + 1].reset_index(drop=True)
     offset = start_idx
 
+    # Perbesar tinggi kotak S/D memakai rentang harga yang benar-benar
+    # tampil (plot_df), bukan tinggi candle OB itu sendiri, supaya ukuran
+    # kotak konsisten antar chart. Di-mutate langsung di sini (sebelum
+    # dipakai untuk hitung ylim maupun digambar) supaya keduanya konsisten.
+    rough_span = float(plot_df["high"].max() - plot_df["low"].min())
+    for z in structure["zones"]:
+        z["top"], z["bottom"] = _pad_zone_bounds(z, rough_span)
+
     ema_period = cfg["indicators"]["ema"]["period"]
     st_period = cfg["indicators"]["supertrend"]["period"]
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
@@ -699,7 +753,8 @@ def build_chart(
     _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
     _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
 
-    _place_level_labels(ax_price, levels, label_x)
+    label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
+    _place_level_labels(ax_price, levels, label_x, label_min_gap)
 
     vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
@@ -739,8 +794,8 @@ def build_chart(
     # kalau font sistem tidak dukung emoji).
     fig.text(
         0.96, 0.013,
-        "Chart-based analysis, for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
-        fontsize=7.5, fontweight="bold", color=AXIS, ha="right", va="bottom",
+        "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
+        fontsize=7.5, fontweight="bold", color=TEXT, ha="right", va="bottom",
         linespacing=1.7,
     )
 
