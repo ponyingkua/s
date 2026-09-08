@@ -163,7 +163,7 @@ regime_filter:
   # "not_bull" (bukan "bear_only") supaya SHORT tetap boleh di regime NEUTRAL,
   # bukan cuma BEAR murni yang nyaris tidak pernah terjadi.
   short_mode: "not_bull"
-  long_mode: "bull_only"
+  long_mode: "not_bear"
 
 symbol_filter:
   # Rugi paling besar & paling konsisten di semua kombinasi arah/setup/timeframe
