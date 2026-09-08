@@ -1,9 +1,8 @@
 name: vSynapse Scan
 
 on:
-  # Cron dimatikan sementara — uncomment 2 baris di bawah untuk mengaktifkan lagi
-  # schedule:
-  #   - cron: "*/30 * * * *"
+   schedule:
+     - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       chart_format:
