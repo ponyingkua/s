@@ -1039,5 +1039,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T12:18:59.196394+00:00"
+  },
+  "\u5e01\u5b89\u4eba\u751fUSDT|15m": {
+    "symbol": "\u5e01\u5b89\u4eba\u751fUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T12:48:14.131817+00:00"
   }
 }
