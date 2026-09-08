@@ -1003,6 +1003,26 @@ async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> Non
                 await resp.read()
 
 
+ZIP_PREFIX = "signal_"
+ZIP_MAX_AGE = timedelta(hours=48)
+
+
+def _parse_zip_timestamp(filename: str) -> datetime | None:
+    """Ambil timestamp dari nama file zip (mis. signal_20260909_143000.zip).
+    Sengaja parse dari NAMA file, bukan mtime filesystem -- karena tiap run
+    GitHub Actions checkout ulang repo, mtime semua file jadi 'baru' lagi
+    (bukan waktu commit asli), jadi mtime tidak bisa dipakai untuk cek umur."""
+    match = re.match(
+        rf"{re.escape(ZIP_PREFIX)}(\d{{8}}_\d{{6}})\.zip$", os.path.basename(filename)
+    )
+    if not match:
+        return None
+    try:
+        return datetime.strptime(match.group(1), "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def zip_charts(
     chart_paths: list[str],
     summary_text: str | None = None,
@@ -1013,18 +1033,21 @@ def zip_charts(
 
     os.makedirs(out_dir, exist_ok=True)
 
-    # Bersihkan arsip hasil scan sebelumnya (scan_*.zip) biar tidak menumpuk
-    # tak terbatas di repo. Hanya menyasar pola nama yang dibuat fungsi ini
-    # sendiri — file chart PNG lain (mis. dari workflow generate chart manual)
-    # tidak disentuh.
-    for old_zip in glob.glob(os.path.join(out_dir, "scan_*.zip")):
-        try:
-            os.remove(old_zip)
-        except OSError:
-            pass
+    # Bersihkan arsip signal_*.zip yang usianya sudah lewat 48 jam. Yang
+    # namanya tidak bisa di-parse (rusak/format lama) juga ikut dibuang agar
+    # tidak menumpuk selamanya. File chart PNG lain (mis. dari workflow
+    # generate chart manual) tidak disentuh sama sekali.
+    now = datetime.now(timezone.utc)
+    for old_zip in glob.glob(os.path.join(out_dir, f"{ZIP_PREFIX}*.zip")):
+        zip_time = _parse_zip_timestamp(old_zip)
+        if zip_time is None or now - zip_time >= ZIP_MAX_AGE:
+            try:
+                os.remove(old_zip)
+            except OSError:
+                pass
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    zip_path = os.path.join(out_dir, f"scan_{timestamp}.zip")
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+    zip_path = os.path.join(out_dir, f"{ZIP_PREFIX}{timestamp}.zip")
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for chart_path in chart_paths:
