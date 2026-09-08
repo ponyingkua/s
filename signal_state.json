@@ -919,5 +919,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T00:10:47.965045+00:00"
+  },
+  "ASTRUSDT|15m": {
+    "symbol": "ASTRUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T02:53:04.648926+00:00"
   }
 }

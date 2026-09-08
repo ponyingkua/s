@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "symbol": "ASTRUSDT",
+    "direction": "SHORT",
+    "score": 75.5,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (32) menguatkan momentum turun",
+      "ADX (31.7) tren kuat (+11.5 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.006281,
+    "sl": 0.006428,
+    "tp": 0.006016
+  }
+]
