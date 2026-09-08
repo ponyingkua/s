@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import glob
 import json
 import os
 import re
@@ -126,7 +127,14 @@ class BinanceFuturesClient:
         self, symbols: list[str], interval: str, limit: int = 300
     ) -> list[Kline]:
         tasks = [self.get_klines(s, interval, limit) for s in symbols]
-        return await asyncio.gather(*tasks, return_exceptions=False)
+        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+        klines: list[Kline] = []
+        for symbol, result in zip(symbols, raw_results):
+            if isinstance(result, Exception):
+                print(f"[warn] Lewati {symbol} {interval}: gagal ambil klines ({result})")
+                continue
+            klines.append(result)
+        return klines
 
 
 def drop_unclosed_candle(df: pd.DataFrame) -> pd.DataFrame:
@@ -780,6 +788,19 @@ def save_state(path: str, state: dict) -> None:
         json.dump(state, f, indent=2)
 
 
+def load_candidates(path: str) -> list[dict]:
+    """Baca isi file kandidat hasil scan sebelumnya (kalau ada dan valid),
+    dipakai untuk digabung dengan hasil run ini alih-alih menimpa total."""
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except json.JSONDecodeError:
+        return []
+    return data if isinstance(data, list) else []
+
+
 def _state_key(symbol: str, timeframe: str) -> str:
     return f"{symbol}|{timeframe}"
 
@@ -799,6 +820,32 @@ def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> N
         "direction": direction,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def prune_stale_state(state: dict, cooldown_hours: float, ttl_multiplier: float = 3.0) -> dict:
+    """
+    Buang entri cooldown yang usianya jauh melewati cooldown_hours (default:
+    3x lipat) — entri seperti itu sudah tidak berpengaruh ke is_in_cooldown()
+    sama sekali, jadi aman dihapus supaya signal_state.json tidak tumbuh
+    tanpa batas seiring waktu. Key khusus "_regime_episode" selalu
+    dipertahankan karena bukan entri cooldown per simbol.
+    """
+    now = datetime.now(timezone.utc)
+    ttl = timedelta(hours=cooldown_hours * ttl_multiplier)
+    pruned: dict = {}
+    for key, entry in state.items():
+        if key == "_regime_episode":
+            pruned[key] = entry
+            continue
+        if not isinstance(entry, dict) or "timestamp" not in entry:
+            continue
+        try:
+            last_time = datetime.fromisoformat(entry["timestamp"])
+        except (ValueError, TypeError):
+            continue
+        if now - last_time < ttl:
+            pruned[key] = entry
+    return pruned
 
 
 async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
@@ -965,6 +1012,17 @@ def zip_charts(
         return None
 
     os.makedirs(out_dir, exist_ok=True)
+
+    # Bersihkan arsip hasil scan sebelumnya (scan_*.zip) biar tidak menumpuk
+    # tak terbatas di repo. Hanya menyasar pola nama yang dibuat fungsi ini
+    # sendiri — file chart PNG lain (mis. dari workflow generate chart manual)
+    # tidak disentuh.
+    for old_zip in glob.glob(os.path.join(out_dir, "scan_*.zip")):
+        try:
+            os.remove(old_zip)
+        except OSError:
+            pass
+
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     zip_path = os.path.join(out_dir, f"scan_{timestamp}.zip")
 
@@ -984,6 +1042,7 @@ def load_config(path: str = "config.yaml") -> dict:
 
 
 async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list[dict]:
+    scan_timestamp = datetime.now(timezone.utc).isoformat()
     results = []
     captions: list[str] = []
     technical_notes: list[str] = []
@@ -1210,10 +1269,15 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                     f"score={r['score']:.1f} setup={r['setup_type']}"
                 )
 
+    state = prune_stale_state(state, cooldown_hours)
     save_state(state_path, state)
 
+    existing_candidates = load_candidates(out_path)
+    combined_candidates = existing_candidates + [
+        {**r, "scanned_at": scan_timestamp} for r in results
+    ]
     with open(out_path, "w") as f:
-        json.dump(results, f, indent=2, default=str)
+        json.dump(combined_candidates, f, indent=2, default=str)
 
     summary = None
     if technical_notes:
