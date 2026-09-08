@@ -1,22 +1,23 @@
 [
   {
-    "symbol": "ASTRUSDT",
+    "symbol": "TACUSDT",
     "direction": "SHORT",
-    "score": 75.5,
-    "timeframe": "15m",
-    "setup_type": "BREAKOUT",
+    "score": 68.4,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (32) menguatkan momentum turun",
-      "ADX (31.7) tren kuat (+11.5 skor)",
-      "Setup terdeteksi: BREAKOUT (+8 skor)",
-      "SL digeser ke luar struktur 10-bar terakhir"
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (23.3) tren kuat (+2.4 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
     ],
-    "entry": 0.006281,
-    "sl": 0.006428,
-    "tp": 0.006016
+    "entry": 0.002293,
+    "sl": 0.002422,
+    "tp": 0.00206
   }
 ]

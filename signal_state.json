@@ -925,5 +925,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T02:53:04.648926+00:00"
+  },
+  "TACUSDT|1h": {
+    "symbol": "TACUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T03:07:02.525109+00:00"
   }
 }
