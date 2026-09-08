@@ -949,5 +949,17 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T05:07:27.913898+00:00"
+  },
+  "HEMIUSDT|15m": {
+    "symbol": "HEMIUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T05:39:58.391444+00:00"
+  },
+  "DOSUSDT|15m": {
+    "symbol": "DOSUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T05:39:59.751192+00:00"
   }
 }

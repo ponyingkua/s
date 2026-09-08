@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "symbol": "HEMIUSDT",
+    "direction": "SHORT",
+    "score": 79.5,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (24.3) tren kuat (+3.5 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.008365,
+    "sl": 0.008831,
+    "tp": 0.007526
+  },
+  {
+    "symbol": "DOSUSDT",
+    "direction": "SHORT",
+    "score": 72.9,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (30), tidak menambah skor",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (34.9) tren kuat (+14.9 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir"
+    ],
+    "entry": 0.2275,
+    "sl": 0.232576,
+    "tp": 0.218363
+  }
+]
