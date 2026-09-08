@@ -18,10 +18,10 @@ on:
           - compare
         default: clean
       timeframes:
-        description: "Khusus mode multi, dipisah koma"
+        description: "Multi Timeframe, dipisah koma"
         default: "15m,1h,4h"
       symbols:
-        description: "Khusus mode compare, dipisah koma, min. 2 simbol"
+        description: "Compare, dipisah koma, min. 2 simbol"
         default: ""
       compare_lookback:
         description: "Khusus mode compare, jumlah candle"
