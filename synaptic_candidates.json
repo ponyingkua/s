@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "symbol": "UNITREEUSDT",
+    "direction": "SHORT",
+    "score": 67.8,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (46) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (22.7) tren kuat (+1.8 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 3.58"
+    ],
+    "entry": 80.04,
+    "sl": 80.831251,
+    "tp": 77.21
+  }
+]
