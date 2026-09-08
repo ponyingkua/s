@@ -299,7 +299,8 @@ class SignalResult:
     reasons: list[str] = field(default_factory=list)
     entry: float | None = None
     sl: float | None = None
-    tp: float | None = None
+    tp: float | None = None       # TP final / TP2
+    tp1: float | None = None      # TP partial (opsional, aktif kalau risk.partial_tp.enabled)
 
 
 def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
@@ -749,6 +750,41 @@ def score_at(
         else:
             tp = rr_tp
 
+    # --- TP1 partial (opsional) ---
+    # Tujuannya: TP final (di atas) kadang jauh (level struktur lama / RR besar),
+    # jadi realisasi profit ditunda terlalu lama. TP1 memberi target dekat untuk
+    # menutup sebagian posisi & (opsional) menggeser SL sisa posisi ke breakeven,
+    # tanpa mengubah cara TP final (tp/TP2) dihitung.
+    partial_cfg = cfg.get("risk", {}).get("partial_tp", {})
+    tp1 = None
+    if partial_cfg.get("enabled", False):
+        tp1_rr = float(partial_cfg.get("tp1_rr", 1.0))
+        tp1_close_pct = float(partial_cfg.get("tp1_close_pct", 0.5))
+        # TP1 di-cap maksimum 90% jarak menuju TP final, supaya urutan
+        # SL < TP1 <= TP2 (LONG) / TP2 <= TP1 < SL (SHORT) selalu terjaga
+        # walau TP final kebetulan dekat (mis. RR pas-pasan di atas rr_min).
+        if direction == "LONG":
+            tp1_raw = price + sl_dist * tp1_rr
+            tp1_cap = price + (tp - price) * 0.9
+            tp1_candidate = min(tp1_raw, tp1_cap)
+            if tp1_candidate > price:
+                tp1 = tp1_candidate
+        else:
+            tp1_raw = price - sl_dist * tp1_rr
+            tp1_cap = price - (price - tp) * 0.9
+            tp1_candidate = max(tp1_raw, tp1_cap)
+            if tp1_candidate < price:
+                tp1 = tp1_candidate
+
+        if tp1 is not None:
+            rr_tp1 = abs(tp1 - price) / sl_dist
+            rr_tp2 = abs(tp - price) / sl_dist
+            reasons.append(
+                f"TP dipecah partial: TP1 RR {rr_tp1:.2f} (tutup {tp1_close_pct * 100:.0f}% posisi"
+                + (", SL sisa -> breakeven" if partial_cfg.get("move_sl_to_breakeven", True) else "")
+                + f"), TP2 RR {rr_tp2:.2f} (sisa posisi)"
+            )
+
     return SignalResult(
         symbol=symbol,
         direction=direction,
@@ -759,6 +795,7 @@ def score_at(
         entry=round(price, 6),
         sl=round(sl, 6),
         tp=round(tp, 6),
+        tp1=round(tp1, 6) if tp1 is not None else None,
     )
 
 
@@ -783,6 +820,12 @@ def passes_risk_filter_detailed(signal: SignalResult, cfg: dict) -> tuple[bool, 
         return False, "invalid_order"
     if signal.direction == "SHORT" and not (signal.tp < signal.entry < signal.sl):
         return False, "invalid_order"
+
+    if signal.tp1 is not None:
+        if signal.direction == "LONG" and not (signal.entry < signal.tp1 <= signal.tp):
+            return False, "invalid_tp1_order"
+        if signal.direction == "SHORT" and not (signal.tp <= signal.tp1 < signal.entry):
+            return False, "invalid_tp1_order"
 
     risk = abs(signal.entry - signal.sl)
     reward = abs(signal.tp - signal.entry)
@@ -915,8 +958,12 @@ def format_signal_message(signal: SignalResult) -> str:
         f"*{signal.symbol}*{tf_label} — {signal.direction}{setup_label} (score {signal.score})",
         f"Entry: `{signal.entry}`",
         f"SL: `{signal.sl}`",
-        f"TP: `{signal.tp}`",
     ]
+    if signal.tp1 is not None:
+        lines.append(f"TP1 (partial): `{signal.tp1}`")
+        lines.append(f"TP2 (final): `{signal.tp}`")
+    else:
+        lines.append(f"TP: `{signal.tp}`")
     if signal.reasons:
         lines.append("Alasan: " + "; ".join(signal.reasons))
     return "\n".join(lines)
@@ -938,9 +985,16 @@ def format_technical_summary(signal: SignalResult) -> str:
         risk = abs(signal.entry - signal.sl)
         reward = abs(signal.tp - signal.entry)
         rr = (reward / risk) if risk else 0.0
-        lines.append(
-            f"Entry: {signal.entry}   SL: {signal.sl}   TP: {signal.tp}   (R:R ≈ {rr:.2f})"
-        )
+        if signal.tp1 is not None:
+            rr1 = abs(signal.tp1 - signal.entry) / risk if risk else 0.0
+            lines.append(
+                f"Entry: {signal.entry}   SL: {signal.sl}   "
+                f"TP1: {signal.tp1} (R:R ≈ {rr1:.2f})   TP2: {signal.tp} (R:R ≈ {rr:.2f})"
+            )
+        else:
+            lines.append(
+                f"Entry: {signal.entry}   SL: {signal.sl}   TP: {signal.tp}   (R:R ≈ {rr:.2f})"
+            )
 
     if signal.reasons:
         technical_points = [_clean_technical_reason(r) for r in signal.reasons]
