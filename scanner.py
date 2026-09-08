@@ -1144,6 +1144,20 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                 )
                 chart_paths.append(chart_path)
 
+                # Versi square (1:1) untuk feed Binance Square/IG -- dikirim
+                # dalam zip yang sama, di samping versi wide di atas.
+                chart_path_square = f"charts/{kline.symbol}_{signal.timeframe}_square.png"
+                chart_module.build_chart(
+                    kline.df,
+                    kline.symbol,
+                    signal.timeframe,
+                    signal,
+                    cfg,
+                    chart_path_square,
+                    square=True,
+                )
+                chart_paths.append(chart_path_square)
+
     save_state(state_path, state)
 
     with open(out_path, "w") as f:
