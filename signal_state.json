@@ -943,5 +943,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T04:07:09.607714+00:00"
+  },
+  "JASMYUSDT|1h": {
+    "symbol": "JASMYUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T05:07:27.913898+00:00"
   }
 }
