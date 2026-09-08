@@ -104,7 +104,7 @@ scoring:
   mtf_agreement_excluded_setups:
     - extended
     - breakout
-  min_score_to_trigger: 65   # naik dari 63 — sumR gabungan (8 simbol) memuncak di sekitar skor 65
+  min_score_to_trigger: 63   # naik dari 63 — sumR gabungan (8 simbol) memuncak di sekitar skor 65
   min_trend_alignment: 2
   min_direction_margin: 8
 
