@@ -1051,5 +1051,17 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T14:57:32.801776+00:00"
+  },
+  "GUSDT|15m": {
+    "symbol": "GUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T15:38:38.495040+00:00"
+  },
+  "ESPORTSUSDT|1h": {
+    "symbol": "ESPORTSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T15:38:40.545415+00:00"
   }
 }
