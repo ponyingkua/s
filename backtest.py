@@ -189,6 +189,8 @@ class Trade:
     mtf_bonus: float = 0.0
     mtf_agree_tfs: list = field(default_factory=list)
     score: float = 0.0  # skor akhir sinyal setelah MTF bonus
+    tp1: float | None = None       # TP partial, None kalau partial_tp tidak aktif
+    tp1_filled: bool = False       # apakah TP1 sempat kena sebelum trade ditutup
 
 
 def backtest_symbol(
@@ -282,8 +284,10 @@ def backtest_symbol(
         future = df.iloc[i + 1 :].reset_index(drop=True)
         tie_break = cfg.get("backtest", {}).get("intrabar_tie_break", "conservative")
         max_holding_bars = int(cfg.get("backtest", {}).get("max_holding_bars", 0))
-        result, r_mult, exit_offset, both_touched = _simulate_exit(
-            signal, future, fee_pct, tie_break, max_holding_bars=max_holding_bars
+        partial_cfg = cfg.get("risk", {}).get("partial_tp", {})
+        result, r_mult, exit_offset, both_touched, tp1_filled = _simulate_exit(
+            signal, future, fee_pct, tie_break, max_holding_bars=max_holding_bars,
+            partial_cfg=partial_cfg,
         )
 
         # The signal is generated after candle i closes, so entry_time must be
@@ -304,6 +308,7 @@ def backtest_symbol(
                 timeframe=signal.timeframe, setup_type=signal.setup_type,
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
                 mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs, score=signal.score,
+                tp1=signal.tp1, tp1_filled=tp1_filled,
             )
         )
 
@@ -314,51 +319,128 @@ def backtest_symbol(
     return trades
 
 
+def _r_multiple(signal, price: float, risk: float) -> float:
+    """R multiple dari harga `price` relatif terhadap risk awal (jarak
+    entry-SL), dipakai sebagai basis yang konsisten untuk menimbang R
+    porsi TP1 dan sisa posisi (yang risk awalnya sama)."""
+    if signal.direction == "LONG":
+        return (price - signal.entry) / risk
+    return (signal.entry - price) / risk
+
+
 def _simulate_exit(
     signal,
     future_df: pd.DataFrame,
     fee_pct: float,
     tie_break: str = "conservative",
     max_holding_bars: int = 0,
-) -> tuple[str, float, int, bool]:
+    partial_cfg: dict | None = None,
+) -> tuple[str, float, int, bool, bool]:
+    """Simulasi exit intrabar berbasis OHLC (bukan tick), dengan dukungan
+    opsional TP1 partial (risk.partial_tp di config).
+
+    Kalau partial_tp tidak aktif (atau signal.tp1 None), perilakunya identik
+    dengan versi lama: exit tunggal di SL atau TP (signal.tp / TP2).
+
+    Kalau aktif:
+    - TP1 kena duluan -> tutup `tp1_close_pct` posisi di situ (dikunci ke
+      realized_r), lalu (opsional) SL sisa posisi digeser ke breakeven, dan
+      simulasi lanjut untuk sisa posisi.
+    - Sisa posisi lalu exit di SL aktif (LOSS kalau sebelum TP1, atau
+      PARTIAL_* kalau sesudah TP1) atau di TP2 (WIN).
+    - Kalau TP1 & TP2 kena di bar yang sama (candle besar/gap), keduanya
+      langsung dieksekusi berurutan di bar itu juga (TP1 selalu lebih dekat
+      dari TP2 by construction di scanner.py, jadi urutannya valid).
+    - Fee round-trip tetap didekati sebagai satu potongan fee_r di R final
+      (sama seperti versi lama), bukan dihitung terpisah per leg TP1/TP2 --
+      pendekatan yang cukup untuk keperluan tuning, bukan akuntansi presisi.
+    - Same-bar sub-path (mis. TP1 kena lalu SL-baru-di-breakeven ikut kena
+      di bar yang SAMA) tidak bisa dideteksi dari OHLC saja -> baru dicek
+      mulai bar berikutnya. Ini simplifikasi yang disengaja, dicatat di sini
+      supaya tidak dikira bug kalau hasil backtest sedikit optimis di kasus
+      candle sangat panjang.
+
+    Return: (result, r_multiple, exit_offset, both_touched, tp1_filled)
+    """
     risk = abs(signal.entry - signal.sl)
     fee_r = (signal.entry * fee_pct) / risk if risk > 0 else 0.0
+
+    partial_cfg = partial_cfg or {}
+    use_partial = bool(partial_cfg.get("enabled")) and getattr(signal, "tp1", None) is not None
+    tp1_pct = min(max(float(partial_cfg.get("tp1_close_pct", 0.5)), 0.0), 1.0) if use_partial else 0.0
+    move_to_be = partial_cfg.get("move_sl_to_breakeven", True)
+    be_buffer_r = float(partial_cfg.get("breakeven_buffer_r", 0.0))
 
     bars_to_check = future_df
     if max_holding_bars > 0:
         bars_to_check = future_df.iloc[:max_holding_bars]
 
-    for offset, (_, bar) in enumerate(bars_to_check.iterrows()):
-        if signal.direction == "LONG":
-            hit_sl = bool(bar["low"] <= signal.sl)
-            hit_tp = bool(bar["high"] >= signal.tp)
-        else:
-            hit_sl = bool(bar["high"] >= signal.sl)
-            hit_tp = bool(bar["low"] <= signal.tp)
+    tp1_filled = False
+    realized_r = 0.0   # R yang sudah dikunci dari porsi TP1 yang closed
+    active_sl = signal.sl
+    any_touch_tie = False
 
-        if hit_sl and hit_tp:
-            win = _resolve_tie(tie_break, signal, bar)
-        elif hit_sl:
-            win = False
-        elif hit_tp:
-            win = True
+    def _hits(bar):
+        if signal.direction == "LONG":
+            hit_sl_ = bool(bar["low"] <= active_sl)
+            hit_tp1_ = use_partial and not tp1_filled and bool(bar["high"] >= signal.tp1)
+            hit_tp2_ = bool(bar["high"] >= signal.tp)
         else:
+            hit_sl_ = bool(bar["high"] >= active_sl)
+            hit_tp1_ = use_partial and not tp1_filled and bool(bar["low"] <= signal.tp1)
+            hit_tp2_ = bool(bar["low"] <= signal.tp)
+        return hit_sl_, hit_tp1_, hit_tp2_
+
+    for offset, (_, bar) in enumerate(bars_to_check.iterrows()):
+        hit_sl, hit_tp1, hit_tp2 = _hits(bar)
+        if not (hit_sl or hit_tp1 or hit_tp2):
             continue
 
-        if win:
-            reward = abs(signal.tp - signal.entry)
-            return "WIN", (reward / risk) - fee_r, offset, hit_sl and hit_tp
-        return "LOSS", -1.0 - fee_r, offset, hit_sl and hit_tp
+        tie_this_bar = hit_sl and (hit_tp1 or hit_tp2)
+        if tie_this_bar:
+            any_touch_tie = True
+            sl_wins = not _resolve_tie(tie_break, signal, bar)
+        else:
+            sl_wins = hit_sl
+
+        if sl_wins:
+            exit_r = _r_multiple(signal, active_sl, risk)
+            if tp1_filled:
+                total_r = realized_r + (1 - tp1_pct) * exit_r
+                result = "PARTIAL_LOSS" if exit_r < -1e-9 else (
+                    "PARTIAL_WIN" if exit_r > 1e-9 else "PARTIAL_BE"
+                )
+            else:
+                total_r = exit_r
+                result = "LOSS"
+            return result, total_r - fee_r, offset, any_touch_tie, tp1_filled
+
+        # TP menang (atau tidak ada tie sama sekali)
+        if hit_tp1:
+            r_tp1 = _r_multiple(signal, signal.tp1, risk)
+            realized_r += tp1_pct * r_tp1
+            tp1_filled = True
+            if move_to_be:
+                be_offset = be_buffer_r * risk
+                active_sl = signal.entry + be_offset if signal.direction == "LONG" else signal.entry - be_offset
+            if hit_tp2:
+                r_tp2 = _r_multiple(signal, signal.tp, risk)
+                realized_r += (1 - tp1_pct) * r_tp2
+                return "WIN", realized_r - fee_r, offset, any_touch_tie, tp1_filled
+            continue
+
+        # hit_tp2 tanpa hit_tp1 (partial tidak aktif, atau TP1 sudah filled sebelumnya)
+        r_tp2 = _r_multiple(signal, signal.tp, risk)
+        total_r = realized_r + (1 - tp1_pct) * r_tp2 if tp1_filled else r_tp2
+        return "WIN", total_r - fee_r, offset, any_touch_tie, tp1_filled
 
     if max_holding_bars > 0 and len(future_df) >= max_holding_bars and len(bars_to_check) > 0:
         last_close = float(bars_to_check.iloc[-1]["close"])
-        if signal.direction == "LONG":
-            mark_r = (last_close - signal.entry) / risk
-        else:
-            mark_r = (signal.entry - last_close) / risk
-        return "TIMEOUT", mark_r - fee_r, len(bars_to_check) - 1, False
+        mark_r = _r_multiple(signal, last_close, risk)
+        total_r = realized_r + (1 - tp1_pct) * mark_r if tp1_filled else mark_r
+        return "TIMEOUT", total_r - fee_r, len(bars_to_check) - 1, any_touch_tie, tp1_filled
 
-    return "OPEN", 0.0, len(future_df), False
+    return "OPEN", 0.0, len(future_df), any_touch_tie, tp1_filled
 
 
 def _resolve_tie(tie_break: str, signal, bar) -> bool:
@@ -374,10 +456,15 @@ def summarize(trades: list[Trade]) -> dict:
     closed = [t for t in trades if t.result != "OPEN"]
     if not closed:
         return {"total": 0, "win_rate": 0.0, "avg_r": 0.0, "tie_count": 0, "tie_pct": 0.0,
-                "mtf_trades": 0, "mtf_pct": 0.0}
-    wins = [t for t in closed if t.result == "WIN"]
+                "mtf_trades": 0, "mtf_pct": 0.0, "tp1_fill_count": 0, "tp1_fill_pct": 0.0}
+    # PARTIAL_WIN dihitung sebagai win (net R > 0 karena porsi TP1 profit
+    # lebih besar dari kerugian porsi sisa di breakeven/kecil). PARTIAL_BE
+    # dan PARTIAL_LOSS sengaja TIDAK dihitung win, konsisten dengan
+    # TIMEOUT yang juga tidak otomatis dihitung win walau R > 0.
+    wins = [t for t in closed if t.result in ("WIN", "PARTIAL_WIN")]
     ties = [t for t in closed if t.both_touched]
     mtf_trades = [t for t in closed if t.mtf_bonus > 0]
+    tp1_fills = [t for t in closed if t.tp1_filled]
     return {
         "total": len(closed),
         "win_rate": round(len(wins) / len(closed) * 100, 1),
@@ -386,6 +473,8 @@ def summarize(trades: list[Trade]) -> dict:
         "tie_pct": round(len(ties) / len(closed) * 100, 1),
         "mtf_trades": len(mtf_trades),
         "mtf_pct": round(len(mtf_trades) / len(closed) * 100, 1),
+        "tp1_fill_count": len(tp1_fills),
+        "tp1_fill_pct": round(len(tp1_fills) / len(closed) * 100, 1),
     }
 
 
@@ -511,8 +600,14 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
         )
         f.write(
             f"- Trade yang dapat MTF bonus: "
-            f"**{summary['mtf_trades']}** ({summary['mtf_pct']}%)\n\n"
+            f"**{summary['mtf_trades']}** ({summary['mtf_pct']}%)\n"
         )
+        if cfg.get("risk", {}).get("partial_tp", {}).get("enabled", False):
+            f.write(
+                f"- Trade yang sempat kena TP1 (partial): "
+                f"**{summary['tp1_fill_count']}** ({summary['tp1_fill_pct']}%)\n"
+            )
+        f.write("\n")
         f.write("## Breakdown per arah\n\n")
         f.write("| Arah | Trade | Win Rate | Avg R |\n")
         f.write("|---|---|---|---|\n")
@@ -583,6 +678,7 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict,
         timeframe,
         regime_enabled=cfg.get("regime_filter", {}).get("enabled", False),
         mtf_enabled=use_mtf,
+        partial_tp_enabled=cfg.get("risk", {}).get("partial_tp", {}).get("enabled", False),
     )
 
 
@@ -590,6 +686,7 @@ def _write_batch_report(
     per_symbol_results, combined: dict, combined_by_setup: dict[str, dict],
     combined_by_direction: dict[str, dict], timeframe: str,
     regime_enabled: bool = False, mtf_enabled: bool = False,
+    partial_tp_enabled: bool = False,
 ) -> None:
     lines = [f"# Backtest Gabungan ({timeframe})\n"]
     if regime_enabled:
@@ -625,6 +722,11 @@ def _write_batch_report(
         f"- Trade yang dapat MTF bonus: "
         f"**{combined.get('mtf_trades', 0)}** ({combined.get('mtf_pct', 0)}%)"
     )
+    if partial_tp_enabled:
+        lines.append(
+            f"- Trade yang sempat kena TP1 (partial): "
+            f"**{combined.get('tp1_fill_count', 0)}** ({combined.get('tp1_fill_pct', 0)}%)"
+        )
 
     lines.append("")
     lines.append("## Breakdown per arah (gabungan semua simbol)")
