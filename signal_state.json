@@ -991,5 +991,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T06:31:50.477110+00:00"
+  },
+  "HYPEUSDT|15m": {
+    "symbol": "HYPEUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:55:47.764365+00:00"
   }
 }
