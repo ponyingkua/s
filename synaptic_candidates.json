@@ -1,6 +1,6 @@
 [
   {
-    "symbol": "\u5e01\u5b89\u4eba\u751fUSDT",
+    "symbol": "JUPUSDT",
     "direction": "SHORT",
     "score": 63.0,
     "timeframe": "15m",
@@ -10,14 +10,13 @@
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (39) menguatkan momentum turun",
-      "ADX (42.9) tren kuat (+15.0 skor)",
+      "RSI (37) menguatkan momentum turun",
+      "ADX (36.3) tren kuat (+15.0 skor)",
       "Setup terdeteksi: EXTENDED (-8 skor)",
-      "SL digeser ke luar struktur 10-bar terakhir",
-      "TP diambil dari level struktur (prior low 80-bar), RR aktual 3.63"
+      "SL digeser ke luar struktur 10-bar terakhir"
     ],
-    "entry": 0.507,
-    "sl": 0.516009,
-    "tp": 0.47429
+    "entry": 0.241,
+    "sl": 0.24523,
+    "tp": 0.233385
   }
 ]
