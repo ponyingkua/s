@@ -7,8 +7,43 @@ on:
         description: "Simbol, mis. BTCUSDT"
         default: "BTCUSDT"
       timeframe:
-        description: "Timeframe, mis. 15m / 1h / 4h"
+        description: "Timeframe, mis. 15m / 1h / 4h (dipakai kalau mode bukan multi/compare)"
         default: "1h"
+      mode:
+        description: "Jenis chart"
+        type: choice
+        options:
+          - standard
+          - clean
+          - multi
+          - compare
+        default: standard
+      timeframes:
+        description: "Khusus mode multi, dipisah koma"
+        default: "15m,1h,4h"
+      symbols:
+        description: "Khusus mode compare, dipisah koma, min. 2 simbol"
+        default: ""
+      compare_lookback:
+        description: "Khusus mode compare, jumlah candle"
+        default: "100"
+      invalidation:
+        description: "Tampilkan invalidation mode (pakai SL sinyal kalau harga tidak diisi)"
+        type: boolean
+        default: false
+      invalidation_price:
+        description: "Override manual harga invalidation (kosongkan untuk pakai SL)"
+        default: ""
+      highlight:
+        description: "Highlight area harga, format top,bottom mis. 66000,64500"
+        default: ""
+      highlight_label:
+        description: "Label untuk highlight area (opsional)"
+        default: ""
+      hide_indicators:
+        description: "Sembunyikan EMA & Supertrend (biasa dipakai bareng mode clean)"
+        type: boolean
+        default: false
 
 jobs:
   chart:
@@ -25,11 +60,32 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python chart.py --symbol "${{ github.event.inputs.symbol }}" --timeframe "${{ github.event.inputs.timeframe }}"
+          SYMBOL: ${{ github.event.inputs.symbol }}
+          TIMEFRAME: ${{ github.event.inputs.timeframe }}
+          MODE: ${{ github.event.inputs.mode }}
+          TIMEFRAMES: ${{ github.event.inputs.timeframes }}
+          SYMBOLS: ${{ github.event.inputs.symbols }}
+          COMPARE_LOOKBACK: ${{ github.event.inputs.compare_lookback }}
+          INVALIDATION: ${{ github.event.inputs.invalidation }}
+          INVALIDATION_PRICE: ${{ github.event.inputs.invalidation_price }}
+          HIGHLIGHT: ${{ github.event.inputs.highlight }}
+          HIGHLIGHT_LABEL: ${{ github.event.inputs.highlight_label }}
+          HIDE_INDICATORS: ${{ github.event.inputs.hide_indicators }}
+        run: |
+          ARGS=(--symbol "$SYMBOL" --timeframe "$TIMEFRAME" --mode "$MODE")
+          [ -n "$TIMEFRAMES" ] && ARGS+=(--timeframes "$TIMEFRAMES")
+          [ -n "$SYMBOLS" ] && ARGS+=(--symbols "$SYMBOLS")
+          [ -n "$COMPARE_LOOKBACK" ] && ARGS+=(--compare-lookback "$COMPARE_LOOKBACK")
+          [ "$INVALIDATION" = "true" ] && ARGS+=(--invalidation)
+          [ -n "$INVALIDATION_PRICE" ] && ARGS+=(--invalidation-price "$INVALIDATION_PRICE")
+          [ -n "$HIGHLIGHT" ] && ARGS+=(--highlight "$HIGHLIGHT")
+          [ -n "$HIGHLIGHT_LABEL" ] && ARGS+=(--highlight-label "$HIGHLIGHT_LABEL")
+          [ "$HIDE_INDICATORS" = "true" ] && ARGS+=(--hide-indicators)
+          python chart.py "${ARGS[@]}"
       - name: Commit chart
         run: |
           git config user.name "vsynapse-bot"
           git config user.email "bot@users.noreply.github.com"
           git add charts/
-          git diff --quiet --cached || git commit -m "chore: generate chart ${{ github.event.inputs.symbol }} ${{ github.event.inputs.timeframe }}"
+          git diff --quiet --cached || git commit -m "chore: generate chart ${{ github.event.inputs.symbol }} ${{ github.event.inputs.mode }}"
           git push
