@@ -154,7 +154,8 @@ def _draw_change_badge(fig, x: float, y: float, change_pct: float | None,
     )
 
 
-def _place_level_labels(ax, levels: list, label_x: float, min_gap: float) -> None:
+def _place_level_labels(ax, levels: list, label_x: float, min_gap: float,
+                         square: bool = False) -> None:
     # Kotak solid berwarna sesuai level (entry/tp/sl), teks putih tebal di
     # dalamnya supaya tetap terbaca jelas dan menonjol di layar kecil (HP).
     # Kalau 2+ level berdekatan (mis. ENTRY & SL cuma beda dikit), kotak
@@ -176,11 +177,12 @@ def _place_level_labels(ax, levels: list, label_x: float, min_gap: float) -> Non
         if positions[i + 1] - positions[i] < min_gap:
             positions[i] = positions[i + 1] - min_gap
 
+    level_fontsize = 15.5 if square else 9.5
     for item, label_y in zip(ordered, positions):
         ax.text(
             label_x, label_y, item["text"],
             color=TEXT,
-            va="center", ha="left", fontweight="bold", fontsize=9.5,
+            va="center", ha="left", fontweight="bold", fontsize=level_fontsize,
             zorder=8, clip_on=False,
             bbox=dict(
                 boxstyle="square,pad=0.35",
@@ -440,23 +442,26 @@ def _pad_zone_bounds(z: dict, y_span: float) -> tuple[float, float]:
     return top, bottom
 
 
-def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int, y_span: float) -> None:
+def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int, y_span: float,
+                             square: bool = False) -> None:
     pad = y_span * 0.022
+    fontsize = 12.5 if square else 6.0
     for pt in labeled_points:
         px = pt["index"] - offset
         if px < 0 or px >= plot_len:
             continue
         if pt["type"] == "H":
             ax.text(px, pt["price"] + pad, pt["label"], color=STRUCT_TEXT,
-                    fontsize=6.0, fontweight="bold", ha="center", va="bottom",
+                    fontsize=fontsize, fontweight="bold", ha="center", va="bottom",
                     zorder=9, clip_on=False)
         else:
             ax.text(px, pt["price"] - pad, pt["label"], color=STRUCT_TEXT,
-                    fontsize=6.0, fontweight="bold", ha="center", va="top",
+                    fontsize=fontsize, fontweight="bold", ha="center", va="top",
                     zorder=9, clip_on=False)
 
 
-def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span: float) -> None:
+def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span: float,
+                 square: bool = False) -> None:
     for z in zones:
         bos_px = z["bos_idx"] - offset
         if bos_px < -0.5:
@@ -481,11 +486,12 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         mid_x = (start_px + end_px) / 2
         mid_y = (z["top"] + z["bottom"]) / 2
         ax.text(mid_x, mid_y, label, color="#F2F2F2",
-                fontsize=7.5, fontweight="bold", ha="center", va="center",
+                fontsize=(14.0 if square else 7.5), fontweight="bold", ha="center", va="center",
                 alpha=0.95, zorder=1.6, clip_on=False)
 
 
-def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame) -> None:
+def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame,
+                                 square: bool = False) -> None:
     """Penanda BOS sederhana: garis level + segitiga kecil + teks BOS."""
     plot_len = len(plot_df)
     high = plot_df["high"].values
@@ -518,7 +524,7 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
 
         # Teks BOS sederhana — warna hitam
         ax.text(idx_px + 0.9, label_y, "BOS", color="#F2F2F2",
-                fontsize=6.0, fontweight="bold",
+                fontsize=(12.5 if square else 6.0), fontweight="bold",
                 ha="left", va="center",
                 zorder=11, clip_on=False)
 
@@ -806,13 +812,13 @@ def build_chart(
     ax_vol.set_xlim(-0.6, last_x + extra_margin)
 
     plot_len = len(plot_df)
-    _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span)
-    _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df)
+    _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span, square=square)
+    _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df, square=square)
     _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
-    _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span)
+    _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span, square=square)
 
     label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
-    _place_level_labels(ax_price, levels, label_x, label_min_gap)
+    _place_level_labels(ax_price, levels, label_x, label_min_gap, square=square)
 
     vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
@@ -833,7 +839,7 @@ def build_chart(
 
     if not hide_indicators:
         legend = ax_price.legend(
-            loc="upper left", fontsize=7.5, framealpha=0.95,
+            loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
             facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
@@ -846,7 +852,7 @@ def build_chart(
               fontsize=18, fontweight="bold", color=TEXT, ha="left", va="top")
     _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df))
     fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
-              fontsize=7, color=AXIS, ha="left", va="bottom")
+              fontsize=(12.5 if square else 7), color=AXIS, ha="left", va="bottom")
 
     # Disclaimer kanan-bawah: satu blok teks 2 baris, font & alignment
     # seragam supaya rapi (sebelumnya 2 fig.text terpisah dengan ukuran
@@ -855,7 +861,7 @@ def build_chart(
     fig.text(
         0.96, 0.013,
         "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
-        fontsize=7.5, fontweight="bold", color=TEXT, ha="right", va="bottom",
+        fontsize=(13.0 if square else 7.5), fontweight="bold", color=TEXT, ha="right", va="bottom",
         linespacing=1.7,
     )
 
