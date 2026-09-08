@@ -47,7 +47,8 @@ ST_UP = "#66BB6A"
 ST_DOWN = "#EF5350"
 
 ENTRY = "#42A5F5"
-TP1 = "#26A69A"
+TP1 = "#26A69A"   # TP partial (dekat) -- juga dipakai sebagai warna TP tunggal kalau partial_tp nonaktif
+TP2 = "#00BFA5"   # TP final (jauh) -- hue senada tapi beda saturasi supaya kebeda dari TP1 di chart
 SL = "#EF5350"
 
 VOLUME_MA = "#FFB74D"
@@ -529,10 +530,12 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
                 zorder=11, clip_on=False)
 
 
-def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int) -> None:
-    """Satu panah arah target, dari candle terakhir (harga close
-    terkini) menuju level TP aktual sinyal. Opacity dijaga sedang
-    (70-80%) supaya tidak mendominasi chart."""
+def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int,
+                        alpha: float = 0.75, lw: float = 1.3) -> None:
+    """Panah arah target, dari candle terakhir (harga close terkini) menuju
+    level TP aktual sinyal. `alpha`/`lw` dibuat bisa diatur supaya kalau
+    dipanggil dua kali (TP1 + TP2), panah TP2 (final, lebih jauh) bisa
+    digambar lebih samar daripada TP1 (partial, target dekat/utama)."""
     if tp_price is None:
         return
 
@@ -545,7 +548,7 @@ def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int) -> None
 
     ax.annotate(
         "", xy=(x_end, tp_price), xytext=(x_start, current_price),
-        arrowprops=dict(arrowstyle="-|>", color=color, lw=1.3, alpha=0.75,
+        arrowprops=dict(arrowstyle="-|>", color=color, lw=lw, alpha=alpha,
                           linestyle=(0, (5, 3)),
                           connectionstyle="arc3,rad=0.35",
                           shrinkA=1, shrinkB=1, mutation_scale=10),
@@ -770,12 +773,19 @@ def build_chart(
     )
     dec = decimals_from_price(ref_price)
 
+    tp1_val = getattr(signal, "tp1", None)
+
     levels = []
     if show_levels:
         if signal.entry is not None:
             levels.append({"level": signal.entry, "color": ENTRY,
                             "text": f"ENTRY  {format_price(signal.entry, dec)}"})
-        if signal.tp is not None:
+        if tp1_val is not None and signal.tp is not None:
+            levels.append({"level": tp1_val, "color": TP1,
+                            "text": f"TP1  {format_price(tp1_val, dec)}"})
+            levels.append({"level": signal.tp, "color": TP2,
+                            "text": f"TP2  {format_price(signal.tp, dec)}"})
+        elif signal.tp is not None:
             levels.append({"level": signal.tp, "color": TP1,
                             "text": f"TP  {format_price(signal.tp, dec)}"})
         if signal.sl is not None:
@@ -814,7 +824,14 @@ def build_chart(
     plot_len = len(plot_df)
     _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span, square=square)
     _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df, square=square)
-    _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
+    if tp1_val is not None and signal.tp is not None:
+        # TP1 (target dekat/utama) ditonjolkan, TP2 (target final) digambar
+        # lebih samar supaya tetap terlihat sebagai target lanjutan tanpa
+        # mendominasi chart.
+        _draw_target_arrow(ax_price, plot_df, tp1_val, last_x, alpha=0.85, lw=1.4)
+        _draw_target_arrow(ax_price, plot_df, signal.tp, last_x, alpha=0.35, lw=1.0)
+    else:
+        _draw_target_arrow(ax_price, plot_df, signal.tp, last_x)
     _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span, square=square)
 
     label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
