@@ -948,7 +948,7 @@
     "symbol": "JASMYUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-08T05:07:27.913898+00:00"
+    "timestamp": "2026-09-08T14:57:30.740828+00:00"
   },
   "HEMIUSDT|15m": {
     "symbol": "HEMIUSDT",
@@ -1045,5 +1045,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T12:48:14.131817+00:00"
+  },
+  "TRUMPUSDT|1h": {
+    "symbol": "TRUMPUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T14:57:32.801776+00:00"
   }
 }

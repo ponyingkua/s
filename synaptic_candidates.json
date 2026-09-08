@@ -1,9 +1,30 @@
 [
   {
-    "symbol": "JUPUSDT",
+    "symbol": "JASMYUSDT",
     "direction": "SHORT",
-    "score": 63.0,
-    "timeframe": "15m",
+    "score": 71.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (33.4) tren kuat (+13.3 skor)",
+      "Setup terdeteksi: BREAKOUT (-10 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 0.004136,
+    "sl": 0.004309,
+    "tp": 0.003824
+  },
+  {
+    "symbol": "TRUMPUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
     "setup_type": "EXTENDED",
     "reasons": [
       "Harga di bawah EMA200 (downtrend)",
@@ -11,12 +32,13 @@
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
       "RSI (37) menguatkan momentum turun",
-      "ADX (36.3) tren kuat (+15.0 skor)",
-      "Setup terdeteksi: EXTENDED (-8 skor)",
-      "SL digeser ke luar struktur 10-bar terakhir"
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (23.8) tren kuat (+3.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
     ],
-    "entry": 0.241,
-    "sl": 0.24523,
-    "tp": 0.233385
+    "entry": 2.223,
+    "sl": 2.304535,
+    "tp": 2.076237
   }
 ]
