@@ -81,15 +81,37 @@ class BinanceFuturesClient:
     async def get_klines(self, symbol: str, interval: str, limit: int = 300) -> Kline:
         url = f"{BASE_URL}/fapi/v1/klines"
         params = {"symbol": symbol, "interval": interval, "limit": limit}
-        async with self._session.get(url, params=params) as resp:
-            raw = await resp.json()
-        if resp.status != 200 or not isinstance(raw, list):
-            raise RuntimeError(
-                f"Gagal mengambil klines {symbol} {interval}: "
-                f"status={resp.status}, response={raw}"
-            )
-        df = self._parse_klines_df(raw)
-        return Kline(symbol=symbol, timeframe=interval, df=df)
+
+        max_retries = 3
+        backoff_seconds = 2.0
+        for attempt in range(max_retries + 1):
+            async with self._session.get(url, params=params) as resp:
+                raw = await resp.json()
+                status = resp.status
+                retry_after = resp.headers.get("Retry-After")
+
+            if status == 429 and attempt < max_retries:
+                wait = float(retry_after) if retry_after else backoff_seconds * (2 ** attempt)
+                print(
+                    f"[warn] Rate limit (429) {symbol} {interval} — "
+                    f"retry {attempt + 1}/{max_retries} setelah {wait:.1f}s"
+                )
+                await asyncio.sleep(wait)
+                continue
+
+            if status != 200 or not isinstance(raw, list):
+                raise RuntimeError(
+                    f"Gagal mengambil klines {symbol} {interval}: "
+                    f"status={status}, response={raw}"
+                )
+            df = self._parse_klines_df(raw)
+            return Kline(symbol=symbol, timeframe=interval, df=df)
+
+        # Tidak akan tercapai dalam praktik (loop di atas selalu return atau
+        # raise), disisakan sebagai pengaman kalau logika di atas berubah.
+        raise RuntimeError(
+            f"Gagal mengambil klines {symbol} {interval} setelah {max_retries} retry (429 terus)"
+        )
 
     async def get_klines_paginated(self, symbol: str, interval: str, total_limit: int) -> Kline:
         url = f"{BASE_URL}/fapi/v1/klines"
