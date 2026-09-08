@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -831,7 +832,14 @@ async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
     return "NEUTRAL"
 
 
+def _clean_technical_reason(reason: str) -> str:
+    """Buang embel-embel skor internal (mis. '(+3.5 skor)') dari sebuah alasan,
+    supaya yang tersisa murni penjelasan teknikal (indikator/struktur/setup)."""
+    return re.sub(r"\s*\([+-]?\d+(\.\d+)?\s*(?:MTF agreement\s*)?skor\)", "", reason).strip()
+
+
 def format_signal_message(signal: SignalResult) -> str:
+    """Pesan singkat untuk caption Telegram (tetap ringkas & ber-Markdown)."""
     tf_label = f" [{signal.timeframe}]" if signal.timeframe else ""
     setup_label = f" · {signal.setup_type}" if signal.setup_type else ""
     lines = [
@@ -842,6 +850,35 @@ def format_signal_message(signal: SignalResult) -> str:
     ]
     if signal.reasons:
         lines.append("Alasan: " + "; ".join(signal.reasons))
+    return "\n".join(lines)
+
+
+def format_technical_summary(signal: SignalResult) -> str:
+    """Blok penjelasan untuk ringkasan.txt — fokus ke analisis teknikal
+    (tren, momentum, struktur harga, R:R) dengan skor tetap ditampilkan,
+    bukan narasi tentang proses/mekanisme scanner-nya."""
+    tf_label = f" {signal.timeframe}" if signal.timeframe else ""
+    setup_label = signal.setup_type or "-"
+
+    lines = [
+        f"{signal.symbol}{tf_label} — {signal.direction}",
+        f"Setup: {setup_label}   |   Skor: {signal.score}",
+    ]
+
+    if signal.entry is not None and signal.sl is not None and signal.tp is not None:
+        risk = abs(signal.entry - signal.sl)
+        reward = abs(signal.tp - signal.entry)
+        rr = (reward / risk) if risk else 0.0
+        lines.append(
+            f"Entry: {signal.entry}   SL: {signal.sl}   TP: {signal.tp}   (R:R ≈ {rr:.2f})"
+        )
+
+    if signal.reasons:
+        technical_points = [_clean_technical_reason(r) for r in signal.reasons]
+        technical_points = [p for p in technical_points if p]
+        lines.append("Analisis teknikal:")
+        lines.extend(f"  - {p}" for p in technical_points)
+
     return "\n".join(lines)
 
 
@@ -946,9 +983,10 @@ def load_config(path: str = "config.yaml") -> dict:
         return yaml.safe_load(f)
 
 
-async def run_scan(cfg: dict, out_path: str) -> list[dict]:
+async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list[dict]:
     results = []
     captions: list[str] = []
+    technical_notes: list[str] = []
     chart_paths: list[str] = []
 
     scan_cfg = cfg.get("scanning", {})
@@ -1128,12 +1166,15 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
             mark_signaled(state, kline.symbol, signal.direction, signal.timeframe)
 
             captions.append(format_signal_message(signal))
+            technical_notes.append(format_technical_summary(signal))
 
             if auto_generate_charts:
                 import chart as chart_module
 
                 os.makedirs("charts", exist_ok=True)
-                chart_path = f"charts/{kline.symbol}_{signal.timeframe}.png"
+                is_square = chart_format == "square"
+                suffix = "_square" if is_square else ""
+                chart_path = f"charts/{kline.symbol}_{signal.timeframe}{suffix}.png"
                 chart_module.build_chart(
                     kline.df,
                     kline.symbol,
@@ -1141,22 +1182,9 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
                     signal,
                     cfg,
                     chart_path,
+                    square=is_square,
                 )
                 chart_paths.append(chart_path)
-
-                # Versi square (1:1) untuk feed Binance Square/IG -- dikirim
-                # dalam zip yang sama, di samping versi wide di atas.
-                chart_path_square = f"charts/{kline.symbol}_{signal.timeframe}_square.png"
-                chart_module.build_chart(
-                    kline.df,
-                    kline.symbol,
-                    signal.timeframe,
-                    signal,
-                    cfg,
-                    chart_path_square,
-                    square=True,
-                )
-                chart_paths.append(chart_path_square)
 
     save_state(state_path, state)
 
@@ -1164,8 +1192,8 @@ async def run_scan(cfg: dict, out_path: str) -> list[dict]:
         json.dump(results, f, indent=2, default=str)
 
     summary = None
-    if captions:
-        summary = f"Scan selesai — {len(results)} sinyal ditemukan\n\n" + "\n\n".join(captions)
+    if technical_notes:
+        summary = "\n\n".join(technical_notes)
 
     zip_path = zip_charts(chart_paths, summary_text=summary)
     if zip_path:
@@ -1184,10 +1212,21 @@ def main():
     parser = argparse.ArgumentParser(description="vSynapse v3.2 scanner (multi-timeframe)")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--out", default="synaptic_candidates.json")
+    parser.add_argument(
+        "--chart-format",
+        choices=["wide", "square"],
+        default=None,
+        help=(
+            "Format chart yang digenerate & dikirim ke Telegram. "
+            "Default: wide. Isi 'square' untuk mengganti sementara ke versi 1:1 "
+            "(dipakai saat run manual, mis. lewat workflow_dispatch)."
+        ),
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-    results = asyncio.run(run_scan(cfg, args.out))
+    chart_format = args.chart_format or cfg.get("chart", {}).get("format", "wide")
+    results = asyncio.run(run_scan(cfg, args.out, chart_format=chart_format))
     print(f"Ditemukan {len(results)} sinyal. Disimpan ke {args.out}")
 
 
