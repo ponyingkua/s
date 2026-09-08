@@ -118,6 +118,18 @@ risk:
   structure_sl_max_atr_mult_breakout: 3.5
   reject_structural_stop_too_wide: true
   max_signals_per_regime_episode: 2
+  # TP final (di atas) tetap dihitung sama seperti sebelumnya (level struktur
+  # atau RR minimum) -- partial_tp cuma menambah TP1 di depannya supaya
+  # sebagian profit terkunci lebih awal, bukan mengganti logika TP final.
+  # Belum divalidasi lewat backtest granular (tp1_rr/tp1_close_pct masih
+  # nilai default akal-sehat) -- cek ulang avg R & win rate setelah beberapa
+  # batch backtest baru sebelum tuning lebih lanjut.
+  partial_tp:
+    enabled: true
+    tp1_rr: 1.0                 # TP1 di RR 1.0 (1x jarak SL), selalu < RR TP final
+    tp1_close_pct: 0.5          # tutup 50% posisi di TP1
+    move_sl_to_breakeven: true  # sisa 50% posisi: SL digeser ke entry setelah TP1 kena
+    breakeven_buffer_r: 0.0     # geser breakeven +/- sekian R dari entry (0 = pas di entry)
 
 setup_engine:
   structure_lookback: 20
