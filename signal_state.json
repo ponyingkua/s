@@ -864,13 +864,13 @@
     "symbol": "XAUUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-07T07:40:00.203495+00:00"
+    "timestamp": "2026-09-08T08:16:11.558694+00:00"
   },
   "PAXGUSDT|4h": {
     "symbol": "PAXGUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-07T07:40:00.431692+00:00"
+    "timestamp": "2026-09-08T08:16:10.018803+00:00"
   },
   "CYSUSDT|1h": {
     "symbol": "CYSUSDT",
@@ -882,7 +882,7 @@
     "symbol": "XAUTUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-07T12:09:09.173532+00:00"
+    "timestamp": "2026-09-08T08:16:10.814678+00:00"
   },
   "HOODUSDT|15m": {
     "symbol": "HOODUSDT",
@@ -997,5 +997,11 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T06:55:47.764365+00:00"
+  },
+  "GOOGLUSDT|15m": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T08:16:07.426472+00:00"
   }
 }
