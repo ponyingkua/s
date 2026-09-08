@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "symbol": "SPXUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (37.6) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 0.5324,
+    "sl": 0.55372,
+    "tp": 0.494024
+  },
+  {
+    "symbol": "BTCUSDT",
+    "direction": "SHORT",
+    "score": 65.2,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (27.7) tren kuat (+7.2 skor)",
+      "Setup terdeteksi: BREAKOUT (-10 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir"
+    ],
+    "entry": 78553.0,
+    "sl": 79552.889547,
+    "tp": 76753.198815
+  }
+]

@@ -961,5 +961,17 @@
     "timeframe": "15m",
     "direction": "SHORT",
     "timestamp": "2026-09-08T05:39:59.751192+00:00"
+  },
+  "SPXUSDT|1h": {
+    "symbol": "SPXUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:08:42.121467+00:00"
+  },
+  "BTCUSDT|1h": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T06:08:44.184702+00:00"
   }
 }
