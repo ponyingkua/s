@@ -1,8 +1,8 @@
 [
   {
-    "symbol": "GUSDT",
+    "symbol": "CLUSDT",
     "direction": "SHORT",
-    "score": 76.9,
+    "score": 83.6,
     "timeframe": "15m",
     "setup_type": "BREAKOUT",
     "reasons": [
@@ -10,32 +10,14 @@
       "MACD line di bawah signal line (momentum turun)",
       "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
       "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (35) menguatkan momentum turun",
-      "ADX (33.0) tren kuat (+12.9 skor)",
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (28.1) tren kuat (+7.6 skor)",
       "Setup terdeteksi: BREAKOUT (+8 skor)",
       "SL digeser ke luar struktur 10-bar terakhir"
     ],
-    "entry": 0.003959,
-    "sl": 0.004285,
-    "tp": 0.003372
-  },
-  {
-    "symbol": "ESPORTSUSDT",
-    "direction": "SHORT",
-    "score": 69.0,
-    "timeframe": "1h",
-    "setup_type": "EXTENDED",
-    "reasons": [
-      "Harga di bawah EMA200 (downtrend)",
-      "MACD line di bawah signal line (momentum turun)",
-      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
-      "Konfluensi tren: 2/3 indikator inti searah",
-      "RSI (35) menguatkan momentum turun",
-      "ADX (45.7) tren kuat (+15.0 skor)",
-      "Setup terdeteksi: EXTENDED (-2 skor)"
-    ],
-    "entry": 0.01388,
-    "sl": 0.014205,
-    "tp": 0.013294
+    "entry": 92.07,
+    "sl": 93.330284,
+    "tp": 89.801489
   }
 ]

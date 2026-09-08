@@ -1063,5 +1063,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T15:38:40.545415+00:00"
+  },
+  "CLUSDT|15m": {
+    "symbol": "CLUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-08T15:56:46.787700+00:00"
   }
 }
