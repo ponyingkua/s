@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "symbol": "JSTUSDT",
+    "direction": "SHORT",
+    "score": 66.2,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (23.1) tren kuat (+2.2 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP diambil dari level struktur (prior low 80-bar), RR aktual 4.92"
+    ],
+    "entry": 0.10545,
+    "sl": 0.106763,
+    "tp": 0.09899
+  }
+]
