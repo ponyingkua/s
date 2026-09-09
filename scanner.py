@@ -509,13 +509,6 @@ def score_at(
             ],
         )
 
-    blacklist = cfg.get("symbol_filter", {}).get("blacklist", [])
-    if symbol in blacklist:
-        return SignalResult(
-            symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
-            reasons=[f"{symbol} ada di blacklist"],
-        )
-
     w = cfg["scoring"]["weights"]
     price = df["close"].iloc[i]
     open_price = df["open"].iloc[i]
@@ -1186,8 +1179,6 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                 return "warmup"
             if "ADX" in last and "ambang" in last:
                 return "adx_filter"
-            if "blacklist" in last:
-                return "blacklist"
             if "Konfluensi tren lemah" in last:
                 return "weak_alignment"
             if "terlalu imbang" in last:
