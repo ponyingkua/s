@@ -196,6 +196,12 @@ class Trade:
     # exit inklusif, terlepas dari SL/TP/TP1 kena atau tidak. Murni diagnostik
     # (tidak memengaruhi r_multiple/hasil trade), dipakai untuk melihat seberapa
     # dekat trade yang GAGAL capai TP1 sempat mendekat sebelum berbalik.
+    fwd1_close_r: float | None = None  # R-multiple dari CLOSE candle ke-1 setelah
+    fwd2_close_r: float | None = None  # entry, dan candle ke-2 -- diagnostik untuk
+    # uji hipotesis "entry timing": apakah candle berikutnya (belum tentu exit)
+    # sudah menunjukkan konfirmasi arah atau justru sudah berbalik. None kalau
+    # datanya tidak cukup (mis. trade di ujung dataset). Murni diagnostik, tidak
+    # memengaruhi entry/exit/r_multiple aktual.
 
 
 def backtest_symbol(
@@ -295,6 +301,17 @@ def backtest_symbol(
             partial_cfg=partial_cfg,
         )
 
+        # --- Diagnostik entry-timing (lookahead terpisah, TIDAK memengaruhi
+        # entry/exit/r_multiple di atas) --- lihat catatan di dataclass Trade.
+        risk_for_diag = abs(signal.entry - signal.sl)
+        fwd1_close_r = None
+        fwd2_close_r = None
+        if risk_for_diag > 0:
+            if len(future) > 0:
+                fwd1_close_r = _r_multiple(signal, future.iloc[0]["close"], risk_for_diag)
+            if len(future) > 1:
+                fwd2_close_r = _r_multiple(signal, future.iloc[1]["close"], risk_for_diag)
+
         # The signal is generated after candle i closes, so entry_time must be
         # close_time. Reporting open_time made every trade appear one candle
         # earlier than the price at which it was actually entered.
@@ -314,6 +331,7 @@ def backtest_symbol(
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
                 mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs, score=signal.score,
                 tp1=signal.tp1, tp1_filled=tp1_filled, mfe_r=mfe_r,
+                fwd1_close_r=fwd1_close_r, fwd2_close_r=fwd2_close_r,
             )
         )
 
