@@ -85,8 +85,8 @@
   "CLUSDT|15m": {
     "symbol": "CLUSDT",
     "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T15:56:46.787700+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-09T00:05:53.046404+00:00"
   },
   "COINUSDT|1h": {
     "symbol": "COINUSDT",
@@ -153,5 +153,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-08T23:04:07.242284+00:00"
+  },
+  "HYPEUSDT|1h": {
+    "symbol": "HYPEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T00:05:50.552275+00:00"
+  },
+  "TSLAUSDT|1h": {
+    "symbol": "TSLAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T00:05:54.370274+00:00"
+  },
+  "KSMUSDT|1h": {
+    "symbol": "KSMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T00:05:55.704664+00:00"
   }
 }

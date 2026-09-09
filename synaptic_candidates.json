@@ -8676,5 +8676,98 @@
     "sl": 8.209093,
     "tp": 9.334433,
     "scanned_at": "2026-09-08T23:02:55.501185+00:00"
+  },
+  {
+    "symbol": "HYPEUSDT",
+    "direction": "LONG",
+    "score": 93.7,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (57) menguatkan momentum naik",
+      "ADX (32.8) tren kuat (+12.7 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 1.81",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.81 (sisa posisi)"
+    ],
+    "entry": 85.121,
+    "sl": 83.281483,
+    "tp": 88.449,
+    "tp1": 86.960517,
+    "scanned_at": "2026-09-09T00:04:44.677295+00:00"
+  },
+  {
+    "symbol": "CLUSDT",
+    "direction": "LONG",
+    "score": 88.0,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "ADX (35.6) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 93.9,
+    "sl": 93.310641,
+    "tp": 94.960847,
+    "tp1": 94.489359,
+    "scanned_at": "2026-09-09T00:04:44.677295+00:00"
+  },
+  {
+    "symbol": "TSLAUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (68) menguatkan momentum naik",
+      "ADX (38.6) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 366.69,
+    "sl": 363.240402,
+    "tp": 372.899276,
+    "tp1": 370.139598,
+    "scanned_at": "2026-09-09T00:04:44.677295+00:00"
+  },
+  {
+    "symbol": "KSMUSDT",
+    "direction": "LONG",
+    "score": 73.1,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (58) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (23.0) tren kuat (+2.1 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 4.131,
+    "sl": 3.896905,
+    "tp": 4.552371,
+    "tp1": 4.365095,
+    "scanned_at": "2026-09-09T00:04:44.677295+00:00"
   }
 ]
