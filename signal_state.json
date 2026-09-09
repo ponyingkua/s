@@ -327,5 +327,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-09T22:04:27.733534+00:00"
+  },
+  "MVLLUSDT|1h": {
+    "symbol": "MVLLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T23:03:49.561554+00:00"
+  },
+  "MRVLUSDT|1h": {
+    "symbol": "MRVLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T23:03:53.848149+00:00"
+  },
+  "MUUUSDT|1h": {
+    "symbol": "MUUUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T23:03:55.108324+00:00"
+  },
+  "MUUSDT|1h": {
+    "symbol": "MUUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T23:03:56.494821+00:00"
   }
 }
