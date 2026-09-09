@@ -277,14 +277,73 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
     return level, trend
 
 
+def _gaussian_kernel1d(sigma: float, radius: int) -> np.ndarray:
+    x = np.arange(-radius, radius + 1, dtype=float)
+    kernel = np.exp(-0.5 * (x / sigma) ** 2)
+    return kernel / kernel.sum()
+
+
+def _round_step_corners(x_idx: np.ndarray, y_val: np.ndarray,
+                         step_res: float = 0.08, sigma: float = 0.15):
+    """1 run step (index candle berurutan naik 1, tanpa celah) diubah jadi
+    polyline rapat lalu di-gaussian-filter tipis -- cuma sudut tikungannya
+    yang membulat, pelat datar yang cukup lebar tetap kebaca flat seperti
+    semula (bukan smoothing penuh sepanjang garis)."""
+    if len(x_idx) < 2:
+        return x_idx.astype(float), y_val.astype(float)
+
+    fine_x = np.arange(float(x_idx[0]), float(x_idx[-1]) + step_res / 2, step_res)
+    if fine_x[-1] < x_idx[-1]:
+        fine_x = np.append(fine_x, float(x_idx[-1]))
+
+    pos = np.clip(np.searchsorted(x_idx, fine_x, side="right") - 1, 0, len(y_val) - 1)
+    fine_y = y_val[pos].astype(float)
+
+    radius = max(1, int(round((sigma * 3) / step_res)))
+    kernel = _gaussian_kernel1d(sigma / step_res, radius)
+    padded = np.pad(fine_y, radius, mode="edge")
+    smooth_y = np.convolve(padded, kernel, mode="valid")
+    return fine_x, smooth_y
+
+
+def _rounded_masked_line(level_masked: pd.Series):
+    """Pecah garis step yang sudah di-mask per arah trend (NaN di bagian
+    trend lawan) jadi run-run kontinu, bulatkan tikungan tiap run lewat
+    _round_step_corners, gabung lagi jadi 1 pasang array x/y (dipisah NaN
+    antar-run) supaya tetap 1x panggilan ax.plot dan celah pas trend ganti
+    arah tetap putus seperti semula, bukan malah nyambung."""
+    values = level_masked.to_numpy(dtype=float)
+    valid = ~np.isnan(values)
+    out_x: list = []
+    out_y: list = []
+    i = 0
+    n = len(values)
+    while i < n:
+        if not valid[i]:
+            i += 1
+            continue
+        j = i
+        while j < n and valid[j]:
+            j += 1
+        fx, fy = _round_step_corners(np.arange(i, j, dtype=float), values[i:j])
+        if out_x:
+            out_x.append(np.nan)
+            out_y.append(np.nan)
+        out_x.extend(fx.tolist())
+        out_y.extend(fy.tolist())
+        i = j
+    return np.array(out_x), np.array(out_y)
+
+
 def _draw_supertrend(ax, level: pd.Series, trend: pd.Series,
                       period: int, multiplier) -> None:
-    x = range(len(level))
-    ax.plot(x, level.where(trend == 1), color=ST_UP, linewidth=1.4, alpha=0.90,
-             drawstyle="steps-post", solid_joinstyle="round",
+    up_x, up_y = _rounded_masked_line(level.where(trend == 1))
+    down_x, down_y = _rounded_masked_line(level.where(trend == -1))
+    ax.plot(up_x, up_y, color=ST_UP, linewidth=1.4, alpha=0.90,
+             solid_joinstyle="round", solid_capstyle="round",
              label=f"Supertrend {period}/{multiplier}", zorder=7)
-    ax.plot(x, level.where(trend == -1), color=ST_DOWN, linewidth=1.4, alpha=0.90,
-             drawstyle="steps-post", solid_joinstyle="round", zorder=7)
+    ax.plot(down_x, down_y, color=ST_DOWN, linewidth=1.4, alpha=0.90,
+             solid_joinstyle="round", solid_capstyle="round", zorder=7)
 
 
 # ============================================================
