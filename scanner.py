@@ -335,6 +335,54 @@ def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: 
     return se_cfg.get(param, default)
 
 
+def _pullback_confirmed(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict) -> bool:
+    """
+    Gate konfirmasi tambahan untuk PULLBACK, di-toggle lewat
+    setup_engine.pullback_confirmation di config (default OFF -> perilaku
+    lama, murni proximity ke EMA200).
+
+    Motivasi: proximity-to-EMA saja (dist_ema_atr <= pullback_atr_mult) tidak
+    membedakan pullback yang baru mulai bangkit dari yang masih jatuh bebas.
+    Backtest 895 trade 15m (19 Feb-8 Sep 2026) menunjukkan PULLBACK LONG
+    (n=320) avg R -0.155, win rate 21.2% -- menyumbang ~71% dari total
+    kerugian R gabungan semua setup, jauh lebih buruk dari BREAKOUT/
+    CONTINUATION (avg R sekitar -0.03 sampai -0.05 di sampel yang sama).
+    Kalau gate ini gagal, classify_setup TIDAK menolak sinyal -- cuma tidak
+    mengembalikan PULLBACK, biasanya jatuh ke CONTINUATION di bawahnya
+    (bonus skor lebih rendah/negatif), bukan diklasifikasikan ulang jadi
+    setup lain yang tidak sesuai realitanya.
+
+    BELUM divalidasi lewat backtest granular (angka di atas adalah motivasi
+    korelasional, bukan hasil A/B test gate ini) -- jalankan backtest.py
+    dengan enabled: true vs false sebelum dipakai live, bandingkan avg R
+    & win rate khusus PULLBACK LONG di kedua kondisi.
+    """
+    pb_cfg = cfg.get("setup_engine", {}).get("pullback_confirmation", {})
+    if not pb_cfg.get("enabled", False):
+        return True
+
+    close = df["close"].iloc[i]
+    open_price = df["open"].iloc[i]
+    candle_bullish = close > open_price
+    candle_bearish = close < open_price
+
+    if direction == "LONG" and pb_cfg.get("require_bullish_candle", True) and not candle_bullish:
+        return False
+    if direction == "SHORT" and pb_cfg.get("require_bearish_candle", True) and not candle_bearish:
+        return False
+
+    if pb_cfg.get("require_rsi_turn", False):
+        rsi_series = ind.get("rsi")
+        if rsi_series is None or i < 1 or pd.isna(rsi_series.iloc[i]) or pd.isna(rsi_series.iloc[i - 1]):
+            return False
+        if direction == "LONG" and not (rsi_series.iloc[i] > rsi_series.iloc[i - 1]):
+            return False
+        if direction == "SHORT" and not (rsi_series.iloc[i] < rsi_series.iloc[i - 1]):
+            return False
+
+    return True
+
+
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
@@ -370,7 +418,12 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
         or (direction == "SHORT" and close <= ema_val)
     )
     if on_trend_side and dist_ema_atr <= pullback_atr_mult:
-        return "PULLBACK"
+        if _pullback_confirmed(df, ind, i, direction, cfg):
+            return "PULLBACK"
+        # Konfirmasi gagal -> jangan langsung PULLBACK. Lanjut ke bawah;
+        # karena dist_ema_atr di sini masih <= pullback_atr_mult (< extended),
+        # baris EXTENDED/OVEREXTENDED tidak akan kena, jadi akan jatuh ke
+        # CONTINUATION di baris terakhir fungsi ini.
     if on_trend_side and dist_ema_atr >= overextended_atr_mult:
         return "OVEREXTENDED"
     if on_trend_side and dist_ema_atr >= extended_atr_mult:
@@ -410,6 +463,29 @@ def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: 
         return dir_cfg[st]
 
     return sb_cfg.get(st, 0)
+
+
+def get_min_score_to_trigger(cfg: dict, timeframe: str = "") -> float:
+    """
+    Ambang skor minimum untuk memicu sinyal, dengan opsional override per
+    timeframe lewat scoring.min_score_to_trigger_by_tf (mis. {'15m': 78}).
+    Fallback ke scoring.min_score_to_trigger (flat, lama) kalau tidak ada
+    override untuk timeframe ini -- backward compatible, tidak mengubah
+    perilaku kalau min_score_to_trigger_by_tf tidak diisi di config.
+
+    Kenapa ini disediakan: backtest 15m (n=895) menunjukkan hubungan skor
+    vs avg R TIDAK monoton naik -- bucket 75-80 avg R -0.207 justru lebih
+    buruk dari 65-70 (-0.097), dan bucket 90-95 masih -0.115. Jadi menaikkan
+    ambang flat untuk SEMUA timeframe bukan lever yang tepat sendirian (dan
+    belum tentu menaikkan pun langsung memperbaiki 15m -- perlu dicek dulu
+    lewat backtest, bukan diasumsikan). Helper ini cuma membuka opsi untuk
+    eksperimen ambang per-TF secara terpisah dari 1h/4h yang pola skornya
+    bisa berbeda -- BUKAN rekomendasi angka tertentu.
+    """
+    by_tf = cfg.get("scoring", {}).get("min_score_to_trigger_by_tf", {})
+    if timeframe and isinstance(by_tf, dict) and timeframe in by_tf:
+        return by_tf[timeframe]
+    return cfg["scoring"]["min_score_to_trigger"]
 
 
 def mtf_bonus_eligible(setup_type: str, cfg: dict) -> bool:
@@ -660,13 +736,14 @@ def score_at(
 
     final_score = long_score if direction == "LONG" else short_score
 
-    if final_score < cfg["scoring"]["min_score_to_trigger"]:
+    min_score = get_min_score_to_trigger(cfg, timeframe)
+    if final_score < min_score:
         return SignalResult(
             symbol=symbol, direction="NONE", score=final_score,
             timeframe=timeframe, setup_type=setup_type,
             reasons=reasons + [
                 f"Skor akhir ({final_score:.1f}) di bawah ambang "
-                f"{cfg['scoring']['min_score_to_trigger']} — sinyal ditahan"
+                f"{min_score} — sinyal ditahan"
             ],
         )
 
