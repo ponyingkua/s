@@ -14,7 +14,7 @@
     "symbol": "QCOMUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T09:04:08.746840+00:00"
+    "timestamp": "2026-09-09T14:04:19.662578+00:00"
   },
   "SOXLUSDT|4h": {
     "symbol": "SOXLUSDT",
@@ -219,5 +219,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T13:04:48.584697+00:00"
+  },
+  "METUSDT|1h": {
+    "symbol": "METUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T14:04:11.831145+00:00"
+  },
+  "SCRUSDT|1h": {
+    "symbol": "SCRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T14:04:13.942499+00:00"
+  },
+  "MIRAUSDT|1h": {
+    "symbol": "MIRAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T14:04:15.438739+00:00"
+  },
+  "KATUSDT|1h": {
+    "symbol": "KATUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T14:04:16.874024+00:00"
+  },
+  "GPSUSDT|1h": {
+    "symbol": "GPSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T14:04:18.246499+00:00"
   }
 }
