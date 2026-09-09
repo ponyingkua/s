@@ -224,7 +224,7 @@ risk:
   structure_sl_max_atr_mult: 2.5
   structure_sl_max_atr_mult_breakout: 3.5
   reject_structural_stop_too_wide: true
-  max_signals_per_regime_episode: 2
+  max_signals_per_regime_episode: 4
   # TP final (di atas) tetap dihitung sama seperti sebelumnya (level struktur
   # atau RR minimum) -- partial_tp cuma menambah TP1 di depannya supaya
   # sebagian profit terkunci lebih awal, bukan mengganti logika TP final.
