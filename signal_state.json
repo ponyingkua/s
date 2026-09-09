@@ -28,18 +28,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-08T22:04:37.963441+00:00"
   },
-  "GUSDT|15m": {
-    "symbol": "GUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T15:38:38.495040+00:00"
-  },
-  "ESPORTSUSDT|1h": {
-    "symbol": "ESPORTSUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T15:38:40.545415+00:00"
-  },
   "CLUSDT|15m": {
     "symbol": "CLUSDT",
     "timeframe": "15m",
@@ -86,7 +74,7 @@
     "symbol": "QCOMUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-08T22:41:27.203160+00:00"
+    "timestamp": "2026-09-09T04:03:53.851590+00:00"
   },
   "GRAMUSDT|1h": {
     "symbol": "GRAMUSDT",
@@ -110,7 +98,7 @@
     "symbol": "ETCUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-08T23:04:07.242284+00:00"
+    "timestamp": "2026-09-09T04:03:52.174312+00:00"
   },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
@@ -165,5 +153,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T03:04:35.649109+00:00"
+  },
+  "ASTERUSDT|1h": {
+    "symbol": "ASTERUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T04:03:54.862762+00:00"
+  },
+  "SKHYNIXUSDT|4h": {
+    "symbol": "SKHYNIXUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T04:03:55.843239+00:00"
   }
 }
