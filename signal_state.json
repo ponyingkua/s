@@ -22,12 +22,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T08:04:24.617714+00:00"
   },
-  "ETCUSDT|1h": {
-    "symbol": "ETCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T04:03:52.174312+00:00"
-  },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
     "timeframe": "1h",
@@ -46,12 +40,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T08:04:21.208574+00:00"
   },
-  "1000CATUSDT|15m": {
-    "symbol": "1000CATUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T03:04:31.993604+00:00"
-  },
   "SKRUSDT|1h": {
     "symbol": "SKRUSDT",
     "timeframe": "1h",
@@ -68,7 +56,7 @@
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T11:04:19.738207+00:00"
+    "timestamp": "2026-09-09T16:04:18.905347+00:00"
   },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
@@ -261,5 +249,47 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-09T15:03:57.806959+00:00"
+  },
+  "SCRUSDT|4h": {
+    "symbol": "SCRUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:11.425848+00:00"
+  },
+  "BULLAUSDT|1h": {
+    "symbol": "BULLAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:13.089260+00:00"
+  },
+  "ZENUSDT|1h": {
+    "symbol": "ZENUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:14.057796+00:00"
+  },
+  "ARMUSDT|4h": {
+    "symbol": "ARMUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:15.098421+00:00"
+  },
+  "QCOMUSDT|4h": {
+    "symbol": "QCOMUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:16.015763+00:00"
+  },
+  "EDGEUSDT|1h": {
+    "symbol": "EDGEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T16:04:16.950885+00:00"
+  },
+  "MSFTUSDT|1h": {
+    "symbol": "MSFTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-09T16:04:17.931456+00:00"
   }
 }
