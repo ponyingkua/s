@@ -22,29 +22,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-08T20:47:58.741921+00:00"
   },
-  "JASMYUSDT|1h": {
-    "symbol": "JASMYUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T14:57:30.740828+00:00"
-  },
-  "JUPUSDT|15m": {
-    "symbol": "JUPUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T13:16:36.617377+00:00"
-  },
   "PENGUUSDT|1h": {
     "symbol": "PENGUUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T22:04:37.963441+00:00"
-  },
-  "TRUMPUSDT|1h": {
-    "symbol": "TRUMPUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T14:57:32.801776+00:00"
   },
   "GUSDT|15m": {
     "symbol": "GUSDT",
@@ -92,7 +74,7 @@
     "symbol": "MVLLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-08T22:41:24.683866+00:00"
+    "timestamp": "2026-09-09T03:04:34.332764+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
@@ -116,7 +98,7 @@
     "symbol": "SOXLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-08T23:04:04.534369+00:00"
+    "timestamp": "2026-09-09T03:04:37.029489+00:00"
   },
   "AIOUSDT|1h": {
     "symbol": "AIOUSDT",
@@ -171,5 +153,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T01:04:43.378966+00:00"
+  },
+  "1000CATUSDT|15m": {
+    "symbol": "1000CATUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T03:04:31.993604+00:00"
+  },
+  "SKRUSDT|1h": {
+    "symbol": "SKRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T03:04:35.649109+00:00"
   }
 }
