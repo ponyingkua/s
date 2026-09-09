@@ -206,7 +206,7 @@
     "symbol": "ZENUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:14.057796+00:00"
+    "timestamp": "2026-09-09T21:03:30.537940+00:00"
   },
   "ARMUSDT|4h": {
     "symbol": "ARMUSDT",
@@ -230,7 +230,7 @@
     "symbol": "MSFTUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-09T16:04:17.931456+00:00"
+    "timestamp": "2026-09-09T21:03:33.464618+00:00"
   },
   "BTRUSDT|1h": {
     "symbol": "BTRUSDT",
@@ -321,5 +321,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T20:04:32.264058+00:00"
+  },
+  "GOOGLUSDT|1h": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-09T21:03:32.410970+00:00"
+  },
+  "BMTUSDT|1h": {
+    "symbol": "BMTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T21:03:34.461068+00:00"
   }
 }
