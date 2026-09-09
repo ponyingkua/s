@@ -76,23 +76,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T11:04:16.499275+00:00"
   },
-  "XPTUSDT|15m": {
-    "symbol": "XPTUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T06:05:07.724061+00:00"
-  },
   "HOODUSDT|1h": {
     "symbol": "HOODUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T13:04:47.556967+00:00"
-  },
-  "METAUSDT|1h": {
-    "symbol": "METAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T06:05:10.531365+00:00"
   },
   "ORCAUSDT|1h": {
     "symbol": "ORCAUSDT",
@@ -327,5 +315,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T18:04:52.410870+00:00"
+  },
+  "XTZUSDT|1h": {
+    "symbol": "XTZUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T19:03:45.357983+00:00"
+  },
+  "PORTALUSDT|1h": {
+    "symbol": "PORTALUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T19:03:48.374391+00:00"
+  },
+  "GRASSUSDT|1h": {
+    "symbol": "GRASSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T19:03:49.622636+00:00"
+  },
+  "SPYUSDT|1h": {
+    "symbol": "SPYUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-09T19:03:50.993980+00:00"
+  },
+  "PYTHUSDT|1h": {
+    "symbol": "PYTHUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T19:03:52.250348+00:00"
   }
 }

@@ -10646,5 +10646,120 @@
     "tp": 76.132937,
     "tp1": 73.353854,
     "scanned_at": "2026-09-09T18:03:57.742160+00:00"
+  },
+  {
+    "symbol": "XTZUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (38.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.2641,
+    "sl": 0.247324,
+    "tp": 0.294297,
+    "tp1": 0.280876,
+    "scanned_at": "2026-09-09T19:03:00.674288+00:00"
+  },
+  {
+    "symbol": "PORTALUSDT",
+    "direction": "LONG",
+    "score": 71.7,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (29.1) tren kuat (+8.7 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.30",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.30 (sisa posisi)"
+    ],
+    "entry": 0.01743,
+    "sl": 0.016347,
+    "tp": 0.01992,
+    "tp1": 0.018513,
+    "scanned_at": "2026-09-09T19:03:00.674288+00:00"
+  },
+  {
+    "symbol": "GRASSUSDT",
+    "direction": "LONG",
+    "score": 70.6,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "ADX (28.1) tren kuat (+7.6 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.3703,
+    "sl": 0.353418,
+    "tp": 0.400688,
+    "tp1": 0.387182,
+    "scanned_at": "2026-09-09T19:03:00.674288+00:00"
+  },
+  {
+    "symbol": "SPYUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (36.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 763.46,
+    "sl": 765.56981,
+    "tp": 759.662342,
+    "tp1": 761.35019,
+    "scanned_at": "2026-09-09T19:03:00.674288+00:00"
+  },
+  {
+    "symbol": "PYTHUSDT",
+    "direction": "LONG",
+    "score": 65.8,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (58) menguatkan momentum naik",
+      "ADX (23.6) tren kuat (+2.8 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.0556,
+    "sl": 0.053624,
+    "tp": 0.059157,
+    "tp1": 0.057576,
+    "scanned_at": "2026-09-09T19:03:00.674288+00:00"
   }
 ]
