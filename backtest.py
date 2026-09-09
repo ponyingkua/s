@@ -12,6 +12,7 @@ from scanner import (
     BinanceFuturesClient,
     compute_indicators,
     get_min_score_to_trigger,
+    is_score_excluded,
     mtf_bonus_eligible,
     passes_regime_filter,
     passes_risk_filter,
@@ -278,8 +279,15 @@ def backtest_symbol(
                     f"Searah dengan TF {', '.join(agree_tfs)} (+{mtf_bonus} MTF agreement)"
                 )
 
-        # Re-check min_score after MTF bonus (same as live)
+        # Re-check min_score & excluded_score_bands setelah MTF bonus (sama
+        # dengan run_scan() di scanner.py, yang direplikasi persis di sini --
+        # keduanya sempat tidak sinkron sebelum ini: run_scan() tidak
+        # re-check pasca-MTF sama sekali, sudah diperbaiki bersamaan dengan
+        # penambahan excluded_score_bands).
         if signal.score < get_min_score_to_trigger(cfg, timeframe):
+            i += 1
+            continue
+        if is_score_excluded(cfg, signal.score, timeframe):
             i += 1
             continue
 
