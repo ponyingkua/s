@@ -488,6 +488,31 @@ def get_min_score_to_trigger(cfg: dict, timeframe: str = "") -> float:
     return cfg["scoring"]["min_score_to_trigger"]
 
 
+def is_score_excluded(cfg: dict, score: float, timeframe: str = "") -> bool:
+    """
+    True kalau `score` jatuh di salah satu rentang scoring.excluded_score_bands
+    untuk timeframe ini -- lubang di tengah rentang skor yang lolos
+    min_score_to_trigger tapi terbukti tetap avg R negatif (beda dari sekadar
+    ambang bawah, yang sudah ditangani get_min_score_to_trigger).
+
+    Format config: {timeframe: [[low, high], ...]}, batas inklusif di kedua
+    sisi. Kosong/tidak diisi = tidak ada band yang dikecualikan (perilaku
+    lama, tidak berubah).
+
+    Dipanggil di DUA tempat yang harus tetap sinkron: score_at() untuk skor
+    pra-MTF, dan sekali lagi di run_scan()/backtest_symbol() setelah MTF
+    agreement bonus ditambahkan -- MTF bonus bisa menggeser skor MASUK atau
+    KELUAR sebuah band setelah cek pertama, jadi re-check pasca-MTF wajib
+    ada supaya band-exclude tidak bisa "diloncati" oleh bonus MTF. Lihat
+    catatan paritas yang sama di get_min_score_to_trigger (re-check
+    min_score pasca-MTF) -- pola dan alasannya identik.
+    """
+    bands = cfg.get("scoring", {}).get("excluded_score_bands", {}).get(timeframe, [])
+    return any(low <= score <= high for low, high in bands)
+
+
+
+
 def mtf_bonus_eligible(setup_type: str, cfg: dict) -> bool:
     """
     MTF agreement bonus dikecualikan untuk setup_type tertentu via
@@ -744,6 +769,16 @@ def score_at(
             reasons=reasons + [
                 f"Skor akhir ({final_score:.1f}) di bawah ambang "
                 f"{min_score} — sinyal ditahan"
+            ],
+        )
+
+    if is_score_excluded(cfg, final_score, timeframe):
+        return SignalResult(
+            symbol=symbol, direction="NONE", score=final_score,
+            timeframe=timeframe, setup_type=setup_type,
+            reasons=reasons + [
+                f"Skor akhir ({final_score:.1f}) jatuh di rentang skor yang "
+                "dikecualikan (excluded_score_bands) — sinyal ditahan"
             ],
         )
 
@@ -1358,6 +1393,21 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
             for signal, kline in cands:
                 direction_map.setdefault(kline.symbol, {})[tf] = signal.direction
 
+        # Re-check pasca-MTF: bonus MTF agreement ditambahkan SETELAH sinyal
+        # lolos min_score_to_trigger & excluded_score_bands di score_at()
+        # (skor pra-MTF). Tanpa re-check di sini, live scanner (run_scan)
+        # tidak sinkron dengan backtest_symbol() di backtest.py, yang SUDAH
+        # re-check min_score pasca-MTF (backtest.py baris ~282) -- gap ini
+        # sudah ada sebelum excluded_score_bands ditambahkan, ditemukan &
+        # diperbaiki bersamaan.
+        #
+        # Dampak historis kecil (MTF bonus applied di 2.7% trade pada
+        # backtest 15m n=825, 0% di n=120 terbaru -- BREAKOUT/PULLBACK yang
+        # dominan sekarang dikecualikan dari bonus MTF) tapi nyata: bonus
+        # selalu +20 flat sekali applied (weights.mtf_agreement), lompatan
+        # sebesar itu bisa menggeser skor MASUK excluded_score_bands yang
+        # tidak diverifikasi ulang kalau tidak ada blok ini.
+        mtf_rejected = 0
         flat_candidates: list[tuple[SignalResult, Kline]] = []
         for tf, cands in per_tf_candidates.items():
             for signal, kline in cands:
@@ -1371,6 +1421,13 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                     signal.reasons.append(
                         f"Searah dengan TF {', '.join(agree_tfs)} (+{bonus} MTF agreement)"
                     )
+
+                if signal.score < get_min_score_to_trigger(cfg, tf):
+                    mtf_rejected += 1
+                    continue
+                if is_score_excluded(cfg, signal.score, tf):
+                    mtf_rejected += 1
+                    continue
                 flat_candidates.append((signal, kline))
 
         best_per_symbol: dict[str, tuple[SignalResult, Kline]] = {}
@@ -1427,6 +1484,12 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                     square=is_square,
                 )
                 chart_paths.append(chart_path)
+
+        if mtf_rejected:
+            print(
+                f"[diag] Ditolak pasca-MTF (skor turun di bawah ambang atau masuk "
+                f"excluded_score_bands setelah bonus MTF ditambahkan): {mtf_rejected}"
+            )
 
         if results:
             print(f"[scan] Sinyal ditemukan ({len(results)}):")
