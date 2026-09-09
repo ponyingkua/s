@@ -191,6 +191,11 @@ class Trade:
     score: float = 0.0  # skor akhir sinyal setelah MTF bonus
     tp1: float | None = None       # TP partial, None kalau partial_tp tidak aktif
     tp1_filled: bool = False       # apakah TP1 sempat kena sebelum trade ditutup
+    mfe_r: float = 0.0              # Max Favorable Excursion (R) yang sempat tercapai
+    # sebelum exit -- dihitung dari high (LONG) / low (SHORT) tiap bar sampai bar
+    # exit inklusif, terlepas dari SL/TP/TP1 kena atau tidak. Murni diagnostik
+    # (tidak memengaruhi r_multiple/hasil trade), dipakai untuk melihat seberapa
+    # dekat trade yang GAGAL capai TP1 sempat mendekat sebelum berbalik.
 
 
 def backtest_symbol(
@@ -285,7 +290,7 @@ def backtest_symbol(
         tie_break = cfg.get("backtest", {}).get("intrabar_tie_break", "conservative")
         max_holding_bars = int(cfg.get("backtest", {}).get("max_holding_bars", 0))
         partial_cfg = cfg.get("risk", {}).get("partial_tp", {})
-        result, r_mult, exit_offset, both_touched, tp1_filled = _simulate_exit(
+        result, r_mult, exit_offset, both_touched, tp1_filled, mfe_r = _simulate_exit(
             signal, future, fee_pct, tie_break, max_holding_bars=max_holding_bars,
             partial_cfg=partial_cfg,
         )
@@ -308,7 +313,7 @@ def backtest_symbol(
                 timeframe=signal.timeframe, setup_type=signal.setup_type,
                 entry_time=entry_time, exit_time=exit_time, both_touched=both_touched,
                 mtf_bonus=mtf_bonus, mtf_agree_tfs=agree_tfs, score=signal.score,
-                tp1=signal.tp1, tp1_filled=tp1_filled,
+                tp1=signal.tp1, tp1_filled=tp1_filled, mfe_r=mfe_r,
             )
         )
 
@@ -335,7 +340,7 @@ def _simulate_exit(
     tie_break: str = "conservative",
     max_holding_bars: int = 0,
     partial_cfg: dict | None = None,
-) -> tuple[str, float, int, bool, bool]:
+) -> tuple[str, float, int, bool, bool, float]:
     """Simulasi exit intrabar berbasis OHLC (bukan tick), dengan dukungan
     opsional TP1 partial (risk.partial_tp di config).
 
@@ -360,7 +365,12 @@ def _simulate_exit(
       supaya tidak dikira bug kalau hasil backtest sedikit optimis di kasus
       candle sangat panjang.
 
-    Return: (result, r_multiple, exit_offset, both_touched, tp1_filled)
+    mfe_r (elemen ke-6 hasil): Max Favorable Excursion dalam R, dihitung dari
+    high (LONG) / low (SHORT) tiap bar sampai bar exit inklusif -- murni
+    diagnostik untuk melihat seberapa dekat trade yang gagal capai TP1 sempat
+    mendekat sebelum berbalik. Tidak memengaruhi r_multiple/hasil trade.
+
+    Return: (result, r_multiple, exit_offset, both_touched, tp1_filled, mfe_r)
     """
     risk = abs(signal.entry - signal.sl)
     fee_r = (signal.entry * fee_pct) / risk if risk > 0 else 0.0
@@ -379,6 +389,7 @@ def _simulate_exit(
     realized_r = 0.0   # R yang sudah dikunci dari porsi TP1 yang closed
     active_sl = signal.sl
     any_touch_tie = False
+    mfe_r = 0.0  # running max favorable excursion (R), lihat docstring di atas
 
     def _hits(bar):
         if signal.direction == "LONG":
@@ -392,6 +403,11 @@ def _simulate_exit(
         return hit_sl_, hit_tp1_, hit_tp2_
 
     for offset, (_, bar) in enumerate(bars_to_check.iterrows()):
+        bar_favorable_price = bar["high"] if signal.direction == "LONG" else bar["low"]
+        bar_r = _r_multiple(signal, bar_favorable_price, risk)
+        if bar_r > mfe_r:
+            mfe_r = bar_r
+
         hit_sl, hit_tp1, hit_tp2 = _hits(bar)
         if not (hit_sl or hit_tp1 or hit_tp2):
             continue
@@ -413,7 +429,7 @@ def _simulate_exit(
             else:
                 total_r = exit_r
                 result = "LOSS"
-            return result, total_r - fee_r, offset, any_touch_tie, tp1_filled
+            return result, total_r - fee_r, offset, any_touch_tie, tp1_filled, mfe_r
 
         # TP menang (atau tidak ada tie sama sekali)
         if hit_tp1:
@@ -426,21 +442,21 @@ def _simulate_exit(
             if hit_tp2:
                 r_tp2 = _r_multiple(signal, signal.tp, risk)
                 realized_r += (1 - tp1_pct) * r_tp2
-                return "WIN", realized_r - fee_r, offset, any_touch_tie, tp1_filled
+                return "WIN", realized_r - fee_r, offset, any_touch_tie, tp1_filled, mfe_r
             continue
 
         # hit_tp2 tanpa hit_tp1 (partial tidak aktif, atau TP1 sudah filled sebelumnya)
         r_tp2 = _r_multiple(signal, signal.tp, risk)
         total_r = realized_r + (1 - tp1_pct) * r_tp2 if tp1_filled else r_tp2
-        return "WIN", total_r - fee_r, offset, any_touch_tie, tp1_filled
+        return "WIN", total_r - fee_r, offset, any_touch_tie, tp1_filled, mfe_r
 
     if max_holding_bars > 0 and len(future_df) >= max_holding_bars and len(bars_to_check) > 0:
         last_close = float(bars_to_check.iloc[-1]["close"])
         mark_r = _r_multiple(signal, last_close, risk)
         total_r = realized_r + (1 - tp1_pct) * mark_r if tp1_filled else mark_r
-        return "TIMEOUT", total_r - fee_r, len(bars_to_check) - 1, any_touch_tie, tp1_filled
+        return "TIMEOUT", total_r - fee_r, len(bars_to_check) - 1, any_touch_tie, tp1_filled, mfe_r
 
-    return "OPEN", 0.0, len(future_df), any_touch_tie, tp1_filled
+    return "OPEN", 0.0, len(future_df), any_touch_tie, tp1_filled, mfe_r
 
 
 def _resolve_tie(tie_break: str, signal, bar) -> bool:
