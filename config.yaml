@@ -74,7 +74,13 @@ scoring:
     "1h":
       breakout: 16
       short:
-        breakout: -10   # LONG breakout avg R +0.65 (n=22) vs SHORT avg R -0.09 (n=47) -> dipisah
+        breakout: -20   # -10 sebelumnya TIDAK CUKUP: validasi 694 trade (21 Feb-8
+        # Sep 2026, trades_raw_batch.json) tunjukkan BREAKOUT SHORT masih avg R
+        # -0.743, win 0% (n=10 -- SELURUH populasi yang lolos threshold 65 lama,
+        # bukan sampel sebagian; base_score-nya 75.4-83.0, semua turun di bawah
+        # 65 dgn bonus -20 sehingga tersaring threshold flat). n kecil (10),
+        # tapi win rate 0% di seluruh populasi cukup mencolok utk didalami --
+        # cek ulang kalau n bertambah, terutama kalau muncul win pertama.
         # 6 sebelumnya (avg R +0.21, n=70) tidak lagi konsisten di data terbaru:
         # keseluruhan turun ke avg R +0.02 (n=127), 58% dari semua sinyal 1h.
         # Breakdown skor jelas dua-puncak (65-70: R -0.40 n=31; 70-75: R -0.04 n=36;
@@ -172,6 +178,28 @@ scoring:
   excluded_score_bands:
     "15m":
       - [90, 95]
+    # 1h: [90, 100] pada SKOR FINAL (pasca setup_bonus, sebelum MTF -- MTF
+    # bonus applied di 0.6% trade 1h, cek re-check pasca-MTF tetap jalan
+    # normal seperti 15m). Divalidasi dari 694 trade 1h (21 Feb-8 Sep 2026,
+    # trades_raw_batch.json): hanya BREAKOUT (n=35) dan PULLBACK (n=28) yang
+    # punya trade di rentang skor final ini -- EXTENDED dan CONTINUATION
+    # base_score-nya di luar rentang ini sama sekali, jadi band-exclude
+    # timeframe-wide di sini TIDAK menyentuh keduanya. Gabungan BREAKOUT+
+    # PULLBACK di rentang ini avg R -0.256, win 19.0%.
+    #
+    # BEDA DARI 15m: untuk CONTINUATION LONG & PULLBACK LONG, ini BUKAN
+    # band-aid murni tanpa penjelasan -- ditemukan lewat breakdown base_score
+    # (score sebelum setup_bonus lama) yang justru pola MONOTON (base_score
+    # 80-85 avg R +0.463, turun terus sampai 95-100 avg R -0.362 utk
+    # CONTINUATION LONG) -- tapi setup_bonus (penalti flat) tidak bisa
+    # memperbaiki ini karena arahnya salah: base_score TINGGI di sini = jelek,
+    # padahal menaikkan penalti cuma bisa membuang dari skor RENDAH (siapa pun
+    # yang gagal >= min_score_to_trigger duluan), bukan dari skor tinggi.
+    # Exclude band adalah mekanisme yang tepat untuk pola "tinggi = jelek",
+    # bukan setup_bonus. Untuk BREAKOUT sendiri masih deskriptif spt 15m
+    # (dip di tengah, diapit dua zona positif, mekanisme belum ditelusuri).
+    "1h":
+      - [90, 100]
   min_trend_alignment: 2
   min_direction_margin: 8
 
