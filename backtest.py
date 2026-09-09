@@ -11,6 +11,7 @@ import yaml
 from scanner import (
     BinanceFuturesClient,
     compute_indicators,
+    get_min_score_to_trigger,
     mtf_bonus_eligible,
     passes_regime_filter,
     passes_risk_filter,
@@ -278,7 +279,7 @@ def backtest_symbol(
                 )
 
         # Re-check min_score after MTF bonus (same as live)
-        if signal.score < cfg["scoring"]["min_score_to_trigger"]:
+        if signal.score < get_min_score_to_trigger(cfg, timeframe):
             i += 1
             continue
 
@@ -530,6 +531,31 @@ def summarize_by_direction(trades: list[Trade]) -> dict[str, dict]:
     return {d: summarize(ts) for d, ts in by_dir.items()}
 
 
+def split_by_date(trades: list[Trade], split_date: str) -> tuple[list[Trade], list[Trade]]:
+    """
+    Pisah trade jadi (in_sample, out_of_sample) berdasarkan entry_time vs
+    split_date (format 'YYYY-MM-DD', UTC). in_sample = entry_time <
+    split_date, out_of_sample = entry_time >= split_date.
+
+    Dipakai untuk validasi walk-forward: config/setup_bonus yang di-tuning
+    dari data SEBELUM split_date seharusnya dicek performanya di data
+    SESUDAH split_date (yang tidak ikut proses tuning), bukan cuma dilihat
+    dari avg R gabungan satu window penuh yang sama seperti dipakai waktu
+    tuning -- itu rawan overfit ke noise sampel kecil per kombinasi
+    (timeframe, direction, setup_type).
+    """
+    cutoff = pd.Timestamp(split_date, tz="UTC")
+    in_sample, out_of_sample = [], []
+    for t in trades:
+        if not t.entry_time:
+            continue
+        ts = pd.Timestamp(t.entry_time)
+        if ts.tzinfo is None:
+            ts = ts.tz_localize("UTC")
+        (in_sample if ts < cutoff else out_of_sample).append(t)
+    return in_sample, out_of_sample
+
+
 async def _fetch_regime_df(client: BinanceFuturesClient, timeframe: str, limit: int, cfg: dict):
     regime_cfg = cfg.get("regime_filter", {})
     if not regime_cfg.get("enabled", False):
@@ -586,7 +612,7 @@ def _build_mtf_map(
 
 
 async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
-                     use_mtf: bool = True) -> None:
+                     use_mtf: bool = True, split_date: str | None = None) -> None:
     async with BinanceFuturesClient() as client:
         kline = await fetch_klines(client, symbol, timeframe, limit)
         regime_df = await _fetch_regime_df(client, timeframe, limit, cfg)
@@ -610,10 +636,15 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
     summary = summarize(trades)
     setup_breakdown = summarize_by_setup(trades)
     direction_breakdown = summarize_by_direction(trades)
-    print(json.dumps(
-        {"overall": summary, "by_setup": setup_breakdown, "by_direction": direction_breakdown},
-        indent=2,
-    ))
+    out = {"overall": summary, "by_setup": setup_breakdown, "by_direction": direction_breakdown}
+    if split_date:
+        in_sample, out_of_sample = split_by_date(trades, split_date)
+        out["walk_forward"] = {
+            "split_date": split_date,
+            "in_sample": summarize(in_sample),
+            "out_of_sample": summarize(out_of_sample),
+        }
+    print(json.dumps(out, indent=2))
 
     with open("trades_raw.json", "w") as f:
         json.dump([t.__dict__ for t in trades], f, indent=2)
@@ -641,6 +672,16 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
                 f"- Trade yang sempat kena TP1 (partial): "
                 f"**{summary['tp1_fill_count']}** ({summary['tp1_fill_pct']}%)\n"
             )
+        if split_date:
+            wf = out["walk_forward"]
+            f.write("\n## Walk-forward split (" + split_date + ")\n\n")
+            f.write("_in-sample = sebelum split_date (boleh dipakai buat tuning); "
+                    "out-of-sample = sesudah split_date (JANGAN dipakai buat tuning, "
+                    "cuma buat validasi)._\n\n")
+            f.write("| Periode | Trade | Win Rate | Avg R |\n")
+            f.write("|---|---|---|---|\n")
+            f.write(f"| In-sample | {wf['in_sample']['total']} | {wf['in_sample']['win_rate']}% | {wf['in_sample']['avg_r']} |\n")
+            f.write(f"| Out-of-sample | {wf['out_of_sample']['total']} | {wf['out_of_sample']['win_rate']}% | {wf['out_of_sample']['avg_r']} |\n")
         f.write("\n")
         f.write("## Breakdown per arah\n\n")
         f.write("| Arah | Trade | Win Rate | Avg R |\n")
@@ -666,7 +707,7 @@ async def run_single(symbol: str, timeframe: str, limit: int, cfg: dict,
 
 
 async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict,
-                    use_mtf: bool = True) -> None:
+                    use_mtf: bool = True, split_date: str | None = None) -> None:
     per_symbol_results: list[tuple[str, dict | None, str | None]] = []
     all_trades: list[Trade] = []
 
@@ -707,12 +748,23 @@ async def run_batch(symbols: list[str], timeframe: str, limit: int, cfg: dict,
     combined_by_direction = summarize_by_direction(all_trades)
     with open("trades_raw_batch.json", "w") as f:
         json.dump([t.__dict__ for t in all_trades], f, indent=2)
+
+    walk_forward = None
+    if split_date:
+        in_sample, out_of_sample = split_by_date(all_trades, split_date)
+        walk_forward = {
+            "split_date": split_date,
+            "in_sample": summarize(in_sample),
+            "out_of_sample": summarize(out_of_sample),
+        }
+
     _write_batch_report(
         per_symbol_results, combined, combined_by_setup, combined_by_direction,
         timeframe,
         regime_enabled=cfg.get("regime_filter", {}).get("enabled", False),
         mtf_enabled=use_mtf,
         partial_tp_enabled=cfg.get("risk", {}).get("partial_tp", {}).get("enabled", False),
+        walk_forward=walk_forward,
     )
 
 
@@ -721,6 +773,7 @@ def _write_batch_report(
     combined_by_direction: dict[str, dict], timeframe: str,
     regime_enabled: bool = False, mtf_enabled: bool = False,
     partial_tp_enabled: bool = False,
+    walk_forward: dict | None = None,
 ) -> None:
     lines = [f"# Backtest Gabungan ({timeframe})\n"]
     if regime_enabled:
@@ -761,6 +814,21 @@ def _write_batch_report(
             f"- Trade yang sempat kena TP1 (partial): "
             f"**{combined.get('tp1_fill_count', 0)}** ({combined.get('tp1_fill_pct', 0)}%)"
         )
+
+    if walk_forward:
+        lines.append("")
+        lines.append(f"## Walk-forward split ({walk_forward['split_date']})")
+        lines.append("_in-sample = sebelum split_date (boleh dipakai buat tuning); "
+                      "out-of-sample = sesudah split_date (JANGAN dipakai buat tuning, "
+                      "cuma buat validasi -- kalau setup_bonus/threshold hasil tuning "
+                      "cuma bagus di in-sample tapi jelek di out-of-sample, itu tanda "
+                      "overfit ke noise sampel, bukan edge asli)._")
+        lines.append("")
+        lines.append("| Periode | Trade | Win Rate | Avg R |")
+        lines.append("|---|---|---|---|")
+        wf_is, wf_oos = walk_forward["in_sample"], walk_forward["out_of_sample"]
+        lines.append(f"| In-sample | {wf_is['total']} | {wf_is['win_rate']}% | {wf_is['avg_r']} |")
+        lines.append(f"| Out-of-sample | {wf_oos['total']} | {wf_oos['win_rate']}% | {wf_oos['avg_r']} |")
 
     lines.append("")
     lines.append("## Breakdown per arah (gabungan semua simbol)")
@@ -813,6 +881,13 @@ def main():
                         help="Aktifkan MTF agreement bonus (default: on)")
     parser.add_argument("--no-mtf", action="store_true",
                         help="Matikan MTF agreement bonus")
+    parser.add_argument("--split-date", default=None,
+                        help="Tanggal walk-forward split, format YYYY-MM-DD (UTC). "
+                             "Kalau diisi, laporan akan menampilkan avg R/win rate "
+                             "terpisah untuk sebelum vs sesudah tanggal ini, supaya "
+                             "tuning setup_bonus/threshold bisa divalidasi out-of-sample "
+                             "alih-alih cuma dilihat dari avg R satu window penuh yang "
+                             "sama dipakai waktu tuning.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -832,9 +907,9 @@ def main():
 
     if args.batch:
         symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
-        asyncio.run(run_batch(symbols, args.timeframe, limit, cfg, use_mtf=use_mtf))
+        asyncio.run(run_batch(symbols, args.timeframe, limit, cfg, use_mtf=use_mtf, split_date=args.split_date))
     else:
-        asyncio.run(run_single(args.symbol.upper(), args.timeframe, limit, cfg, use_mtf=use_mtf))
+        asyncio.run(run_single(args.symbol.upper(), args.timeframe, limit, cfg, use_mtf=use_mtf, split_date=args.split_date))
 
 
 if __name__ == "__main__":
