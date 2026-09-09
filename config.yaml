@@ -129,7 +129,10 @@ risk:
     tp1_rr: 1.0                 # TP1 di RR 1.0 (1x jarak SL), selalu < RR TP final
     tp1_close_pct: 0.5          # tutup 50% posisi di TP1
     move_sl_to_breakeven: true  # sisa 50% posisi: SL digeser ke entry setelah TP1 kena
-    breakeven_buffer_r: 0.0     # geser breakeven +/- sekian R dari entry (0 = pas di entry)
+    breakeven_buffer_r: -0.05   # geser breakeven +/- sekian R dari entry (0 = pas di entry).
+    # -0.05: SL sisa posisi digeser sedikit di bawah entry (LONG) / atas entry
+    # (SHORT) setelah TP1 kena -- lebih realistis vs slippage & fee round-trip
+    # dibanding breakeven presisi di harga entry.
 
 setup_engine:
   structure_lookback: 20
