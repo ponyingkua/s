@@ -287,7 +287,7 @@ def backtest_symbol(
         if signal.score < get_min_score_to_trigger(cfg, timeframe):
             i += 1
             continue
-        if is_score_excluded(cfg, signal.score, timeframe):
+        if is_score_excluded(cfg, signal.score, timeframe, signal.setup_type, signal.direction):
             i += 1
             continue
 
