@@ -488,16 +488,41 @@ def get_min_score_to_trigger(cfg: dict, timeframe: str = "") -> float:
     return cfg["scoring"]["min_score_to_trigger"]
 
 
-def is_score_excluded(cfg: dict, score: float, timeframe: str = "") -> bool:
+def is_score_excluded(
+    cfg: dict, score: float, timeframe: str = "",
+    setup_type: str = "", direction: str = "",
+) -> bool:
     """
     True kalau `score` jatuh di salah satu rentang scoring.excluded_score_bands
-    untuk timeframe ini -- lubang di tengah rentang skor yang lolos
-    min_score_to_trigger tapi terbukti tetap avg R negatif (beda dari sekadar
-    ambang bawah, yang sudah ditangani get_min_score_to_trigger).
+    yang berlaku untuk kombinasi timeframe/setup_type/direction ini -- lubang
+    di tengah rentang skor yang lolos min_score_to_trigger tapi terbukti tetap
+    avg R negatif (beda dari sekadar ambang bawah, yang sudah ditangani
+    get_min_score_to_trigger).
 
-    Format config: {timeframe: [[low, high], ...]}, batas inklusif di kedua
-    sisi. Kosong/tidak diisi = tidak ada band yang dikecualikan (perilaku
-    lama, tidak berubah).
+    Dua format config didukung untuk scoring.excluded_score_bands[timeframe]:
+      1. List langsung -- [[low, high], ...]: TF-wide, berlaku untuk SEMUA
+         setup_type & direction di TF itu. Ini format lama (dipakai 15m),
+         tetap didukung apa adanya.
+      2. Dict bersarang -- {"all": [[low,high],...], setup_type: [[low,high],...]
+         | {direction: [[low,high],...]}}: dipakai kalau exclude perlu presisi
+         ke setup_type/direction tertentu supaya tidak "collateral damage" ke
+         setup lain yang justru bagus di rentang skor yang sama (kasus 1h:
+         band [90,100] TF-wide aman untuk BREAKOUT/PULLBACK, tapi CONTINUATION
+         LONG butuh band terpisah [72,82] yang KALAU dibuat TF-wide akan ikut
+         membuang BREAKOUT LONG yang justru avg R +0.461 di rentang skor yang
+         sama). Key setup_type ada di LUAR, direction (opsional) di DALAM --
+         mis. {"continuation": {"long": [[72,82]]}} artinya band ini cuma
+         berlaku untuk CONTINUATION+LONG, bukan CONTINUATION+SHORT.
+
+    PENTING -- pengecekan ADITIF, bukan precedence/override: semua level yang
+    relevan (key "all" DAN key setup_type/direction spesifik) dicek sekaligus,
+    band manapun yang match = excluded. Ini beda dari get_setup_bonus() yang
+    override (paling spesifik menang) -- di sini band "all" harus tetap
+    berlaku sekalipun ada override setup lain di TF yang sama, karena
+    keduanya menangani masalah yang independen.
+
+    Batas band inklusif di kedua sisi. Kosong/tidak diisi = tidak ada band
+    yang dikecualikan (perilaku lama, tidak berubah).
 
     Dipanggil di DUA tempat yang harus tetap sinkron: score_at() untuk skor
     pra-MTF, dan sekali lagi di run_scan()/backtest_symbol() setelah MTF
@@ -507,8 +532,27 @@ def is_score_excluded(cfg: dict, score: float, timeframe: str = "") -> bool:
     catatan paritas yang sama di get_min_score_to_trigger (re-check
     min_score pasca-MTF) -- pola dan alasannya identik.
     """
-    bands = cfg.get("scoring", {}).get("excluded_score_bands", {}).get(timeframe, [])
-    return any(low <= score <= high for low, high in bands)
+    tf_cfg = cfg.get("scoring", {}).get("excluded_score_bands", {}).get(timeframe, [])
+    st = setup_type.lower()
+    d = direction.lower()
+
+    all_bands: list = []
+    if isinstance(tf_cfg, list):
+        # Format 1: list langsung, TF-wide.
+        all_bands.extend(tf_cfg)
+    elif isinstance(tf_cfg, dict):
+        # Format 2: dict bersarang {"all": [...], setup_type: [...] | {direction: [...]}}.
+        all_bands.extend(tf_cfg.get("all", []))
+        st_cfg = tf_cfg.get(st) if st else None
+        if isinstance(st_cfg, list):
+            # setup_type: [[low,high],...] -- berlaku semua direction
+            all_bands.extend(st_cfg)
+        elif isinstance(st_cfg, dict) and d and d in st_cfg:
+            # setup_type: {direction: [[low,high],...]} -- spesifik direction
+            all_bands.extend(st_cfg[d])
+
+    return any(low <= score <= high for low, high in all_bands)
+
 
 
 
@@ -772,7 +816,7 @@ def score_at(
             ],
         )
 
-    if is_score_excluded(cfg, final_score, timeframe):
+    if is_score_excluded(cfg, final_score, timeframe, setup_type, direction):
         return SignalResult(
             symbol=symbol, direction="NONE", score=final_score,
             timeframe=timeframe, setup_type=setup_type,
@@ -1425,7 +1469,7 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                 if signal.score < get_min_score_to_trigger(cfg, tf):
                     mtf_rejected += 1
                     continue
-                if is_score_excluded(cfg, signal.score, tf):
+                if is_score_excluded(cfg, signal.score, tf, signal.setup_type, signal.direction):
                     mtf_rejected += 1
                     continue
                 flat_candidates.append((signal, kline))
