@@ -104,7 +104,7 @@
     "symbol": "ORCAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T12:04:42.694787+00:00"
+    "timestamp": "2026-09-09T17:03:37.222777+00:00"
   },
   "PHAROSUSDT|1h": {
     "symbol": "PHAROSUSDT",
@@ -291,5 +291,35 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-09T16:04:17.931456+00:00"
+  },
+  "BTRUSDT|1h": {
+    "symbol": "BTRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T17:03:39.062225+00:00"
+  },
+  "ZENUSDT|4h": {
+    "symbol": "ZENUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T17:03:40.267059+00:00"
+  },
+  "SAHARAUSDT|4h": {
+    "symbol": "SAHARAUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T17:03:41.377200+00:00"
+  },
+  "DELLUSDT|4h": {
+    "symbol": "DELLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T17:03:42.504970+00:00"
+  },
+  "CLUSDT|1h": {
+    "symbol": "CLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T17:03:43.615946+00:00"
   }
 }
