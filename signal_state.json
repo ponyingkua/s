@@ -249,5 +249,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T14:04:18.246499+00:00"
+  },
+  "MAGMAUSDT|1h": {
+    "symbol": "MAGMAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T15:03:55.558440+00:00"
+  },
+  "WLFIUSDT|1h": {
+    "symbol": "WLFIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-09T15:03:57.806959+00:00"
   }
 }

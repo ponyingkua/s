@@ -10151,5 +10151,53 @@
     "tp": 187.48,
     "tp1": 180.779668,
     "scanned_at": "2026-09-09T14:03:08.074845+00:00"
+  },
+  {
+    "symbol": "MAGMAUSDT",
+    "direction": "LONG",
+    "score": 100.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (31.6) tren kuat (+11.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.27723,
+    "sl": 0.243173,
+    "tp": 0.338533,
+    "tp1": 0.311287,
+    "scanned_at": "2026-09-09T15:03:13.904401+00:00"
+  },
+  {
+    "symbol": "WLFIUSDT",
+    "direction": "SHORT",
+    "score": 72.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (40) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (26.6) tren kuat (+6.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.05556,
+    "sl": 0.056375,
+    "tp": 0.054093,
+    "tp1": 0.054745,
+    "scanned_at": "2026-09-09T15:03:13.904401+00:00"
   }
 ]
