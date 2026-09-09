@@ -34,12 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T00:05:53.046404+00:00"
   },
-  "COINUSDT|1h": {
-    "symbol": "COINUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T17:14:36.695020+00:00"
-  },
   "1000LUNCUSDT|15m": {
     "symbol": "1000LUNCUSDT",
     "timeframe": "15m",
@@ -183,5 +177,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T05:04:12.657281+00:00"
+  },
+  "MSTRUSDT|1h": {
+    "symbol": "MSTRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T06:05:05.545717+00:00"
+  },
+  "XPTUSDT|15m": {
+    "symbol": "XPTUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T06:05:07.724061+00:00"
+  },
+  "HOODUSDT|1h": {
+    "symbol": "HOODUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T06:05:09.107718+00:00"
+  },
+  "METAUSDT|1h": {
+    "symbol": "METAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T06:05:10.531365+00:00"
   }
 }
