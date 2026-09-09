@@ -480,7 +480,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         ax.add_patch(Rectangle(
             (start_px, z["bottom"]), end_px - start_px, z["top"] - z["bottom"],
             facecolor=fill, edgecolor=edge, alpha=0.40, linewidth=1.1,
-            zorder=1.2,
+            zorder=6.2,
         ))
 
         # Teks S/D — warna hitam (sama dengan background gelap)
@@ -488,7 +488,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         mid_y = (z["top"] + z["bottom"]) / 2
         ax.text(mid_x, mid_y, label, color="#F2F2F2",
                 fontsize=(14.0 if square else 7.5), fontweight="bold", ha="center", va="center",
-                alpha=0.95, zorder=1.6, clip_on=False)
+                alpha=0.95, zorder=6.3, clip_on=False)
 
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame,
@@ -763,7 +763,7 @@ def build_chart(
     colors = _draw_candles(ax_price, plot_df)
     if not hide_indicators:
         ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.6,
-                      solid_capstyle="round", label=f"EMA {ema_period}", zorder=4)
+                      solid_capstyle="round", label=f"EMA {ema_period}", zorder=6.5)
         _draw_supertrend(ax_price, st_level_full, st_trend_full, st_period, st_mult)
 
     last_x = len(plot_df) - 1
@@ -950,7 +950,7 @@ def build_multi_tf_card(
 
         ema_period = cfg["indicators"]["ema"]["period"]
         ema_vals = ema(df["close"], ema_period).tail(len(plot_df)).reset_index(drop=True)
-        ax_p.plot(range(len(plot_df)), ema_vals, color=EMA_COLOR, linewidth=1.1, zorder=4)
+        ax_p.plot(range(len(plot_df)), ema_vals, color=EMA_COLOR, linewidth=1.1, zorder=6.5)
 
         st_period = cfg["indicators"]["supertrend"]["period"]
         st_mult = cfg["indicators"]["supertrend"]["multiplier"]
