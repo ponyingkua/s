@@ -56,7 +56,7 @@
     "symbol": "MVLLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T03:04:34.332764+00:00"
+    "timestamp": "2026-09-09T08:04:23.715196+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
@@ -80,7 +80,7 @@
     "symbol": "SOXLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T03:04:37.029489+00:00"
+    "timestamp": "2026-09-09T08:04:24.617714+00:00"
   },
   "AIOUSDT|1h": {
     "symbol": "AIOUSDT",
@@ -128,7 +128,7 @@
     "symbol": "VVVUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T01:04:42.011000+00:00"
+    "timestamp": "2026-09-09T08:04:21.208574+00:00"
   },
   "ANTHROPICUSDT|1h": {
     "symbol": "ANTHROPICUSDT",
@@ -213,5 +213,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T07:05:18.316803+00:00"
+  },
+  "BICOUSDT|4h": {
+    "symbol": "BICOUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T08:04:22.693022+00:00"
   }
 }
