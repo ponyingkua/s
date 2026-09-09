@@ -107,14 +107,36 @@ scoring:
   min_score_to_trigger: 65   # naik dari 63 — sumR gabungan (8 simbol) memuncak di sekitar skor 65
   # Opsional: override ambang per timeframe (get_min_score_to_trigger() di
   # scanner.py). Kosong/tidak diisi = semua TF pakai min_score_to_trigger di
-  # atas (perilaku lama, tidak berubah). CATATAN dari backtest 15m (n=895,
-  # 19 Feb-8 Sep 2026): hubungan skor vs avg R di 15m TIDAK monoton naik
-  # (bucket 75-80 avg R -0.207 lebih buruk dari 65-70 -0.097; bucket 90-95
-  # masih -0.115) -- jadi JANGAN asal naikkan angka di bawah ini dan anggap
-  # otomatis membaik. Isi & backtest dulu, bandingkan avg R sebelum/sesudah,
-  # baru dipakai live. Contoh (belum divalidasi):
-  # min_score_to_trigger_by_tf:
-  #   "15m": 78
+  # atas (perilaku lama, tidak berubah).
+  #
+  # VALIDASI (825 trade 15m, 8 simbol, 21 Feb-8 Sep 2026, dari
+  # trades_raw_batch.json hasil config saat ini -- konfirmasi non-monotonik
+  # yang dicatat sebelumnya, sekaligus temukan titik infleksi):
+  #   score bucket   n    avg_R    win%
+  #   65-70         299  -0.117   24.7
+  #   70-75         265  -0.044   25.7
+  #   75-80          92  -0.227   17.4
+  #   80-85          55  -0.141   21.8
+  #   85-90          58  +0.246   41.4   <- infleksi mulai di sini
+  #   90-95          42  -0.109   28.6   <- turun lagi, JANGAN naikkan ambang
+  #                                          lebih tinggi dari 85 tanpa cek ulang
+  #   95-100          8  +0.473   50.0   (n terlalu tipis utk threshold sendiri)
+  #
+  # Simulasi ambang kumulatif (>=X, re-filter trade existing, TIDAK
+  # mensimulasikan ulang interaksi cooldown/max_signals_per_run/regime-episode
+  # yang berubah kalau threshold naik -- treat sebagai indikasi arah):
+  #   >=65: n=825 (100%)   avg_R=-0.077  sum_R=-63.4
+  #   >=80: n=169 (20.5%)  avg_R=+0.025  sum_R=+4.2
+  #   >=85: n=114 (13.8%)  avg_R=+0.104  sum_R=+11.9  win=36.0%  <- dipilih
+  #   >=90: n=56  (6.8%)   avg_R=-0.042  sum_R=-2.3   (turun lagi)
+  #
+  # 85 dipilih: titik terbaik dengan n masih 2 digit tebal (114), bukan cuma
+  # tepi sampel tipis. BELUM dites lewat backtest.py --batch --timeframe 15m
+  # sungguhan dengan config ini (angka di atas dari re-filter trade existing,
+  # bukan re-run penuh) -- jalankan itu dulu sebelum live, dan cek lagi kalau
+  # ada data baru karena titik infleksi bisa bergeser.
+  min_score_to_trigger_by_tf:
+    "15m": 85
   min_trend_alignment: 2
   min_direction_margin: 8
 
@@ -158,19 +180,32 @@ setup_engine:
   structure_sl_buffer_atr_mult: 0.25
   target_lookback: 40
   # Gate konfirmasi tambahan untuk PULLBACK (classify_setup -> _pullback_confirmed
-  # di scanner.py). Sebelum ini, PULLBACK dikenali murni dari jarak ke EMA200
-  # (dist_ema_atr <= pullback_atr_mult) TANPA syarat momentum/bounce apapun.
-  # Backtest 15m (n=895, 19 Feb-8 Sep 2026): PULLBACK LONG (n=320) avg R
-  # -0.155, win rate 21.2% -- menyumbang ~71% dari total kerugian R gabungan
-  # semua setup (jauh dari proporsional ke 37% dari total trade). Gate ini
-  # mensyaratkan candle pemicu benar-benar bergerak searah sinyal (bukan cuma
-  # "kebetulan dekat EMA"); kalau gagal, classify_setup jatuh ke CONTINUATION,
-  # bukan ditolak total.
-  # BELUM divalidasi lewat A/B backtest (enabled: true vs false) -- ini
-  # hipotesis berbasis data di atas, bukan hasil yang sudah diukur. Jalankan
-  # backtest.py dua kali (ubah enabled saja) sebelum percaya angkanya di live.
+  # di scanner.py). Kalau enabled, mensyaratkan candle pemicu bergerak searah
+  # sinyal (bukan cuma "kebetulan dekat EMA") sebelum diklasifikasikan PULLBACK;
+  # gagal -> jatuh ke CONTINUATION, bukan ditolak total.
+  #
+  # DIMATIKAN (enabled: false) setelah divalidasi terhadap 825 trade 15m
+  # (21 Feb-8 Sep 2026, trades_raw_batch.json — gate ini AKTIF saat data
+  # dikumpulkan): PULLBACK LONG yang LOLOS gate (n=159, avg R -0.132) justru
+  # LEBIH BURUK dari CONTINUATION LONG (n=302, avg R -0.091) — tempat di mana
+  # trade seharusnya jatuh kalau gate bekerja dan menyaring yang lemah. Kalau
+  # gate efektif, populasi yang lolos harusnya lebih baik dari yang gagal,
+  # bukan sebaliknya. Root cause: require_bullish_candle/require_bearish_candle
+  # cuma mensyaratkan close != open (candle hijau/merah setipis apa pun lolos),
+  # jadi hampir tidak membedakan apa-apa — gate memangkas 50% volume PULLBACK
+  # LONG (320->159) tapi avg R nyaris tidak bergerak (-0.155 -> -0.132).
+  #
+  # Filter kualitas PULLBACK 15m sekarang diserahkan ke
+  # scoring.min_score_to_trigger_by_tf (lihat komentar di sana) yang titik
+  # infleksinya jauh lebih jelas dan konsisten di data yang sama.
+  #
+  # require_rsi_turn: true BELUM dicoba (syarat lebih ketat dari sekadar warna
+  # candle) -- kalau mau eksperimen lagi nanti, nyalakan enabled:true +
+  # require_rsi_turn:true dan bandingkan avg R PULLBACK LONG vs CONTINUATION
+  # LONG dengan cara yang sama seperti di atas, jangan cuma lihat avg R
+  # PULLBACK sendirian sebelum/sesudah.
   pullback_confirmation:
-    enabled: true
+    enabled: false
     require_bullish_candle: true   # LONG: candle pemicu harus close > open
     require_bearish_candle: true   # SHORT: candle pemicu harus close < open
     require_rsi_turn: false        # opsional, lebih ketat: RSI harus naik (LONG)/turun (SHORT) vs candle sebelumnya
