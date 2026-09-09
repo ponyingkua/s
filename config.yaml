@@ -178,28 +178,40 @@ scoring:
   excluded_score_bands:
     "15m":
       - [90, 95]
-    # 1h: [90, 100] pada SKOR FINAL (pasca setup_bonus, sebelum MTF -- MTF
-    # bonus applied di 0.6% trade 1h, cek re-check pasca-MTF tetap jalan
-    # normal seperti 15m). Divalidasi dari 694 trade 1h (21 Feb-8 Sep 2026,
-    # trades_raw_batch.json): hanya BREAKOUT (n=35) dan PULLBACK (n=28) yang
-    # punya trade di rentang skor final ini -- EXTENDED dan CONTINUATION
-    # base_score-nya di luar rentang ini sama sekali, jadi band-exclude
-    # timeframe-wide di sini TIDAK menyentuh keduanya. Gabungan BREAKOUT+
-    # PULLBACK di rentang ini avg R -0.256, win 19.0%.
+    # 1h: dict bersarang (bukan list langsung) krn butuh presisi per
+    # setup_type+direction -- lihat is_score_excluded() utk format & precedence
+    # (ADITIF: "all" + override spesifik digabung, bukan saling menimpa).
     #
-    # BEDA DARI 15m: untuk CONTINUATION LONG & PULLBACK LONG, ini BUKAN
-    # band-aid murni tanpa penjelasan -- ditemukan lewat breakdown base_score
-    # (score sebelum setup_bonus lama) yang justru pola MONOTON (base_score
-    # 80-85 avg R +0.463, turun terus sampai 95-100 avg R -0.362 utk
-    # CONTINUATION LONG) -- tapi setup_bonus (penalti flat) tidak bisa
-    # memperbaiki ini karena arahnya salah: base_score TINGGI di sini = jelek,
-    # padahal menaikkan penalti cuma bisa membuang dari skor RENDAH (siapa pun
-    # yang gagal >= min_score_to_trigger duluan), bukan dari skor tinggi.
-    # Exclude band adalah mekanisme yang tepat untuk pola "tinggi = jelek",
-    # bukan setup_bonus. Untuk BREAKOUT sendiri masih deskriptif spt 15m
-    # (dip di tengah, diapit dua zona positif, mekanisme belum ditelusuri).
+    # "all": [90,100] pada SKOR FINAL -- divalidasi 662 trade 1h (22 Feb-9 Sep
+    # 2026, trades_raw_batch.json, config short.breakout:-20 sudah aktif):
+    # rentang ini sekarang KOSONG (n=0) krn BREAKOUT SHORT yang dulu ngisi
+    # situ sudah tersaring duluan oleh short.breakout:-20. Dibiarkan aktif
+    # sbg guard kalau pola serupa muncul lagi di data mendatang, tidak
+    # mengubah apa pun saat ini.
+    #
+    # continuation.long: [72,82] pada SKOR FINAL -- KOREKSI dari revisi
+    # sebelumnya yang salah: klaim lama bilang band "all" [90,100] sudah
+    # menangani CONTINUATION LONG, itu SALAH -- band itu dicek di SKOR FINAL,
+    # sedangkan analisis yang mendasarinya pakai BASE SCORE (final+18, krn
+    # bonus lama continuation:-18 flat) tanpa dikonversi balik. base_score
+    # 90-100 == final_score 72-82, BUKAN final_score 90-100. Validasi ulang
+    # (data yang sama, 662 trade): CONTINUATION LONG di final_score 72-82
+    # n=70, avg R -0.288, win 20.0% -- sementara BREAKOUT LONG di RENTANG
+    # FINAL SCORE YANG SAMA n=21, avg R +0.461, win 47.6%. Kalau band ini
+    # dibuat TF-wide (spt "all"), BREAKOUT LONG yang bagus itu ikut terbuang
+    # -- makanya butuh override setup+direction spesifik, bukan flat.
+    # Precedence "tinggi=jelek" ini juga TIDAK bisa diperbaiki lewat
+    # setup_bonus/penalti flat (sudah dicoba, penalti makin dalam cuma
+    # membuang base_score RENDAH yang justru bagus, arahnya salah) --
+    # exclude band presisi adalah satu-satunya mekanisme yang cocok.
+    # BELUM di-backtest ulang dgn override baru ini -- estimasi di atas dari
+    # re-filter trade existing (n=70/n=21), bukan re-run backtest.py sungguhan.
     "1h":
-      - [90, 100]
+      all:
+        - [90, 100]
+      continuation:
+        long:
+          - [72, 82]
   min_trend_alignment: 2
   min_direction_margin: 8
 
