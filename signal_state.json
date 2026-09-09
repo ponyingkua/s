@@ -4,29 +4,11 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "PENGUUSDT|1h": {
-    "symbol": "PENGUUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T22:04:37.963441+00:00"
-  },
   "CLUSDT|15m": {
     "symbol": "CLUSDT",
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-09T00:05:53.046404+00:00"
-  },
-  "HEMIUSDT|15m": {
-    "symbol": "HEMIUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T22:04:40.787499+00:00"
-  },
-  "AIOUSDT|4h": {
-    "symbol": "AIOUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-08T22:41:22.777328+00:00"
   },
   "MVLLUSDT|4h": {
     "symbol": "MVLLUSDT",
@@ -34,35 +16,17 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T08:04:23.715196+00:00"
   },
-  "DOGSUSDT|1h": {
-    "symbol": "DOGSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-08T22:41:25.939116+00:00"
-  },
   "QCOMUSDT|1h": {
     "symbol": "QCOMUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T09:04:08.746840+00:00"
   },
-  "GRAMUSDT|1h": {
-    "symbol": "GRAMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-08T23:04:02.301028+00:00"
-  },
   "SOXLUSDT|4h": {
     "symbol": "SOXLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-09T08:04:24.617714+00:00"
-  },
-  "AIOUSDT|1h": {
-    "symbol": "AIOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-08T23:04:05.847168+00:00"
   },
   "ETCUSDT|1h": {
     "symbol": "ETCUSDT",
@@ -134,7 +98,7 @@
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T04:03:55.843239+00:00"
+    "timestamp": "2026-09-09T11:04:19.738207+00:00"
   },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
@@ -152,13 +116,13 @@
     "symbol": "LITUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T05:04:12.657281+00:00"
+    "timestamp": "2026-09-09T11:04:18.431572+00:00"
   },
   "MSTRUSDT|1h": {
     "symbol": "MSTRUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T06:05:05.545717+00:00"
+    "timestamp": "2026-09-09T11:04:16.499275+00:00"
   },
   "XPTUSDT|15m": {
     "symbol": "XPTUSDT",
@@ -231,5 +195,11 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-09T10:04:13.774665+00:00"
+  },
+  "HAEDALUSDT|1h": {
+    "symbol": "HAEDALUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T11:04:20.987428+00:00"
   }
 }
