@@ -74,7 +74,7 @@
     "symbol": "HYPEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T05:04:07.652214+00:00"
+    "timestamp": "2026-09-09T10:04:08.557865+00:00"
   },
   "TSLAUSDT|1h": {
     "symbol": "TSLAUSDT",
@@ -213,5 +213,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T09:04:07.526745+00:00"
+  },
+  "RAYSOLUSDT|1h": {
+    "symbol": "RAYSOLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T10:04:10.984233+00:00"
+  },
+  "RKLBUSDT|1h": {
+    "symbol": "RKLBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T10:04:12.406162+00:00"
+  },
+  "DOGSUSDT|4h": {
+    "symbol": "DOGSUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T10:04:13.774665+00:00"
   }
 }
