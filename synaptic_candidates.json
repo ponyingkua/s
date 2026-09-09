@@ -9048,5 +9048,99 @@
     "tp": 1481.406667,
     "tp1": 1434.705926,
     "scanned_at": "2026-09-09T04:03:12.447991+00:00"
+  },
+  {
+    "symbol": "HYPEUSDT",
+    "direction": "LONG",
+    "score": 102.4,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (26.1) tren kuat (+5.4 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 86.138,
+    "sl": 83.861693,
+    "tp": 90.235352,
+    "tp1": 88.414307,
+    "scanned_at": "2026-09-09T05:02:58.828484+00:00"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "direction": "LONG",
+    "score": 100.5,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (24.3) tren kuat (+3.5 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 79136.0,
+    "sl": 78273.416972,
+    "tp": 80688.649451,
+    "tp1": 79998.583028,
+    "scanned_at": "2026-09-09T05:02:58.828484+00:00"
+  },
+  {
+    "symbol": "LDOUSDT",
+    "direction": "LONG",
+    "score": 86.3,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (51) menguatkan momentum naik",
+      "ADX (25.9) tren kuat (+5.3 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.16",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.16 (sisa posisi)"
+    ],
+    "entry": 0.3916,
+    "sl": 0.380729,
+    "tp": 0.4151,
+    "tp1": 0.402471,
+    "scanned_at": "2026-09-09T05:02:58.828484+00:00"
+  },
+  {
+    "symbol": "LITUSDT",
+    "direction": "LONG",
+    "score": 84.6,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (70) overbought \u2014 penalti chasing (-10)",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (24.4) tren kuat (+3.6 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 5.1341,
+    "sl": 4.68702,
+    "tp": 5.938845,
+    "tp1": 5.58118,
+    "scanned_at": "2026-09-09T05:02:58.828484+00:00"
   }
 ]

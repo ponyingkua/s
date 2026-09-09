@@ -104,7 +104,7 @@
     "symbol": "HYPEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T00:05:50.552275+00:00"
+    "timestamp": "2026-09-09T05:04:07.652214+00:00"
   },
   "TSLAUSDT|1h": {
     "symbol": "TSLAUSDT",
@@ -165,5 +165,23 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-09T04:03:55.843239+00:00"
+  },
+  "BTCUSDT|1h": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T05:04:09.858547+00:00"
+  },
+  "LDOUSDT|1h": {
+    "symbol": "LDOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T05:04:11.262193+00:00"
+  },
+  "LITUSDT|1h": {
+    "symbol": "LITUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T05:04:12.657281+00:00"
   }
 }
