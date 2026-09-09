@@ -4,47 +4,17 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "MVLLUSDT|4h": {
-    "symbol": "MVLLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T08:04:23.715196+00:00"
-  },
   "QCOMUSDT|1h": {
     "symbol": "QCOMUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T14:04:19.662578+00:00"
   },
-  "SOXLUSDT|4h": {
-    "symbol": "SOXLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T08:04:24.617714+00:00"
-  },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T10:04:08.557865+00:00"
-  },
-  "JUPUSDT|1h": {
-    "symbol": "JUPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T07:05:11.783755+00:00"
-  },
-  "VVVUSDT|1h": {
-    "symbol": "VVVUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T08:04:21.208574+00:00"
-  },
-  "SKRUSDT|1h": {
-    "symbol": "SKRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T07:05:17.572158+00:00"
   },
   "ASTERUSDT|1h": {
     "symbol": "ASTERUSDT",
@@ -87,18 +57,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T17:03:37.222777+00:00"
-  },
-  "PHAROSUSDT|1h": {
-    "symbol": "PHAROSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T07:05:18.316803+00:00"
-  },
-  "BICOUSDT|4h": {
-    "symbol": "BICOUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T08:04:22.693022+00:00"
   },
   "GMEUSDT|1h": {
     "symbol": "GMEUSDT",
@@ -212,7 +170,7 @@
     "symbol": "KATUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T14:04:16.874024+00:00"
+    "timestamp": "2026-09-09T20:04:29.389327+00:00"
   },
   "GPSUSDT|1h": {
     "symbol": "GPSUSDT",
@@ -345,5 +303,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T19:03:52.250348+00:00"
+  },
+  "RIVERUSDT|4h": {
+    "symbol": "RIVERUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-09T20:04:27.083304+00:00"
+  },
+  "NEARUSDT|1h": {
+    "symbol": "NEARUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T20:04:30.810404+00:00"
+  },
+  "SAHARAUSDT|1h": {
+    "symbol": "SAHARAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T20:04:32.264058+00:00"
   }
 }
