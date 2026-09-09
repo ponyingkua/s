@@ -105,6 +105,16 @@ scoring:
     - extended
     - breakout
   min_score_to_trigger: 65   # naik dari 63 — sumR gabungan (8 simbol) memuncak di sekitar skor 65
+  # Opsional: override ambang per timeframe (get_min_score_to_trigger() di
+  # scanner.py). Kosong/tidak diisi = semua TF pakai min_score_to_trigger di
+  # atas (perilaku lama, tidak berubah). CATATAN dari backtest 15m (n=895,
+  # 19 Feb-8 Sep 2026): hubungan skor vs avg R di 15m TIDAK monoton naik
+  # (bucket 75-80 avg R -0.207 lebih buruk dari 65-70 -0.097; bucket 90-95
+  # masih -0.115) -- jadi JANGAN asal naikkan angka di bawah ini dan anggap
+  # otomatis membaik. Isi & backtest dulu, bandingkan avg R sebelum/sesudah,
+  # baru dipakai live. Contoh (belum divalidasi):
+  # min_score_to_trigger_by_tf:
+  #   "15m": 78
   min_trend_alignment: 2
   min_direction_margin: 8
 
@@ -147,6 +157,23 @@ setup_engine:
   overextended_atr_mult: 5.5
   structure_sl_buffer_atr_mult: 0.25
   target_lookback: 40
+  # Gate konfirmasi tambahan untuk PULLBACK (classify_setup -> _pullback_confirmed
+  # di scanner.py). Sebelum ini, PULLBACK dikenali murni dari jarak ke EMA200
+  # (dist_ema_atr <= pullback_atr_mult) TANPA syarat momentum/bounce apapun.
+  # Backtest 15m (n=895, 19 Feb-8 Sep 2026): PULLBACK LONG (n=320) avg R
+  # -0.155, win rate 21.2% -- menyumbang ~71% dari total kerugian R gabungan
+  # semua setup (jauh dari proporsional ke 37% dari total trade). Gate ini
+  # mensyaratkan candle pemicu benar-benar bergerak searah sinyal (bukan cuma
+  # "kebetulan dekat EMA"); kalau gagal, classify_setup jatuh ke CONTINUATION,
+  # bukan ditolak total.
+  # BELUM divalidasi lewat A/B backtest (enabled: true vs false) -- ini
+  # hipotesis berbasis data di atas, bukan hasil yang sudah diukur. Jalankan
+  # backtest.py dua kali (ubah enabled saja) sebelum percaya angkanya di live.
+  pullback_confirmation:
+    enabled: true
+    require_bullish_candle: true   # LONG: candle pemicu harus close > open
+    require_bearish_candle: true   # SHORT: candle pemicu harus close < open
+    require_rsi_turn: false        # opsional, lebih ketat: RSI harus naik (LONG)/turun (SHORT) vs candle sebelumnya
   "15m":
     structure_lookback: 40
     stop_lookback: 10
