@@ -137,6 +137,41 @@ scoring:
   # ada data baru karena titik infleksi bisa bergeser.
   min_score_to_trigger_by_tf:
     "15m": 85
+  # Rentang skor yang dikecualikan meski sudah lolos min_score_to_trigger --
+  # lubang di tengah, bukan sekadar ambang bawah. Dicek lewat
+  # is_score_excluded() di scanner.py, di DUA titik: score_at() (pra-MTF) dan
+  # sekali lagi setelah MTF agreement bonus diterapkan di run_scan()/
+  # backtest_symbol() -- lihat komentar is_score_excluded() untuk kenapa
+  # re-check kedua itu wajib.
+  #
+  # VALIDASI (120 trade 15m, 8 simbol, 26 Feb-4 Sep 2026, dari
+  # trades_raw_batch.json hasil RE-RUN backtest.py --batch sungguhan dengan
+  # min_score_to_trigger_by_tf 15m:85 + pullback_confirmation.enabled:false
+  # di atas -- BUKAN cuma re-filter approximate seperti validasi
+  # min_score_to_trigger_by_tf):
+  #   Setelah threshold 85 diterapkan: overall avg_R masih -0.066 (belum
+  #   positif, meleset dari estimasi approximate +0.104 sebelumnya -- populasi
+  #   trade berubah signifikan krn gate pullback mati mengubah klasifikasi
+  #   setup_type/skor banyak trade, CONTINUATION+EXTENDED nyaris hilang total
+  #   krn kombinasi penalti besar + threshold 85 saling memperkuat).
+  #   BREAKOUT (n=113, 94% dari total) breakdown by score, LONG & SHORT
+  #   konsisten sama-sama anjlok di satu rentang spesifik:
+  #     85-90: n=50  avg_R=+0.191  win=38.0%
+  #     90-95: n=42  avg_R=-0.282  win=23.8%   <- lubang, LONG & SHORT sama
+  #     95-100: n=10 avg_R=+0.132  win=40.0%
+  #     100-105: n=11 avg_R=-0.287 win=9.1%    (n tipis, belum dikecualikan)
+  #
+  # is_score_excluded() TIDAK menjelaskan MEKANISME kenapa 90-95 buruk --
+  # trade JSON cuma simpan skor final, bukan breakdown komponen (trend/rsi/
+  # adx/setup_bonus terpisah), jadi tidak bisa ditelusuri dari data yang ada
+  # tanpa instrumentasi tambahan di Trade dataclass (backtest.py). ANGKA DI
+  # BAWAH INI ADALAH BAND-AID YANG DISENGAJA: exclude langsung berdasarkan
+  # pola deskriptif (konsisten LONG+SHORT, n=42 bukan super tipis), tanpa
+  # menunggu tahu penyebabnya. Cek ulang begitu ada data baru -- band ini
+  # bisa jadi cuma menutupi gejala dari sumber lain yang belum ketemu.
+  excluded_score_bands:
+    "15m":
+      - [90, 95]
   min_trend_alignment: 2
   min_direction_margin: 8
 
