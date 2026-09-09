@@ -34,35 +34,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-08T13:16:36.617377+00:00"
   },
-  "MINIMAXUSDT|1h": {
-    "symbol": "MINIMAXUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T12:18:52.562355+00:00"
-  },
-  "HK1810USDT|1h": {
-    "symbol": "HK1810USDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T12:18:55.849617+00:00"
-  },
   "PENGUUSDT|1h": {
     "symbol": "PENGUUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-08T22:04:37.963441+00:00"
-  },
-  "KITEUSDT|1h": {
-    "symbol": "KITEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T12:18:59.196394+00:00"
-  },
-  "\u5e01\u5b89\u4eba\u751fUSDT|15m": {
-    "symbol": "\u5e01\u5b89\u4eba\u751fUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-08T12:48:14.131817+00:00"
   },
   "TRUMPUSDT|1h": {
     "symbol": "TRUMPUSDT",
@@ -171,5 +147,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T00:05:55.704664+00:00"
+  },
+  "MIRAUSDT|1h": {
+    "symbol": "MIRAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T01:04:38.377597+00:00"
+  },
+  "JUPUSDT|1h": {
+    "symbol": "JUPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T01:04:40.571828+00:00"
+  },
+  "VVVUSDT|1h": {
+    "symbol": "VVVUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T01:04:42.011000+00:00"
+  },
+  "ANTHROPICUSDT|1h": {
+    "symbol": "ANTHROPICUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-09T01:04:43.378966+00:00"
   }
 }
