@@ -177,15 +177,6 @@ regime_filter:
   short_mode: "not_bull"
   long_mode: "not_bear"
 
-symbol_filter:
-  # Rugi paling besar & paling konsisten di semua kombinasi arah/setup/timeframe
-  # pada window backtest yang jadi acuan tuning saat ini.
-  blacklist:
-    - DOGEUSDT
-    - LTCUSDT
-    - ADAUSDT   # avg R -0.12 (n=92), negatif di ketiga timeframe; LONG jauh lebih buruk dari SHORT
-    - LINKUSDT  # avg R -0.12 (n=88), negatif di ketiga timeframe; LONG jauh lebih buruk dari SHORT
-
 notify:
   telegram:
     enabled: true
