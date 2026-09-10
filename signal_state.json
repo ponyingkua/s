@@ -10,23 +10,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T14:04:19.662578+00:00"
   },
-  "ASTERUSDT|1h": {
-    "symbol": "ASTERUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T13:04:49.587756+00:00"
-  },
   "SKHYNIXUSDT|4h": {
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-09T16:04:18.905347+00:00"
-  },
-  "HOODUSDT|1h": {
-    "symbol": "HOODUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T13:04:47.556967+00:00"
   },
   "ORCAUSDT|1h": {
     "symbol": "ORCAUSDT",
@@ -34,23 +22,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T17:03:37.222777+00:00"
   },
-  "GMEUSDT|1h": {
-    "symbol": "GMEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T13:04:46.484535+00:00"
-  },
   "RAYSOLUSDT|1h": {
     "symbol": "RAYSOLUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T18:04:48.638695+00:00"
-  },
-  "PUMPUSDT|1h": {
-    "symbol": "PUMPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T13:04:44.771563+00:00"
   },
   "TRUTHUSDT|1h": {
     "symbol": "TRUTHUSDT",
@@ -309,5 +285,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T01:04:29.043903+00:00"
+  },
+  "COINUSDT|1h": {
+    "symbol": "COINUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T02:03:47.636004+00:00"
   }
 }
