@@ -231,5 +231,53 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T07:05:35.227197+00:00"
+  },
+  "STBLUSDT|4h": {
+    "symbol": "STBLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:17.523471+00:00"
+  },
+  "XAUTUSDT|4h": {
+    "symbol": "XAUTUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:19.562537+00:00"
+  },
+  "XAUUSDT|4h": {
+    "symbol": "XAUUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:20.531761+00:00"
+  },
+  "AVAXUSDT|1h": {
+    "symbol": "AVAXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:21.597495+00:00"
+  },
+  "SOLVUSDT|1h": {
+    "symbol": "SOLVUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:22.616225+00:00"
+  },
+  "WDCUSDT|4h": {
+    "symbol": "WDCUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T08:04:23.594248+00:00"
+  },
+  "BICOUSDT|1h": {
+    "symbol": "BICOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T08:04:24.527705+00:00"
+  },
+  "BOMEUSDT|1h": {
+    "symbol": "BOMEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T08:04:25.511611+00:00"
   }
 }
