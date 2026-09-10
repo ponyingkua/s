@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T12:05:20.689025+00:00"
   },
-  "COINUSDT|1h": {
-    "symbol": "COINUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T02:03:47.636004+00:00"
-  },
   "JASMYUSDT|1h": {
     "symbol": "JASMYUSDT",
     "timeframe": "1h",
@@ -158,7 +152,7 @@
     "symbol": "BICOUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T08:04:24.527705+00:00"
+    "timestamp": "2026-09-10T14:04:21.380263+00:00"
   },
   "BOMEUSDT|1h": {
     "symbol": "BOMEUSDT",
@@ -182,13 +176,13 @@
     "symbol": "ICPUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T09:04:27.610851+00:00"
+    "timestamp": "2026-09-10T14:04:16.308472+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T09:04:29.087821+00:00"
+    "timestamp": "2026-09-10T14:04:17.309723+00:00"
   },
   "OPUSDT|1h": {
     "symbol": "OPUSDT",
@@ -200,7 +194,7 @@
     "symbol": "JTOUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T09:04:31.916606+00:00"
+    "timestamp": "2026-09-10T14:04:22.355384+00:00"
   },
   "WIFUSDT|1h": {
     "symbol": "WIFUSDT",
@@ -357,5 +351,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T13:04:40.513541+00:00"
+  },
+  "SAGAUSDT|1h": {
+    "symbol": "SAGAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T14:04:14.813875+00:00"
+  },
+  "LITUSDT|1h": {
+    "symbol": "LITUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T14:04:18.303170+00:00"
+  },
+  "XLMUSDT|1h": {
+    "symbol": "XLMUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T14:04:19.320322+00:00"
+  },
+  "GALAUSDT|1h": {
+    "symbol": "GALAUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T14:04:20.283337+00:00"
   }
 }
