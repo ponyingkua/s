@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T12:05:20.689025+00:00"
   },
-  "PAXGUSDT|4h": {
-    "symbol": "PAXGUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T09:04:24.711965+00:00"
-  },
   "SOXLUSDT|4h": {
     "symbol": "SOXLUSDT",
     "timeframe": "4h",
@@ -26,7 +20,7 @@
     "symbol": "AEROUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T16:04:47.454594+00:00"
+    "timestamp": "2026-09-10T21:04:26.599055+00:00"
   },
   "NEWTUSDT|1h": {
     "symbol": "NEWTUSDT",
@@ -64,12 +58,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-10T14:04:21.380263+00:00"
   },
-  "BOMEUSDT|1h": {
-    "symbol": "BOMEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T08:04:25.511611+00:00"
-  },
   "RUNEUSDT|1h": {
     "symbol": "RUNEUSDT",
     "timeframe": "1h",
@@ -94,23 +82,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T14:04:17.309723+00:00"
   },
-  "OPUSDT|1h": {
-    "symbol": "OPUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T09:04:30.515097+00:00"
-  },
   "JTOUSDT|1h": {
     "symbol": "JTOUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T14:04:22.355384+00:00"
-  },
-  "WIFUSDT|1h": {
-    "symbol": "WIFUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T09:04:33.449558+00:00"
   },
   "HUMAUSDT|1h": {
     "symbol": "HUMAUSDT",
@@ -332,7 +308,7 @@
     "symbol": "FILUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T16:04:46.021536+00:00"
+    "timestamp": "2026-09-10T21:04:21.301806+00:00"
   },
   "QCOMUSDT|4h": {
     "symbol": "QCOMUSDT",
@@ -447,5 +423,41 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-10T20:04:21.706262+00:00"
+  },
+  "PHAROSUSDT|1h": {
+    "symbol": "PHAROSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T21:04:23.656971+00:00"
+  },
+  "SQQQUSDT|1h": {
+    "symbol": "SQQQUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T21:04:25.179722+00:00"
+  },
+  "XRPUSDT|1h": {
+    "symbol": "XRPUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T21:04:28.303840+00:00"
+  },
+  "ENAUSDT|1h": {
+    "symbol": "ENAUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T21:04:29.733039+00:00"
+  },
+  "ONTUSDT|1h": {
+    "symbol": "ONTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T21:04:31.146765+00:00"
+  },
+  "TQQQUSDT|1h": {
+    "symbol": "TQQQUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T21:04:32.660269+00:00"
   }
 }
