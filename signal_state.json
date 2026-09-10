@@ -4,59 +4,17 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "KATUSDT|1h": {
-    "symbol": "KATUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T20:04:29.389327+00:00"
-  },
-  "ZENUSDT|1h": {
-    "symbol": "ZENUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T21:03:30.537940+00:00"
-  },
-  "MSFTUSDT|1h": {
-    "symbol": "MSFTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-09T21:03:33.464618+00:00"
-  },
   "SAHARAUSDT|4h": {
     "symbol": "SAHARAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-10T00:05:42.422517+00:00"
   },
-  "RIVERUSDT|4h": {
-    "symbol": "RIVERUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-09T20:04:27.083304+00:00"
-  },
-  "NEARUSDT|1h": {
-    "symbol": "NEARUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T20:04:30.810404+00:00"
-  },
   "SAHARAUSDT|1h": {
     "symbol": "SAHARAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-10T01:04:30.347487+00:00"
-  },
-  "GOOGLUSDT|1h": {
-    "symbol": "GOOGLUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-09T21:03:32.410970+00:00"
-  },
-  "BMTUSDT|1h": {
-    "symbol": "BMTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T21:03:34.461068+00:00"
   },
   "COTIUSDT|1h": {
     "symbol": "COTIUSDT",
@@ -152,7 +110,7 @@
     "symbol": "PAXGUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T04:04:29.448012+00:00"
+    "timestamp": "2026-09-10T09:04:24.711965+00:00"
   },
   "\u5e01\u5b89\u4eba\u751fUSDT|4h": {
     "symbol": "\u5e01\u5b89\u4eba\u751fUSDT",
@@ -279,5 +237,47 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T08:04:25.511611+00:00"
+  },
+  "RUNEUSDT|1h": {
+    "symbol": "RUNEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T09:04:22.492146+00:00"
+  },
+  "AAPLUSDT|1h": {
+    "symbol": "AAPLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T09:04:26.182020+00:00"
+  },
+  "ICPUSDT|1h": {
+    "symbol": "ICPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T09:04:27.610851+00:00"
+  },
+  "DOGSUSDT|1h": {
+    "symbol": "DOGSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T09:04:29.087821+00:00"
+  },
+  "OPUSDT|1h": {
+    "symbol": "OPUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T09:04:30.515097+00:00"
+  },
+  "JTOUSDT|1h": {
+    "symbol": "JTOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T09:04:31.916606+00:00"
+  },
+  "WIFUSDT|1h": {
+    "symbol": "WIFUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T09:04:33.449558+00:00"
   }
 }
