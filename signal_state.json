@@ -28,12 +28,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T11:04:52.116205+00:00"
   },
-  "BIRBUSDT|1h": {
-    "symbol": "BIRBUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T05:04:22.083531+00:00"
-  },
   "AEROUSDT|1h": {
     "symbol": "AEROUSDT",
     "timeframe": "1h",
@@ -218,7 +212,7 @@
     "symbol": "MSTRUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:36.564227+00:00"
+    "timestamp": "2026-09-10T17:04:20.797635+00:00"
   },
   "VTHOUSDT|1h": {
     "symbol": "VTHOUSDT",
@@ -230,7 +224,7 @@
     "symbol": "ORDERUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T11:04:43.294881+00:00"
+    "timestamp": "2026-09-10T17:04:16.750494+00:00"
   },
   "OPENAIUSDT|1h": {
     "symbol": "OPENAIUSDT",
@@ -242,7 +236,7 @@
     "symbol": "ZAMAUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T11:04:47.727704+00:00"
+    "timestamp": "2026-09-10T17:04:19.809521+00:00"
   },
   "RAYSOLUSDT|1h": {
     "symbol": "RAYSOLUSDT",
@@ -417,5 +411,35 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T16:04:51.766554+00:00"
+  },
+  "TRBUSDT|1h": {
+    "symbol": "TRBUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T17:04:15.195502+00:00"
+  },
+  "RENDERUSDT|1h": {
+    "symbol": "RENDERUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T17:04:17.749381+00:00"
+  },
+  "NEIROUSDT|1h": {
+    "symbol": "NEIROUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T17:04:18.810934+00:00"
+  },
+  "LSKUSDT|4h": {
+    "symbol": "LSKUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T17:04:21.785305+00:00"
+  },
+  "SPKUSDT|1h": {
+    "symbol": "SPKUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T17:04:22.868937+00:00"
   }
 }
