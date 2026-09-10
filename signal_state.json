@@ -10,30 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T12:05:20.689025+00:00"
   },
-  "SAHARAUSDT|1h": {
-    "symbol": "SAHARAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T01:04:30.347487+00:00"
-  },
-  "METUSDT|4h": {
-    "symbol": "METUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T00:05:44.484190+00:00"
-  },
-  "MINAUSDT|1h": {
-    "symbol": "MINAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T01:04:27.029827+00:00"
-  },
-  "MITOUSDT|1h": {
-    "symbol": "MITOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T01:04:29.043903+00:00"
-  },
   "COINUSDT|1h": {
     "symbol": "COINUSDT",
     "timeframe": "1h",
@@ -110,7 +86,7 @@
     "symbol": "NEWTUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T05:04:28.669575+00:00"
+    "timestamp": "2026-09-10T13:04:33.795306+00:00"
   },
   "AAVEUSDT|1h": {
     "symbol": "AAVEUSDT",
@@ -134,7 +110,7 @@
     "symbol": "KASUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T07:05:31.941390+00:00"
+    "timestamp": "2026-09-10T13:04:35.106390+00:00"
   },
   "VIRTUALUSDT|1h": {
     "symbol": "VIRTUALUSDT",
@@ -345,5 +321,41 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T12:05:25.867945+00:00"
+  },
+  "GRVTUSDT|1h": {
+    "symbol": "GRVTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T13:04:29.630239+00:00"
+  },
+  "MOVEUSDT|15m": {
+    "symbol": "MOVEUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T13:04:32.469498+00:00"
+  },
+  "ZENUSDT|1h": {
+    "symbol": "ZENUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T13:04:36.416387+00:00"
+  },
+  "USELESSUSDT|1h": {
+    "symbol": "USELESSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T13:04:37.865189+00:00"
+  },
+  "AXTIUSDT|4h": {
+    "symbol": "AXTIUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T13:04:39.231050+00:00"
+  },
+  "ARUSDT|1h": {
+    "symbol": "ARUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T13:04:40.513541+00:00"
   }
 }
