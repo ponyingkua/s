@@ -14089,5 +14089,96 @@
     "tp": 67.271858,
     "tp1": 68.191032,
     "scanned_at": "2026-09-10T21:03:11.062887+00:00"
+  },
+  {
+    "symbol": "ETHFIUSDT",
+    "direction": "LONG",
+    "score": 71.3,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "ADX (28.8) tren kuat (+8.3 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.6678,
+    "sl": 0.604868,
+    "tp": 0.781078,
+    "tp1": 0.730732,
+    "scanned_at": "2026-09-10T22:03:00.733966+00:00"
+  },
+  {
+    "symbol": "MSTRUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (46.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 128.97,
+    "sl": 132.318525,
+    "tp": 122.942656,
+    "tp1": 125.621475,
+    "scanned_at": "2026-09-10T22:03:00.733966+00:00"
+  },
+  {
+    "symbol": "QQQUSDT",
+    "direction": "SHORT",
+    "score": 67.2,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "ADX (33.3) tren kuat (+13.2 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 709.56,
+    "sl": 713.001712,
+    "tp": 703.364919,
+    "tp1": 706.118288,
+    "scanned_at": "2026-09-10T22:03:00.733966+00:00"
+  },
+  {
+    "symbol": "THEUSDT",
+    "direction": "SHORT",
+    "score": 66.7,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (37) menguatkan momentum turun",
+      "ADX (32.9) tren kuat (+12.7 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.06624,
+    "sl": 0.068238,
+    "tp": 0.062643,
+    "tp1": 0.064242,
+    "scanned_at": "2026-09-10T22:03:00.733966+00:00"
   }
 ]
