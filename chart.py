@@ -75,6 +75,43 @@ COMPARE_PALETTE = [
 
 CANDLE_WIDTH = 0.8
 
+# ------------------------------------------------------------
+# Z-ORDER (urutan layer chart, dari paling belakang ke paling depan)
+# ------------------------------------------------------------
+# Grid ada di bawah semuanya lewat ax.set_axisbelow(True) (terpisah, tidak
+# perlu konstanta). Urutan di bawah ini yang menentukan elemen mana yang
+# "menutupi" elemen lain kalau posisinya bertabrakan secara visual:
+#
+#   1. Candle (wick & body)
+#   2. Supertrend
+#   3. EMA 200
+#   4. Mark point struktur (zona Demand/Supply, garis+segitiga+teks BOS,
+#      label HH/HL/LH/LL)
+#   5. Garis + label ENTRY/TP/SL
+#   6. Panah target TP (paling depan)
+#
+# Tiap grup dikasih rentang 1.0 (mis. 4.0-4.9) supaya elemen di dalam grup
+# yang sama masih bisa diatur urutannya sendiri (mis. fill zona di bawah
+# teks "S"/"D"-nya) tanpa tabrakan dengan grup lain.
+Z_CANDLE_WICK = 2.0
+Z_CANDLE_BODY = 2.1
+
+Z_SUPERTREND = 3.0
+
+Z_EMA = 4.0
+
+Z_ZONE_FILL = 5.0
+Z_ZONE_TEXT = 5.1
+Z_BOS_LEVEL_LINE = 5.2
+Z_BOS_MARKER = 5.3
+Z_BOS_TEXT = 5.4
+Z_STRUCT_LABEL = 5.5
+
+Z_LEVEL_LINE = 6.0      # garis putus-putus ENTRY/TP/SL
+Z_LEVEL_LABEL = 6.5     # kotak label ENTRY/TP/SL (di atas garisnya sendiri)
+
+Z_TARGET_ARROW = 7.0
+
 MAX_CANDLES_BY_TF = {
     "15m": 50,   # ideal 45-55
     "1h": 60,    # ideal 55-65
@@ -184,7 +221,7 @@ def _place_level_labels(ax, levels: list, label_x: float, min_gap: float,
             label_x, label_y, item["text"],
             color=TEXT,
             va="center", ha="left", fontweight="bold", fontsize=level_fontsize,
-            zorder=8, clip_on=False,
+            zorder=Z_LEVEL_LABEL, clip_on=False,
             bbox=dict(
                 boxstyle="square,pad=0.35",
                 facecolor=item["color"],
@@ -205,13 +242,13 @@ def _draw_candles(ax, df: pd.DataFrame) -> list:
         colors.append(color)
 
         ax.plot([i, i], [low_p, high_p], color=color, linewidth=1.3,
-                 solid_capstyle="round", zorder=5)
+                 solid_capstyle="round", zorder=Z_CANDLE_WICK)
 
         body_bottom = min(open_p, close_p)
         body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.012)
         ax.add_patch(Rectangle(
             (i - CANDLE_WIDTH / 2, body_bottom), CANDLE_WIDTH, body_height,
-            facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=6,
+            facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=Z_CANDLE_BODY,
         ))
     return colors
 
@@ -341,9 +378,9 @@ def _draw_supertrend(ax, level: pd.Series, trend: pd.Series,
     down_x, down_y = _rounded_masked_line(level.where(trend == -1))
     ax.plot(up_x, up_y, color=ST_UP, linewidth=1.4, alpha=0.90,
              solid_joinstyle="round", solid_capstyle="round",
-             label=f"Supertrend {period}/{multiplier}", zorder=7)
+             label=f"Supertrend {period}/{multiplier}", zorder=Z_SUPERTREND)
     ax.plot(down_x, down_y, color=ST_DOWN, linewidth=1.4, alpha=0.90,
-             solid_joinstyle="round", solid_capstyle="round", zorder=7)
+             solid_joinstyle="round", solid_capstyle="round", zorder=Z_SUPERTREND)
 
 
 # ============================================================
@@ -513,11 +550,11 @@ def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int,
         if pt["type"] == "H":
             ax.text(px, pt["price"] + pad, pt["label"], color=STRUCT_TEXT,
                     fontsize=fontsize, fontweight="bold", ha="center", va="bottom",
-                    zorder=9, clip_on=False)
+                    zorder=Z_STRUCT_LABEL, clip_on=False)
         else:
             ax.text(px, pt["price"] - pad, pt["label"], color=STRUCT_TEXT,
                     fontsize=fontsize, fontweight="bold", ha="center", va="top",
-                    zorder=9, clip_on=False)
+                    zorder=Z_STRUCT_LABEL, clip_on=False)
 
 
 def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span: float,
@@ -539,7 +576,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         ax.add_patch(Rectangle(
             (start_px, z["bottom"]), end_px - start_px, z["top"] - z["bottom"],
             facecolor=fill, edgecolor=edge, alpha=0.40, linewidth=1.1,
-            zorder=6.2,
+            zorder=Z_ZONE_FILL,
         ))
 
         # Teks S/D — warna hitam (sama dengan background gelap)
@@ -547,7 +584,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         mid_y = (z["top"] + z["bottom"]) / 2
         ax.text(mid_x, mid_y, label, color="#F2F2F2",
                 fontsize=(14.0 if square else 7.5), fontweight="bold", ha="center", va="center",
-                alpha=0.95, zorder=6.3, clip_on=False)
+                alpha=0.95, zorder=Z_ZONE_TEXT, clip_on=False)
 
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame,
@@ -570,23 +607,23 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
 
         # Garis level sederhana
         ax.plot([origin_px, idx_px], [ev["level"], ev["level"]], color=color,
-                 linestyle=(0, (4, 3)), linewidth=1.1, alpha=0.85, zorder=4)
+                 linestyle=(0, (4, 3)), linewidth=1.1, alpha=0.85, zorder=Z_BOS_LEVEL_LINE)
 
         # Segitiga kecil
         if is_bull:
             ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=color,
-                     markersize=6.0, zorder=10, clip_on=False)
+                     markersize=6.0, zorder=Z_BOS_MARKER, clip_on=False)
             label_y = max(ev["level"], high[idx_px]) + pad_label
         else:
             ax.plot(idx_px, low[idx_px] - pad_marker, marker="v", color=color,
-                     markersize=6.0, zorder=10, clip_on=False)
+                     markersize=6.0, zorder=Z_BOS_MARKER, clip_on=False)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
         # Teks BOS sederhana — warna hitam
         ax.text(idx_px + 0.9, label_y, "BOS", color="#F2F2F2",
                 fontsize=(12.5 if square else 6.0), fontweight="bold",
                 ha="left", va="center",
-                zorder=11, clip_on=False)
+                zorder=Z_BOS_TEXT, clip_on=False)
 
 
 def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int,
@@ -611,7 +648,7 @@ def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int,
                           linestyle=(0, (5, 3)),
                           connectionstyle="arc3,rad=0.35",
                           shrinkA=1, shrinkB=1, mutation_scale=10),
-        zorder=9,
+        zorder=Z_TARGET_ARROW,
     )
 
 
@@ -822,7 +859,7 @@ def build_chart(
     colors = _draw_candles(ax_price, plot_df)
     if not hide_indicators:
         ax_price.plot(range(len(plot_df)), ema_full, color=EMA_COLOR, linewidth=1.6,
-                      solid_capstyle="round", label=f"EMA {ema_period}", zorder=6.5)
+                      solid_capstyle="round", label=f"EMA {ema_period}", zorder=Z_EMA)
         _draw_supertrend(ax_price, st_level_full, st_trend_full, st_period, st_mult)
 
     last_x = len(plot_df) - 1
@@ -853,7 +890,7 @@ def build_chart(
 
     for item in levels:
         ax_price.axhline(y=item["level"], color=item["color"], linestyle="--",
-                          linewidth=1.0, alpha=0.70, zorder=2)
+                          linewidth=1.0, alpha=0.70, zorder=Z_LEVEL_LINE)
 
     zone_values = []
     for z in structure["zones"]:
@@ -1009,7 +1046,7 @@ def build_multi_tf_card(
 
         ema_period = cfg["indicators"]["ema"]["period"]
         ema_vals = ema(df["close"], ema_period).tail(len(plot_df)).reset_index(drop=True)
-        ax_p.plot(range(len(plot_df)), ema_vals, color=EMA_COLOR, linewidth=1.1, zorder=6.5)
+        ax_p.plot(range(len(plot_df)), ema_vals, color=EMA_COLOR, linewidth=1.1, zorder=Z_EMA)
 
         st_period = cfg["indicators"]["supertrend"]["period"]
         st_mult = cfg["indicators"]["supertrend"]["multiplier"]
