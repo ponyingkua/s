@@ -88,41 +88,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-10T14:04:22.355384+00:00"
   },
-  "HUMAUSDT|1h": {
-    "symbol": "HUMAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T10:04:25.490596+00:00"
-  },
-  "AXSUSDT|1h": {
-    "symbol": "AXSUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:29.161593+00:00"
-  },
-  "1000LUNCUSDT|1h": {
-    "symbol": "1000LUNCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:30.585368+00:00"
-  },
   "PNUTUSDT|1h": {
     "symbol": "PNUTUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T15:05:22.007614+00:00"
-  },
-  "BIOUSDT|1h": {
-    "symbol": "BIOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:33.458596+00:00"
-  },
-  "SIRENUSDT|1h": {
-    "symbol": "SIRENUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:35.136385+00:00"
   },
   "MSTRUSDT|1h": {
     "symbol": "MSTRUSDT",
@@ -248,7 +218,7 @@
     "symbol": "LITUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T18:05:19.130214+00:00"
+    "timestamp": "2026-09-10T23:03:46.139725+00:00"
   },
   "XLMUSDT|1h": {
     "symbol": "XLMUSDT",
@@ -362,7 +332,7 @@
     "symbol": "BTCUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T18:05:20.255411+00:00"
+    "timestamp": "2026-09-10T23:03:47.601657+00:00"
   },
   "APEUSDT|1h": {
     "symbol": "APEUSDT",
@@ -477,5 +447,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T22:04:16.693704+00:00"
+  },
+  "COMPUSDT|1h": {
+    "symbol": "COMPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T23:03:42.428584+00:00"
+  },
+  "CATIUSDT|1h": {
+    "symbol": "CATIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T23:03:44.698661+00:00"
+  },
+  "MSFTUSDT|1h": {
+    "symbol": "MSFTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T23:03:49.011090+00:00"
   }
 }
