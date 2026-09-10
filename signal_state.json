@@ -10,23 +10,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T12:05:20.689025+00:00"
   },
-  "JASMYUSDT|1h": {
-    "symbol": "JASMYUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T03:04:22.596661+00:00"
-  },
   "ENAUSDT|1h": {
     "symbol": "ENAUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T07:05:33.864694+00:00"
-  },
-  "CRCLUSDT|1h": {
-    "symbol": "CRCLUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T03:04:26.384735+00:00"
   },
   "PAXGUSDT|4h": {
     "symbol": "PAXGUSDT",
@@ -86,13 +74,13 @@
     "symbol": "AAVEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:27.582327+00:00"
+    "timestamp": "2026-09-10T15:05:16.243871+00:00"
   },
   "ARBUSDT|1h": {
     "symbol": "ARBUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T06:05:03.493338+00:00"
+    "timestamp": "2026-09-10T15:05:11.202892+00:00"
   },
   "FETUSDT|1h": {
     "symbol": "FETUSDT",
@@ -224,7 +212,7 @@
     "symbol": "PNUTUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T10:04:32.043527+00:00"
+    "timestamp": "2026-09-10T15:05:22.007614+00:00"
   },
   "BIOUSDT|1h": {
     "symbol": "BIOUSDT",
@@ -375,5 +363,35 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T14:04:20.283337+00:00"
+  },
+  "KAVAUSDT|1h": {
+    "symbol": "KAVAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T15:05:13.393553+00:00"
+  },
+  "SOLUSDT|1h": {
+    "symbol": "SOLUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T15:05:14.825822+00:00"
+  },
+  "HBARUSDT|1h": {
+    "symbol": "HBARUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T15:05:17.645810+00:00"
+  },
+  "ENSUSDT|1h": {
+    "symbol": "ENSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T15:05:19.172408+00:00"
+  },
+  "MOODENGUSDT|1h": {
+    "symbol": "MOODENGUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T15:05:20.587980+00:00"
   }
 }
