@@ -34,18 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-10T16:04:47.454594+00:00"
   },
-  "BULLAUSDT|1h": {
-    "symbol": "BULLAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T05:04:25.841465+00:00"
-  },
-  "1000FLOKIUSDT|1h": {
-    "symbol": "1000FLOKIUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T05:04:27.271362+00:00"
-  },
   "NEWTUSDT|1h": {
     "symbol": "NEWTUSDT",
     "timeframe": "1h",
@@ -63,12 +51,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-10T15:05:11.202892+00:00"
-  },
-  "FETUSDT|1h": {
-    "symbol": "FETUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T06:05:05.802776+00:00"
   },
   "KASUSDT|1h": {
     "symbol": "KASUSDT",
@@ -134,7 +116,7 @@
     "symbol": "RUNEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T09:04:22.492146+00:00"
+    "timestamp": "2026-09-10T18:05:15.673417+00:00"
   },
   "AAPLUSDT|1h": {
     "symbol": "AAPLUSDT",
@@ -146,7 +128,7 @@
     "symbol": "ICPUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T14:04:16.308472+00:00"
+    "timestamp": "2026-09-10T18:05:17.977617+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
@@ -284,7 +266,7 @@
     "symbol": "1000SHIBUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-10T12:05:25.867945+00:00"
+    "timestamp": "2026-09-10T18:05:21.334540+00:00"
   },
   "GRVTUSDT|1h": {
     "symbol": "GRVTUSDT",
@@ -332,7 +314,7 @@
     "symbol": "LITUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T14:04:18.303170+00:00"
+    "timestamp": "2026-09-10T18:05:19.130214+00:00"
   },
   "XLMUSDT|1h": {
     "symbol": "XLMUSDT",
@@ -441,5 +423,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T17:04:22.868937+00:00"
+  },
+  "BTCUSDT|1h": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T18:05:20.255411+00:00"
+  },
+  "APEUSDT|1h": {
+    "symbol": "APEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T18:05:22.393267+00:00"
+  },
+  "ONDOUSDT|1h": {
+    "symbol": "ONDOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T18:05:23.555026+00:00"
+  },
+  "HOLOUSDT|1h": {
+    "symbol": "HOLOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T18:05:24.632716+00:00"
   }
 }
