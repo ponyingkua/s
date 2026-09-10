@@ -230,7 +230,7 @@
     "symbol": "SAHARAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-09T20:04:32.264058+00:00"
+    "timestamp": "2026-09-10T01:04:30.347487+00:00"
   },
   "GOOGLUSDT|1h": {
     "symbol": "GOOGLUSDT",
@@ -297,5 +297,17 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-10T00:05:44.484190+00:00"
+  },
+  "MINAUSDT|1h": {
+    "symbol": "MINAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T01:04:27.029827+00:00"
+  },
+  "MITOUSDT|1h": {
+    "symbol": "MITOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T01:04:29.043903+00:00"
   }
 }

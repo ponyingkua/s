@@ -11174,5 +11174,75 @@
     "tp": 0.245145,
     "tp1": 0.229391,
     "scanned_at": "2026-09-10T00:04:32.805519+00:00"
+  },
+  {
+    "symbol": "MINAUSDT",
+    "direction": "LONG",
+    "score": 86.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (37.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.09372,
+    "sl": 0.085943,
+    "tp": 0.107719,
+    "tp1": 0.101497,
+    "scanned_at": "2026-09-10T01:03:36.182071+00:00"
+  },
+  {
+    "symbol": "MITOUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "ADX (68.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 2.54",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.54 (sisa posisi)"
+    ],
+    "entry": 0.014,
+    "sl": 0.015112,
+    "tp": 0.01118,
+    "tp1": 0.012888,
+    "scanned_at": "2026-09-10T01:03:36.182071+00:00"
+  },
+  {
+    "symbol": "SAHARAUSDT",
+    "direction": "LONG",
+    "score": 67.9,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (25.5) tren kuat (+4.9 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.010036,
+    "sl": 0.009496,
+    "tp": 0.011008,
+    "tp1": 0.010576,
+    "scanned_at": "2026-09-10T01:03:36.182071+00:00"
   }
 ]
