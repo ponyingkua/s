@@ -11568,5 +11568,52 @@
     "tp": 120.461605,
     "tp1": 122.558669,
     "scanned_at": "2026-09-10T05:03:10.594142+00:00"
+  },
+  {
+    "symbol": "ARBUSDT",
+    "direction": "LONG",
+    "score": 78.0,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (40), tidak menambah skor",
+      "ADX (35.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.65",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.65 (sisa posisi)"
+    ],
+    "entry": 0.15185,
+    "sl": 0.144506,
+    "tp": 0.17867,
+    "tp1": 0.159194,
+    "scanned_at": "2026-09-10T06:03:53.608417+00:00"
+  },
+  {
+    "symbol": "FETUSDT",
+    "direction": "LONG",
+    "score": 75.4,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (43), tidak menambah skor",
+      "ADX (32.6) tren kuat (+12.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.39",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.39 (sisa posisi)"
+    ],
+    "entry": 0.1706,
+    "sl": 0.165195,
+    "tp": 0.1889,
+    "tp1": 0.176005,
+    "scanned_at": "2026-09-10T06:03:53.608417+00:00"
   }
 ]

@@ -4,24 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "RAYSOLUSDT|1h": {
-    "symbol": "RAYSOLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T18:04:48.638695+00:00"
-  },
-  "TRUTHUSDT|1h": {
-    "symbol": "TRUTHUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T18:04:49.992165+00:00"
-  },
-  "METUSDT|1h": {
-    "symbol": "METUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T18:04:51.228570+00:00"
-  },
   "KATUSDT|1h": {
     "symbol": "KATUSDT",
     "timeframe": "1h",
@@ -45,18 +27,6 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-10T00:05:42.422517+00:00"
-  },
-  "HOLOUSDT|1h": {
-    "symbol": "HOLOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T18:04:45.406769+00:00"
-  },
-  "AXTIUSDT|1h": {
-    "symbol": "AXTIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T18:04:52.410870+00:00"
   },
   "XTZUSDT|1h": {
     "symbol": "XTZUSDT",
@@ -267,5 +237,17 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T05:04:30.074717+00:00"
+  },
+  "ARBUSDT|1h": {
+    "symbol": "ARBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T06:05:03.493338+00:00"
+  },
+  "FETUSDT|1h": {
+    "symbol": "FETUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T06:05:05.802776+00:00"
   }
 }
