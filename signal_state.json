@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "SKHYNIXUSDT|4h": {
-    "symbol": "SKHYNIXUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:18.905347+00:00"
-  },
   "ORCAUSDT|1h": {
     "symbol": "ORCAUSDT",
     "timeframe": "1h",
@@ -40,41 +34,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-09T20:04:29.389327+00:00"
   },
-  "SCRUSDT|4h": {
-    "symbol": "SCRUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:11.425848+00:00"
-  },
-  "BULLAUSDT|1h": {
-    "symbol": "BULLAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:13.089260+00:00"
-  },
   "ZENUSDT|1h": {
     "symbol": "ZENUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-09T21:03:30.537940+00:00"
-  },
-  "ARMUSDT|4h": {
-    "symbol": "ARMUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:15.098421+00:00"
-  },
-  "QCOMUSDT|4h": {
-    "symbol": "QCOMUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:16.015763+00:00"
-  },
-  "EDGEUSDT|1h": {
-    "symbol": "EDGEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-09T16:04:16.950885+00:00"
   },
   "MSFTUSDT|1h": {
     "symbol": "MSFTUSDT",
@@ -273,5 +237,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T03:04:26.384735+00:00"
+  },
+  "PAXGUSDT|4h": {
+    "symbol": "PAXGUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T04:04:29.448012+00:00"
+  },
+  "\u5e01\u5b89\u4eba\u751fUSDT|4h": {
+    "symbol": "\u5e01\u5b89\u4eba\u751fUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T04:04:31.942433+00:00"
+  },
+  "HOODUSDT|1h": {
+    "symbol": "HOODUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T04:04:33.360345+00:00"
+  },
+  "SOXLUSDT|4h": {
+    "symbol": "SOXLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T04:04:34.868911+00:00"
   }
 }
