@@ -447,5 +447,41 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T18:05:24.632716+00:00"
+  },
+  "1000PEPEUSDT|1h": {
+    "symbol": "1000PEPEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:01.868222+00:00"
+  },
+  "HYPEUSDT|1h": {
+    "symbol": "HYPEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:04.911335+00:00"
+  },
+  "ZKCUSDT|1h": {
+    "symbol": "ZKCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:06.322594+00:00"
+  },
+  "BTCUSDT_260925|1h": {
+    "symbol": "BTCUSDT_260925",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:07.740674+00:00"
+  },
+  "BTCUSDT_261225|1h": {
+    "symbol": "BTCUSDT_261225",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:09.160116+00:00"
+  },
+  "BTRUSDT|1h": {
+    "symbol": "BTRUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T19:04:10.584732+00:00"
   }
 }
