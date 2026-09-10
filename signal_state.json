@@ -8,7 +8,7 @@
     "symbol": "SAHARAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T00:05:42.422517+00:00"
+    "timestamp": "2026-09-10T12:05:20.689025+00:00"
   },
   "SAHARAUSDT|1h": {
     "symbol": "SAHARAUSDT",
@@ -146,7 +146,7 @@
     "symbol": "STBLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T08:04:17.523471+00:00"
+    "timestamp": "2026-09-10T12:05:15.999219+00:00"
   },
   "XAUTUSDT|4h": {
     "symbol": "XAUTUSDT",
@@ -309,5 +309,41 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T11:04:50.728551+00:00"
+  },
+  "EGLDUSDT|1h": {
+    "symbol": "EGLDUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T12:05:18.061938+00:00"
+  },
+  "COHRUSDT|4h": {
+    "symbol": "COHRUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T12:05:19.460336+00:00"
+  },
+  "PHAROSUSDT|4h": {
+    "symbol": "PHAROSUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T12:05:21.935210+00:00"
+  },
+  "ANIMEUSDT|1h": {
+    "symbol": "ANIMEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-10T12:05:23.146934+00:00"
+  },
+  "CRVUSDT|1h": {
+    "symbol": "CRVUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T12:05:24.418831+00:00"
+  },
+  "1000SHIBUSDT|1h": {
+    "symbol": "1000SHIBUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-10T12:05:25.867945+00:00"
   }
 }
