@@ -11126,5 +11126,53 @@
     "tp": 1058.09,
     "tp1": 1038.921075,
     "scanned_at": "2026-09-09T23:02:58.163011+00:00"
+  },
+  {
+    "symbol": "SAHARAUSDT",
+    "direction": "LONG",
+    "score": 86.0,
+    "timeframe": "4h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (68) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (48.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (-22 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.010409,
+    "sl": 0.00924,
+    "tp": 0.012514,
+    "tp1": 0.011578,
+    "scanned_at": "2026-09-10T00:04:32.805519+00:00"
+  },
+  {
+    "symbol": "METUSDT",
+    "direction": "LONG",
+    "score": 73.0,
+    "timeframe": "4h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (58) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (39.6) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-35 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.2097,
+    "sl": 0.190009,
+    "tp": 0.245145,
+    "tp1": 0.229391,
+    "scanned_at": "2026-09-10T00:04:32.805519+00:00"
   }
 ]
