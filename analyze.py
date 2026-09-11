@@ -54,14 +54,24 @@ def _reject_label(reason: str | None, regime: str) -> str:
     return REASON_LABELS.get(reason, reason)
 
 
+# ============================================================
+# Indicator helpers (fixed + improved)
+# ============================================================
+
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """Wilder RSI. Pure uptrend → 100, pure downtrend → 0 (tidak NaN)."""
     delta = series.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
     avg_gain = gain.ewm(alpha=1 / period, min_periods=period).mean()
     avg_loss = loss.ewm(alpha=1 / period, min_periods=period).mean()
+
     rs = avg_gain / avg_loss.replace(0, np.nan)
-    return 100 - (100 / (1 + rs))
+    rsi = 100 - (100 / (1 + rs))
+    # Pure uptrend / downtrend — hindari NaN
+    rsi = rsi.mask(avg_loss == 0, 100.0)
+    rsi = rsi.mask(avg_gain == 0, 0.0)
+    return rsi
 
 
 def _macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
@@ -77,8 +87,11 @@ def _bollinger(series: pd.Series, period: int = 20, std_mult: float = 2.0):
     std = series.rolling(period).std()
     upper = mid + std_mult * std
     lower = mid - std_mult * std
-    width_pct = (upper - lower) / mid * 100
-    percent_b = (series - lower) / (upper - lower)
+    width_pct = (upper - lower) / mid.replace(0, np.nan) * 100
+    # Saat bandwidth = 0 → percent_b = 0.5 (netral), bukan NaN/inf
+    denom = upper - lower
+    percent_b = np.where(denom == 0, 0.5, (series - lower) / denom)
+    percent_b = pd.Series(percent_b, index=series.index)
     return width_pct, percent_b
 
 
@@ -91,19 +104,47 @@ def _atr_pct(df: pd.DataFrame, period: int = 14) -> pd.Series:
     high, low, close = df["high"], df["low"], df["close"]
     prev_close = close.shift(1)
     tr = pd.concat(
-        [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+        [high - low, (high - prev_close).abs(), (low - prev_close).abs()],
+        axis=1,
     ).max(axis=1)
     atr = tr.ewm(alpha=1 / period, min_periods=period).mean()
-    return (atr / close) * 100
+    return (atr / close.replace(0, np.nan)) * 100
 
+
+def _ema_slope(series: pd.Series, lookback: int = 5) -> float:
+    """Slope relatif EMA (positif = naik)."""
+    if len(series) < lookback + 1 or pd.isna(series.iloc[-1]):
+        return 0.0
+    return float(series.iloc[-1] - series.iloc[-lookback]) / max(abs(series.iloc[-lookback]), 1e-9)
+
+
+# ============================================================
+# Deep confluence analysis (1 token, bukan scanner filter)
+# ============================================================
 
 def analyze_confluence(df: pd.DataFrame) -> dict:
-    """Analisa teknikal mandiri (EMA/RSI/MACD/Bollinger/OBV/ATR), lepas dari
-    skor internal scanner. Dipakai khusus untuk laporan analyze.py."""
+    """Analisa teknikal mandiri (EMA/RSI/MACD/Bollinger/OBV/ATR).
+    Dipakai khusus untuk laporan analyze.py — bukan filter lolos/tidak.
+    """
     if len(df) < 30:
-        return {"bias": "DATA KURANG", "bullish_votes": 0, "bearish_votes": 0, "notes": []}
+        return {
+            "bias": "DATA KURANG",
+            "bullish_votes": 0.0,
+            "bearish_votes": 0.0,
+            "notes": ["Data kurang dari 30 bar"],
+            "volatility_pct": None,
+            "bb_width_pct": None,
+            "price": None,
+            "ema20": None,
+            "ema50": None,
+            "ema200": None,
+            "percent_b": None,
+            "rsi": None,
+        }
 
     close = df["close"]
+    volume = df["volume"]
+
     ema20 = close.ewm(span=20, adjust=False).mean()
     ema50 = close.ewm(span=50, adjust=False).mean()
     ema200 = close.ewm(span=200, adjust=False).mean() if len(close) >= 200 else None
@@ -114,73 +155,127 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
     atrp = _atr_pct(df)
     obv_series = _obv(df)
 
-    bull, bear = 0, 0
+    bull = 0.0
+    bear = 0.0
     notes: list[str] = []
 
-    if ema20.iloc[-1] > ema50.iloc[-1]:
-        bull += 1
-        notes.append("EMA20 di atas EMA50 (trend jangka pendek naik)")
+    price_now = float(close.iloc[-1])
+    ema20_now = float(ema20.iloc[-1])
+    ema50_now = float(ema50.iloc[-1])
+    rsi_now = float(rsi14.iloc[-1]) if pd.notna(rsi14.iloc[-1]) else None
+    pb_now = float(percent_b.iloc[-1]) if pd.notna(percent_b.iloc[-1]) else None
+    hist_now = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
+    hist_prev = float(hist.iloc[-2]) if len(hist) >= 2 and pd.notna(hist.iloc[-2]) else None
+
+    # 1. Struktur EMA (bobot lebih tinggi)
+    if ema20_now > ema50_now:
+        bull += 1.5
+        notes.append("EMA20 di atas EMA50 (struktur jangka pendek naik)")
     else:
-        bear += 1
-        notes.append("EMA20 di bawah EMA50 (trend jangka pendek turun)")
+        bear += 1.5
+        notes.append("EMA20 di bawah EMA50 (struktur jangka pendek turun)")
 
     if ema200 is not None and pd.notna(ema200.iloc[-1]):
-        if close.iloc[-1] > ema200.iloc[-1]:
-            bull += 1
+        ema200_now = float(ema200.iloc[-1])
+        if price_now > ema200_now:
+            bull += 1.2
             notes.append("Harga di atas EMA200 (bias jangka panjang naik)")
         else:
-            bear += 1
+            bear += 1.2
             notes.append("Harga di bawah EMA200 (bias jangka panjang turun)")
 
-    rsi_last = rsi14.iloc[-1]
-    if pd.notna(rsi_last):
-        if rsi_last > 55:
-            bull += 1
-            notes.append(f"RSI {rsi_last:.0f}: momentum condong naik")
-        elif rsi_last < 45:
-            bear += 1
-            notes.append(f"RSI {rsi_last:.0f}: momentum condong turun")
-        else:
-            notes.append(f"RSI {rsi_last:.0f}: netral")
+        if ema20_now > ema50_now > ema200_now:
+            bull += 0.8
+            notes.append("Full bullish alignment (EMA20 > EMA50 > EMA200)")
+        elif ema20_now < ema50_now < ema200_now:
+            bear += 0.8
+            notes.append("Full bearish alignment (EMA20 < EMA50 < EMA200)")
 
-    if len(hist) >= 2 and pd.notna(hist.iloc[-1]) and pd.notna(hist.iloc[-2]):
-        if hist.iloc[-1] > 0 and hist.iloc[-1] >= hist.iloc[-2]:
-            bull += 1
+    # 2. Slope EMA (momentum trend)
+    slope20 = _ema_slope(ema20, 5)
+    slope50 = _ema_slope(ema50, 5)
+    if slope20 > 0 and slope50 > 0:
+        bull += 0.7
+        notes.append("EMA sloping naik (momentum trend positif)")
+    elif slope20 < 0 and slope50 < 0:
+        bear += 0.7
+        notes.append("EMA sloping turun (momentum trend negatif)")
+
+    # 3. RSI
+    if rsi_now is not None:
+        if rsi_now > 55:
+            bull += 1.0
+            notes.append(f"RSI {rsi_now:.0f}: momentum condong naik")
+        elif rsi_now < 45:
+            bear += 1.0
+            notes.append(f"RSI {rsi_now:.0f}: momentum condong turun")
+        else:
+            notes.append(f"RSI {rsi_now:.0f}: netral")
+
+        if rsi_now >= 70:
+            notes.append("RSI overbought (≥70) — hati-hati retrace")
+        elif rsi_now <= 30:
+            notes.append("RSI oversold (≤30) — potensi bounce")
+
+    # 4. MACD (hist + crossover)
+    if hist_now is not None and hist_prev is not None:
+        if hist_now > 0 and hist_now >= hist_prev:
+            bull += 1.0
             notes.append("Histogram MACD positif dan menguat")
-        elif hist.iloc[-1] < 0 and hist.iloc[-1] <= hist.iloc[-2]:
-            bear += 1
+        elif hist_now < 0 and hist_now <= hist_prev:
+            bear += 1.0
             notes.append("Histogram MACD negatif dan melemah")
         else:
             notes.append("Momentum MACD belum searah jelas")
 
-    pb_last = percent_b.iloc[-1]
-    if pd.notna(pb_last):
-        if pb_last > 0.8:
-            bull += 1
-            notes.append("Harga dekat/menembus upper Bollinger Band")
-        elif pb_last < 0.2:
-            bear += 1
-            notes.append("Harga dekat/menembus lower Bollinger Band")
+        if hist_prev <= 0 < hist_now:
+            bull += 0.8
+            notes.append("MACD bullish crossover")
+        elif hist_prev >= 0 > hist_now:
+            bear += 0.8
+            notes.append("MACD bearish crossover")
 
-    if len(obv_series) >= 10:
-        obv_slope = obv_series.iloc[-1] - obv_series.iloc[-10]
+    # 5. Bollinger %B
+    if pb_now is not None:
+        if pb_now > 0.75:
+            bull += 0.9
+            notes.append(f"%B tinggi ({pb_now:.2f}) — dekat/menembus upper Bollinger Band")
+        elif pb_now < 0.25:
+            bear += 0.9
+            notes.append(f"%B rendah ({pb_now:.2f}) — dekat/menembus lower Bollinger Band")
+
+    # 6. OBV + Volume expansion
+    if len(obv_series) >= 12:
+        obv_slope = float(obv_series.iloc[-1] - obv_series.iloc[-12])
+        vol_ma = volume.rolling(20).mean().iloc[-1]
+        vol_now = float(volume.iloc[-1])
+
         if obv_slope > 0:
-            bull += 1
-            notes.append("OBV naik 10 candle terakhir (volume mendukung buyer)")
+            bull += 0.8
+            notes.append("OBV naik 12 candle terakhir (volume mendukung buyer)")
         elif obv_slope < 0:
-            bear += 1
-            notes.append("OBV turun 10 candle terakhir (volume mendukung seller)")
+            bear += 0.8
+            notes.append("OBV turun 12 candle terakhir (volume mendukung seller)")
 
+        if pd.notna(vol_ma) and vol_ma > 0 and vol_now > vol_ma * 1.3:
+            if close.iloc[-1] > close.iloc[-2]:
+                bull += 0.5
+                notes.append("Volume expansion + close hijau")
+            else:
+                bear += 0.5
+                notes.append("Volume expansion + close merah")
+
+    # --- Bias determination ---
     total = bull + bear
     if total == 0:
         bias = "NETRAL"
     else:
         ratio = bull / total
-        if ratio >= 0.7:
+        if ratio >= 0.65:
             bias = "BULLISH KUAT"
         elif ratio >= 0.55:
             bias = "BULLISH"
-        elif ratio <= 0.3:
+        elif ratio <= 0.35:
             bias = "BEARISH KUAT"
         elif ratio <= 0.45:
             bias = "BEARISH"
@@ -189,11 +284,17 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
 
     return {
         "bias": bias,
-        "bullish_votes": bull,
-        "bearish_votes": bear,
+        "bullish_votes": round(bull, 2),
+        "bearish_votes": round(bear, 2),
         "notes": notes,
-        "volatility_pct": round(atrp.iloc[-1], 2) if pd.notna(atrp.iloc[-1]) else None,
-        "bb_width_pct": round(bb_width.iloc[-1], 2) if pd.notna(bb_width.iloc[-1]) else None,
+        "volatility_pct": round(float(atrp.iloc[-1]), 2) if pd.notna(atrp.iloc[-1]) else None,
+        "bb_width_pct": round(float(bb_width.iloc[-1]), 2) if pd.notna(bb_width.iloc[-1]) else None,
+        "price": price_now,
+        "ema20": ema20_now,
+        "ema50": ema50_now,
+        "ema200": float(ema200.iloc[-1]) if ema200 is not None and pd.notna(ema200.iloc[-1]) else None,
+        "percent_b": pb_now,
+        "rsi": rsi_now,
     }
 
 
@@ -233,7 +334,12 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
                 confluence = analyze_confluence(closed_df)
             except Exception as exc:
                 print(f"[warn] Gagal hitung confluence {symbol} {tf}: {exc}")
-                confluence = {"bias": "ERROR", "bullish_votes": 0, "bearish_votes": 0, "notes": []}
+                confluence = {
+                    "bias": "ERROR",
+                    "bullish_votes": 0.0,
+                    "bearish_votes": 0.0,
+                    "notes": [],
+                }
 
             info: dict = {
                 "signal": signal,
@@ -285,9 +391,7 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
         else:
             info["would_trigger"] = True
 
-    # Chart hanya dibuat untuk TF yang punya arah (dipakai buat menentukan
-    # setup/trigger) -- TF tanpa arah jelas dilewati, tidak ada yang perlu
-    # divisualisasikan.
+    # Chart hanya dibuat untuk TF yang punya arah
     os.makedirs(os.path.join(OUT_DIR, CHART_SUBDIR), exist_ok=True)
     chart_paths: list[str] = []
     for tf, info in per_tf.items():
@@ -351,6 +455,8 @@ def compose_analysis_text(result: dict) -> str:
             lines.append(f"Volatilitas (ATR): {confluence['volatility_pct']}% dari harga")
         if confluence.get("bb_width_pct") is not None:
             lines.append(f"Lebar Bollinger Band: {confluence['bb_width_pct']}%")
+        if confluence.get("rsi") is not None:
+            lines.append(f"RSI: {confluence['rsi']:.1f}")
         for note in confluence.get("notes", []):
             lines.append(f"- {note}")
 
