@@ -16,12 +16,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T04:04:38.986532+00:00"
   },
-  "AAPLUSDT|1h": {
-    "symbol": "AAPLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T03:04:34.643192+00:00"
-  },
   "ICPUSDT|1h": {
     "symbol": "ICPUSDT",
     "timeframe": "1h",
@@ -40,18 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T13:04:04.665514+00:00"
   },
-  "BTCUSDT|1h": {
-    "symbol": "BTCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T03:04:37.485172+00:00"
-  },
-  "XRPUSDT|1h": {
-    "symbol": "XRPUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T03:04:38.897954+00:00"
-  },
   "BRUSDT|1h": {
     "symbol": "BRUSDT",
     "timeframe": "1h",
@@ -63,36 +45,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T06:04:43.780489+00:00"
-  },
-  "NATGASUSDT|1h": {
-    "symbol": "NATGASUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T03:04:28.695364+00:00"
-  },
-  "\u725b\u6765USDT|1h": {
-    "symbol": "\u725b\u6765USDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T03:04:36.049527+00:00"
-  },
-  "LINKUSDT|1h": {
-    "symbol": "LINKUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T03:04:40.328865+00:00"
-  },
-  "XAUUSDT|1h": {
-    "symbol": "XAUUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T03:04:41.859543+00:00"
-  },
-  "CFGUSDT|1h": {
-    "symbol": "CFGUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T03:04:43.279229+00:00"
   },
   "1000RATSUSDT|1h": {
     "symbol": "1000RATSUSDT",
@@ -375,5 +327,29 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T14:03:55.734012+00:00"
+  },
+  "ZAMAUSDT|1h": {
+    "symbol": "ZAMAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T15:04:45.277633+00:00"
+  },
+  "AVGOUSDT|1h": {
+    "symbol": "AVGOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T15:04:47.468975+00:00"
+  },
+  "METAUSDT|1h": {
+    "symbol": "METAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T15:04:48.977976+00:00"
+  },
+  "SQQQUSDT|1h": {
+    "symbol": "SQQQUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T15:04:50.462564+00:00"
   }
 }
