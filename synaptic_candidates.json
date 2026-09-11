@@ -14296,5 +14296,29 @@
     "tp": 482.211154,
     "tp1": 485.970641,
     "scanned_at": "2026-09-10T23:02:36.837281+00:00"
+  },
+  {
+    "symbol": "ACEUSDT",
+    "direction": "SHORT",
+    "score": 65.4,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (31.6) tren kuat (+11.4 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 2.36",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.36 (sisa posisi)"
+    ],
+    "entry": 0.15568,
+    "sl": 0.161905,
+    "tp": 0.141,
+    "tp1": 0.149455,
+    "scanned_at": "2026-09-11T00:04:17.772785+00:00"
   }
 ]
