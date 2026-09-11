@@ -62,7 +62,7 @@
     "symbol": "LITUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T23:03:46.139725+00:00"
+    "timestamp": "2026-09-11T05:03:51.456516+00:00"
   },
   "XLMUSDT|1h": {
     "symbol": "XLMUSDT",
@@ -76,35 +76,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-11T01:04:50.357379+00:00"
   },
-  "CRDOUSDT|4h": {
-    "symbol": "CRDOUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T16:04:44.637061+00:00"
-  },
   "FILUSDT|1h": {
     "symbol": "FILUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-10T21:04:21.301806+00:00"
-  },
-  "QCOMUSDT|4h": {
-    "symbol": "QCOMUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T16:04:48.889949+00:00"
-  },
-  "SQQQUSDT|4h": {
-    "symbol": "SQQQUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T16:04:50.250334+00:00"
-  },
-  "QQQUSDT|4h": {
-    "symbol": "QQQUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T16:04:51.766554+00:00"
   },
   "TRBUSDT|1h": {
     "symbol": "TRBUSDT",
@@ -399,5 +375,47 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T04:04:41.797478+00:00"
+  },
+  "JUPUSDT|1h": {
+    "symbol": "JUPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T05:03:46.757625+00:00"
+  },
+  "ATUSDT|4h": {
+    "symbol": "ATUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T05:03:48.526197+00:00"
+  },
+  "SAGAUSDT|1h": {
+    "symbol": "SAGAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T05:03:49.517577+00:00"
+  },
+  "IOSTUSDT|1h": {
+    "symbol": "IOSTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T05:03:50.459209+00:00"
+  },
+  "HOODUSDT|1h": {
+    "symbol": "HOODUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T05:03:52.437859+00:00"
+  },
+  "XAUTUSDT|1h": {
+    "symbol": "XAUTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T05:03:53.404647+00:00"
+  },
+  "TRUTHUSDT|1h": {
+    "symbol": "TRUTHUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T05:03:54.436959+00:00"
   }
 }
