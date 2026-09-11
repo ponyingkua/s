@@ -10,10 +10,9 @@ import pandas as pd
 
 # Infrastructure only. The analysis engine below does NOT use scanner scoring,
 # scanner filters, scanner setup classification, or market-regime decisions.
-from scanner import BinanceFuturesClient, Kline, load_config, drop_unclosed_candle
+from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
 OUT_DIR = "analysis_output"
-CHART_SUBDIR = "charts"
 
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
@@ -420,7 +419,7 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     }
 
 
-async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> dict:
+async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     # Only data-fetch settings are borrowed from config. No scanner thresholds,
     # filters, scores, or regime decisions are consulted.
     data_cfg = cfg.get("scanning", {})
@@ -437,7 +436,6 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
                     per_tf[tf] = {"error": f"Only {len(df)} closed bars available; minimum 60 required."}
                     continue
                 info = analyze_timeframe(df, symbol, tf)
-                info["kline"] = Kline(symbol=symbol, timeframe=tf, df=df)
                 info["mtf_agree_tfs"] = []
                 per_tf[tf] = info
             except Exception as exc:
@@ -449,26 +447,7 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
         if "direction" in info and info["direction"] != "NONE":
             info["mtf_agree_tfs"] = [t for t, d in directions.items() if t != tf and d == info["direction"]]
 
-    # Chart integration is optional. It no longer imports scanner.score_symbol.
-    os.makedirs(os.path.join(OUT_DIR, CHART_SUBDIR), exist_ok=True)
-    chart_paths = []
-    for tf, info in per_tf.items():
-        if info.get("direction") == "NONE":
-            continue
-        try:
-            import chart as chart_module
-            if not hasattr(chart_module, "build_chart_from_analysis"):
-                continue
-            square = chart_format == "square"
-            suffix = "_square" if square else ""
-            path = os.path.join(OUT_DIR, CHART_SUBDIR, f"{symbol}_{tf}{suffix}.png")
-            chart_module.build_chart_from_analysis(info["kline"].df, symbol, tf, info, cfg, path, square=square)
-            info["chart_path"] = path
-            chart_paths.append(path)
-        except Exception as exc:
-            print(f"[warn] Failed to build {symbol} {tf} chart: {exc}")
-
-    return {"symbol": symbol, "per_tf": per_tf, "chart_paths": chart_paths}
+    return {"symbol": symbol, "per_tf": per_tf}
 
 
 def compose_analysis_text(result: dict) -> str:
@@ -512,8 +491,6 @@ def compose_analysis_text(result: dict) -> str:
             lines.append(f"TP2: {lv['tp2']}")
         if info.get("mtf_agree_tfs"):
             lines.append(f"MTF confirmation: {', '.join(info['mtf_agree_tfs'])}")
-        if info.get("chart_path"):
-            lines.append(f"Chart: {os.path.basename(info['chart_path'])}")
         lines.append("")
 
     actionable = [(tf, x["direction"]) for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"]
@@ -533,16 +510,14 @@ def main():
     parser = argparse.ArgumentParser(description="vSynapse — independent single-token MTF analyzer")
     parser.add_argument("--symbol", required=True, help="Coin code, e.g. ZEC or ZECUSDT")
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--chart-format", choices=["wide", "square"], default=None)
     args = parser.parse_args()
 
     cfg = load_config(args.config)
     symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
-    chart_format = args.chart_format or cfg.get("chart", {}).get("format", "wide")
 
     print(f"[analyze] Independent analysis started for {symbol}")
     print(f"[analyze] Timeframes: {', '.join(cfg.get('timeframes', ['1h']))}")
-    result = asyncio.run(analyze_symbol(symbol, cfg, chart_format))
+    result = asyncio.run(analyze_symbol(symbol, cfg))
     text = compose_analysis_text(result)
     print("\n" + text)
 
