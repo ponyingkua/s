@@ -327,5 +327,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T22:04:40.855270+00:00"
+  },
+  "QCOMUSDT|1h": {
+    "symbol": "QCOMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T23:03:25.056160+00:00"
+  },
+  "MVLLUSDT|1h": {
+    "symbol": "MVLLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T23:03:27.163344+00:00"
+  },
+  "EDGEUSDT|1h": {
+    "symbol": "EDGEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T23:03:27.897040+00:00"
+  },
+  "BEUSDT|1h": {
+    "symbol": "BEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T23:03:28.734560+00:00"
+  },
+  "ETHUSDT|1h": {
+    "symbol": "ETHUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T23:03:29.454805+00:00"
   }
 }
