@@ -8,7 +8,7 @@
     "symbol": "AEROUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-10T21:04:26.599055+00:00"
+    "timestamp": "2026-09-11T06:04:42.505321+00:00"
   },
   "RUNEUSDT|1h": {
     "symbol": "RUNEUSDT",
@@ -26,25 +26,13 @@
     "symbol": "ICPUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T02:03:42.774347+00:00"
+    "timestamp": "2026-09-11T06:04:41.179377+00:00"
   },
   "MSTRUSDT|1h": {
     "symbol": "MSTRUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-10T22:04:14.656045+00:00"
-  },
-  "ORDERUSDT|1h": {
-    "symbol": "ORDERUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T17:04:16.750494+00:00"
-  },
-  "ZAMAUSDT|1h": {
-    "symbol": "ZAMAUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T17:04:19.809521+00:00"
   },
   "1000SHIBUSDT|1h": {
     "symbol": "1000SHIBUSDT",
@@ -81,36 +69,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-10T21:04:21.301806+00:00"
-  },
-  "TRBUSDT|1h": {
-    "symbol": "TRBUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T17:04:15.195502+00:00"
-  },
-  "RENDERUSDT|1h": {
-    "symbol": "RENDERUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T17:04:17.749381+00:00"
-  },
-  "NEIROUSDT|1h": {
-    "symbol": "NEIROUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T17:04:18.810934+00:00"
-  },
-  "LSKUSDT|4h": {
-    "symbol": "LSKUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T17:04:21.785305+00:00"
-  },
-  "SPKUSDT|1h": {
-    "symbol": "SPKUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T17:04:22.868937+00:00"
   },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
@@ -308,7 +266,7 @@
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T02:03:41.773691+00:00"
+    "timestamp": "2026-09-11T06:04:43.780489+00:00"
   },
   "CLUSDT|1h": {
     "symbol": "CLUSDT",
@@ -417,5 +375,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T05:03:54.436959+00:00"
+  },
+  "ORCLUSDT|1h": {
+    "symbol": "ORCLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T06:04:39.215816+00:00"
+  },
+  "SOXSUSDT|1h": {
+    "symbol": "SOXSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T06:04:45.052408+00:00"
+  },
+  "ARMUSDT|1h": {
+    "symbol": "ARMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T06:04:46.314174+00:00"
+  },
+  "ATUSDT|1h": {
+    "symbol": "ATUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T06:04:47.573045+00:00"
+  },
+  "SOLVUSDT|1h": {
+    "symbol": "SOLVUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T06:04:48.948149+00:00"
   }
 }
