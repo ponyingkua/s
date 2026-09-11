@@ -16198,5 +16198,122 @@
     "tp": 0.005029,
     "tp1": 0.004812,
     "scanned_at": "2026-09-11T13:03:12.658963+00:00"
+  },
+  {
+    "symbol": "ICPUSDT",
+    "direction": "LONG",
+    "score": 111.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (23.2) tren kuat (+2.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 2.844,
+    "sl": 2.684636,
+    "tp": 3.130856,
+    "tp1": 3.003364,
+    "scanned_at": "2026-09-11T14:03:23.073205+00:00"
+  },
+  {
+    "symbol": "TSMUSDT",
+    "direction": "LONG",
+    "score": 87.9,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (55) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (27.4) tren kuat (+6.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 431.62,
+    "sl": 426.667932,
+    "tp": 440.533722,
+    "tp1": 436.572068,
+    "scanned_at": "2026-09-11T14:03:23.073205+00:00"
+  },
+  {
+    "symbol": "KORUUSDT",
+    "direction": "LONG",
+    "score": 87.4,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (26.9) tren kuat (+6.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 23.32,
+    "sl": 22.013481,
+    "tp": 25.671734,
+    "tp1": 24.626519,
+    "scanned_at": "2026-09-11T14:03:23.073205+00:00"
+  },
+  {
+    "symbol": "ZHONGJIUSDT",
+    "direction": "LONG",
+    "score": 73.8,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (34.8) tren kuat (+14.8 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 151.27,
+    "sl": 144.820612,
+    "tp": 162.878899,
+    "tp1": 157.719388,
+    "scanned_at": "2026-09-11T14:03:23.073205+00:00"
+  },
+  {
+    "symbol": "1000FLOKIUSDT",
+    "direction": "SHORT",
+    "score": 68.5,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (32.7) tren kuat (+12.5 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.02401,
+    "sl": 0.025095,
+    "tp": 0.022057,
+    "tp1": 0.022925,
+    "scanned_at": "2026-09-11T14:03:23.073205+00:00"
   }
 ]
