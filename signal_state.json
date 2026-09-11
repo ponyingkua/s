@@ -49,8 +49,8 @@
   "SOLUSDT|1h": {
     "symbol": "SOLUSDT",
     "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T01:04:50.357379+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:04.665514+00:00"
   },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
@@ -266,7 +266,7 @@
     "symbol": "SOLVUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:48.948149+00:00"
+    "timestamp": "2026-09-11T13:04:10.360166+00:00"
   },
   "MUBARAKUSDT|1h": {
     "symbol": "MUBARAKUSDT",
@@ -393,5 +393,41 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T12:05:06.173716+00:00"
+  },
+  "FETUSDT|1h": {
+    "symbol": "FETUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:01.797968+00:00"
+  },
+  "BNBUSDT|1h": {
+    "symbol": "BNBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:03.541022+00:00"
+  },
+  "AAVEUSDT|1h": {
+    "symbol": "AAVEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:05.845695+00:00"
+  },
+  "FARTCOINUSDT|1h": {
+    "symbol": "FARTCOINUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:06.967979+00:00"
+  },
+  "COLLECTUSDT|1h": {
+    "symbol": "COLLECTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:08.101076+00:00"
+  },
+  "LSKUSDT|1h": {
+    "symbol": "LSKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T13:04:09.235411+00:00"
   }
 }
