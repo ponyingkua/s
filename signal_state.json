@@ -28,12 +28,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T06:04:41.179377+00:00"
   },
-  "MSTRUSDT|1h": {
-    "symbol": "MSTRUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T22:04:14.656045+00:00"
-  },
   "GRVTUSDT|1h": {
     "symbol": "GRVTUSDT",
     "timeframe": "1h",
@@ -81,42 +75,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T03:04:38.897954+00:00"
-  },
-  "ETHFIUSDT|1h": {
-    "symbol": "ETHFIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T22:04:12.027690+00:00"
-  },
-  "QQQUSDT|1h": {
-    "symbol": "QQQUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T22:04:15.623193+00:00"
-  },
-  "THEUSDT|1h": {
-    "symbol": "THEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T22:04:16.693704+00:00"
-  },
-  "COMPUSDT|1h": {
-    "symbol": "COMPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T23:03:42.428584+00:00"
-  },
-  "CATIUSDT|1h": {
-    "symbol": "CATIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T23:03:44.698661+00:00"
-  },
-  "MSFTUSDT|1h": {
-    "symbol": "MSFTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T23:03:49.011090+00:00"
   },
   "ACEUSDT|1h": {
     "symbol": "ACEUSDT",
@@ -375,5 +333,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T10:04:06.176006+00:00"
+  },
+  "EWYUSDT|1h": {
+    "symbol": "EWYUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T11:04:28.396980+00:00"
+  },
+  "BLURUSDT|1h": {
+    "symbol": "BLURUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T11:04:31.650274+00:00"
+  },
+  "VELVETUSDT|1h": {
+    "symbol": "VELVETUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T11:04:33.189002+00:00"
+  },
+  "RAVEUSDT|1h": {
+    "symbol": "RAVEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T11:04:34.636368+00:00"
+  },
+  "VTHOUSDT|1h": {
+    "symbol": "VTHOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T11:04:36.006773+00:00"
   }
 }
