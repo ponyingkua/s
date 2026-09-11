@@ -14870,5 +14870,141 @@
     "tp": 0.09384,
     "tp1": 0.098534,
     "scanned_at": "2026-09-11T03:03:25.187473+00:00"
+  },
+  {
+    "symbol": "1000RATSUSDT",
+    "direction": "LONG",
+    "score": 84.3,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "ADX (24.0) tren kuat (+3.3 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.04028,
+    "sl": 0.038097,
+    "tp": 0.04421,
+    "tp1": 0.042463,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
+  },
+  {
+    "symbol": "OPUSDT",
+    "direction": "SHORT",
+    "score": 70.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "ADX (34.0) tren kuat (+14.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.0956,
+    "sl": 0.101465,
+    "tp": 0.085043,
+    "tp1": 0.089735,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
+  },
+  {
+    "symbol": "CRWVUSDT",
+    "direction": "SHORT",
+    "score": 66.8,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (39) menguatkan momentum turun",
+      "ADX (31.1) tren kuat (+10.8 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior low 60-bar), RR aktual 2.04",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.04 (sisa posisi)"
+    ],
+    "entry": 88.87,
+    "sl": 93.653565,
+    "tp": 79.11,
+    "tp1": 84.086435,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
+  },
+  {
+    "symbol": "RUNEUSDT",
+    "direction": "LONG",
+    "score": 66.6,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "ADX (24.3) tren kuat (+3.6 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.513,
+    "sl": 0.488954,
+    "tp": 0.556284,
+    "tp1": 0.537046,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
+  },
+  {
+    "symbol": "HBARUSDT",
+    "direction": "SHORT",
+    "score": 66.1,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (30.4) tren kuat (+10.1 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.07516,
+    "sl": 0.077666,
+    "tp": 0.070648,
+    "tp1": 0.072654,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
+  },
+  {
+    "symbol": "DOTUSDT",
+    "direction": "LONG",
+    "score": 65.1,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "ADX (26.7) tren kuat (+6.1 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.78",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.78 (sisa posisi)"
+    ],
+    "entry": 1.1212,
+    "sl": 1.085426,
+    "tp": 1.2207,
+    "tp1": 1.156974,
+    "scanned_at": "2026-09-11T04:03:29.517925+00:00"
   }
 ]
