@@ -93,12 +93,12 @@ scoring:
       continuation: -35
       breakout: 0
       long:
-        breakout: -22
-        # -22 (top-level long.extended) masih net negatif: avg R -0.11 (n=12),
-        # dan TIDAK ada zona skor yang membaik (flat ~-0.10 di skor rendah maupun
-        # tinggi) -> beda pola dari 1h short-extended, jadi bukan soal ambang,
-        # setup ini memang lemah di 4h. Didekatkan ke perlakuan 4h continuation
-        # (-35) / 15m long-extended (-40): efektif nyaris exclude, bukan filter halus.
+        # breakout: -22 (nilai lama, TIDAK ADA alasan tercatat) dihapus --
+        # fallback ke breakout:0 di atas. 71 trade (5 Mar-3 Sep 2026): BREAKOUT
+        # LONG n=8 avg R +0.18 win 50%, tidak mendukung penalti sebesar itu.
+        # n=8 terlalu tipis utk cari ambang baru (base_score 88-90 kalah 3x,
+        # 90-101 menang 4x, 104 kalah lagi -- pola sweet-spot MUNGKIN ada tapi
+        # 1 trade bisa balik cerita, jangan overfit). Cek ulang begitu n nambah.
         extended: -38
       short:
         # -14 sebelumnya: n=3 saja, avg R -1.04, win 0% — sample sangat tipis,
@@ -212,6 +212,22 @@ scoring:
       continuation:
         long:
           - [72, 82]
+    # 4h: [80, 90] TF-wide (list biasa, bukan dict bersarang spt 1h) --
+    # divalidasi dari 71 trade 4h (5 Mar-3 Sep 2026, trades_raw_batch.json).
+    # BEDA KARAKTER dari 15m/1h: n jauh lebih tipis (4h candle jauh lebih
+    # jarang), dan breakdown skor PULLBACK LONG (setup dominan, n=41, avg R
+    # -0.144) TIDAK menunjukkan pola infleksi yang jelas -- kebanyakan bucket
+    # cuma n=1-4 (rawan 1 trade mengubah avg R drastis), cuma 80-85 (n=17,
+    # avg R -0.117) dan 85-90 (n=8, avg R -0.063) yang n-nya lumayan, dan
+    # keduanya negatif RINGAN, bukan ekstrem seperti kasus 90-95 (15m) atau
+    # 72-82 (1h continuation). Breakdown by symbol juga rata, tidak ada satu
+    # koin dominan. Band ini KEPUTUSAN SADAR dengan bukti lebih lemah dari
+    # band 15m/1h -- gabungan 80-90 (n=25 PULLBACK LONG + 2 trade setup lain
+    # yang kebetulan juga negatif) avg R -0.100, bukan titik infleksi tajam.
+    # Cek ulang begitu n bertambah -- rentang ini BISA BERUBAH atau ditarik
+    # sepenuhnya kalau data baru menunjukkan pola berbeda.
+    "4h":
+      - [80, 90]
   min_trend_alignment: 2
   min_direction_margin: 8
 
