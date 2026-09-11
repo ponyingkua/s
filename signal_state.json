@@ -44,7 +44,7 @@
     "symbol": "LITUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:51.456516+00:00"
+    "timestamp": "2026-09-11T10:04:07.254032+00:00"
   },
   "XLMUSDT|1h": {
     "symbol": "XLMUSDT",
@@ -58,12 +58,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-11T01:04:50.357379+00:00"
   },
-  "FILUSDT|1h": {
-    "symbol": "FILUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T21:04:21.301806+00:00"
-  },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
     "timeframe": "1h",
@@ -76,12 +70,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-11T01:04:53.295401+00:00"
   },
-  "PHAROSUSDT|1h": {
-    "symbol": "PHAROSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T21:04:23.656971+00:00"
-  },
   "SQQQUSDT|1h": {
     "symbol": "SQQQUSDT",
     "timeframe": "1h",
@@ -93,24 +81,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T03:04:38.897954+00:00"
-  },
-  "ENAUSDT|1h": {
-    "symbol": "ENAUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T21:04:29.733039+00:00"
-  },
-  "ONTUSDT|1h": {
-    "symbol": "ONTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T21:04:31.146765+00:00"
-  },
-  "TQQQUSDT|1h": {
-    "symbol": "TQQQUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T21:04:32.660269+00:00"
   },
   "ETHFIUSDT|1h": {
     "symbol": "ETHFIUSDT",
@@ -296,7 +266,7 @@
     "symbol": "IOSTUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:50.459209+00:00"
+    "timestamp": "2026-09-11T10:04:02.620309+00:00"
   },
   "HOODUSDT|1h": {
     "symbol": "HOODUSDT",
@@ -393,5 +363,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T09:04:16.078447+00:00"
+  },
+  "ONGUSDT|1h": {
+    "symbol": "ONGUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T10:04:05.218257+00:00"
+  },
+  "USELESSUSDT|1h": {
+    "symbol": "USELESSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T10:04:06.176006+00:00"
   }
 }

@@ -15609,5 +15609,102 @@
     "tp": 0.06708,
     "tp1": 0.062336,
     "scanned_at": "2026-09-11T09:03:05.509517+00:00"
+  },
+  {
+    "symbol": "IOSTUSDT",
+    "direction": "LONG",
+    "score": 70.6,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (43), tidak menambah skor",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (28.1) tren kuat (+7.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 9.37",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 9.37 (sisa posisi)"
+    ],
+    "entry": 0.000976,
+    "sl": 0.000844,
+    "tp": 0.00222,
+    "tp1": 0.001109,
+    "scanned_at": "2026-09-11T10:03:24.437423+00:00"
+  },
+  {
+    "symbol": "ONGUSDT",
+    "direction": "LONG",
+    "score": 69.7,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (34.8) tren kuat (+14.7 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.00",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.00 (sisa posisi)"
+    ],
+    "entry": 0.08179,
+    "sl": 0.077086,
+    "tp": 0.0959,
+    "tp1": 0.086494,
+    "scanned_at": "2026-09-11T10:03:24.437423+00:00"
+  },
+  {
+    "symbol": "USELESSUSDT",
+    "direction": "LONG",
+    "score": 66.9,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (47), tidak menambah skor",
+      "ADX (24.7) tren kuat (+3.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.82",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.82 (sisa posisi)"
+    ],
+    "entry": 0.22701,
+    "sl": 0.198899,
+    "tp": 0.3345,
+    "tp1": 0.255121,
+    "scanned_at": "2026-09-11T10:03:24.437423+00:00"
+  },
+  {
+    "symbol": "LITUSDT",
+    "direction": "LONG",
+    "score": 66.7,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (49), tidak menambah skor",
+      "ADX (24.5) tren kuat (+3.7 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.51",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.51 (sisa posisi)"
+    ],
+    "entry": 4.5,
+    "sl": 4.266677,
+    "tp": 5.3194,
+    "tp1": 4.733323,
+    "scanned_at": "2026-09-11T10:03:24.437423+00:00"
   }
 ]
