@@ -7,14 +7,6 @@ on:
         description: "Kode koin (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
         required: true
         type: string
-      chart_format:
-        description: "Format chart"
-        required: false
-        type: choice
-        options:
-          - wide
-          - square
-        default: wide
 
 jobs:
   analyze:
@@ -39,7 +31,7 @@ jobs:
 
           RAW="${{ inputs.symbols }}"
           # Normalisasi: spasi → koma, hapus spasi berlebih & koma ganda
-          CLEAN=$(echo "\( RAW" | tr ' ' ',' | tr -s ',' | sed 's/^,//;s/, \)//')
+          CLEAN=$(echo "$RAW" | tr ' ' ',' | tr -s ',' | sed 's/^,//;s/,$//')
 
           if [ -z "$CLEAN" ]; then
             echo "ERROR: Tidak ada symbol yang diberikan"
@@ -47,7 +39,6 @@ jobs:
           fi
 
           echo "Symbols yang akan dianalisa: $CLEAN"
-          echo "Chart format: ${{ inputs.chart_format }}"
           echo "----------------------------------------"
 
           IFS=',' read -ra SYMBOLS <<< "$CLEAN"
@@ -61,9 +52,7 @@ jobs:
             echo ">>> Analyzing: $SYM"
             echo "----------------------------------------"
 
-            if python analyze.py \
-                --symbol "$SYM" \
-                --chart-format "${{ inputs.chart_format }}"; then
+            if python analyze.py --symbol "$SYM"; then
               echo "✓ Selesai: $SYM"
             else
               echo "✗ Gagal: $SYM"
