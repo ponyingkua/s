@@ -12,27 +12,13 @@ from scanner import (
     BinanceFuturesClient,
     Kline,
     get_market_regime,
-    get_min_score_to_trigger,
-    is_in_cooldown,
-    is_score_excluded,
     load_config,
-    load_state,
-    mtf_bonus_eligible,
-    passes_regime_filter,
-    passes_risk_filter_detailed,
     drop_unclosed_candle,
     score_symbol,
 )
 
 OUT_DIR = "analysis_output"
 CHART_SUBDIR = "charts"
-
-REASON_LABELS = {
-    "tidak_ada_arah": "tidak ada arah yang jelas (indikator belum warm-up / skor LONG-SHORT dasi)",
-    "skor_di_bawah_ambang": "skor di bawah ambang trigger",
-    "masuk_excluded_band": "skor masuk rentang yang dikecualikan (excluded_score_bands)",
-    "cooldown_aktif": "simbol/arah ini masih dalam masa cooldown dari sinyal sebelumnya",
-}
 
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
@@ -42,16 +28,6 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
     if s.endswith(quote_asset):
         return s
     return f"{s}{quote_asset}"
-
-
-def _reject_label(reason: str | None, regime: str) -> str:
-    if reason is None:
-        return ""
-    if reason.startswith("regime_"):
-        return f"ditolak regime filter (regime saat ini: {regime})"
-    if reason.startswith("risk_"):
-        return f"gagal risk filter ({reason.split('risk_', 1)[1]})"
-    return REASON_LABELS.get(reason, reason)
 
 
 # ============================================================
@@ -290,10 +266,7 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
     scan_cfg = cfg.get("scanning", {})
     klines_limit = scan_cfg.get("klines_limit", 300)
     min_history_bars = scan_cfg.get("min_history_bars", 260)
-    cooldown_hours = scan_cfg.get("cooldown_hours", 4)
-    state_path = scan_cfg.get("state_path", "signal_state.json")
     timeframes = cfg["timeframes"]
-    state = load_state(state_path)
 
     per_tf: dict[str, dict] = {}
 
@@ -329,57 +302,30 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
                     "notes": [],
                 }
 
-            info: dict = {
+            per_tf[tf] = {
                 "signal": signal,
                 "kline": Kline(symbol=symbol, timeframe=tf, df=closed_df),
                 "confluence": confluence,
-                "is_candidate": False,
-                "would_trigger": False,
-                "reject_reason": None,
                 "mtf_agree_tfs": [],
             }
 
-            if signal.direction == "NONE":
-                info["reject_reason"] = "tidak_ada_arah"
-            elif not passes_regime_filter(signal.direction, regime, cfg):
-                info["reject_reason"] = f"regime_{regime}"
-            else:
-                risk_ok, risk_reason = passes_risk_filter_detailed(signal, cfg)
-                if not risk_ok:
-                    info["reject_reason"] = f"risk_{risk_reason}"
-                elif is_in_cooldown(state, symbol, signal.direction, tf, cooldown_hours):
-                    info["reject_reason"] = "cooldown_aktif"
-                else:
-                    info["is_candidate"] = True
-
-            per_tf[tf] = info
-
-    mtf_bonus_weight = cfg["scoring"]["weights"].get("mtf_agreement", 0)
+    # MTF agreement: TF lain yang arahnya sama (tanpa filter scanner)
     direction_map = {
         tf: info["signal"].direction
         for tf, info in per_tf.items()
-        if info.get("is_candidate")
+        if "signal" in info and info["signal"].direction != "NONE"
     }
-
     for tf, info in per_tf.items():
-        if not info.get("is_candidate"):
+        if "signal" not in info:
             continue
         signal = info["signal"]
+        if signal.direction == "NONE":
+            continue
+        info["mtf_agree_tfs"] = [
+            t for t, d in direction_map.items() if t != tf and d == signal.direction
+        ]
 
-        agree_tfs = [t for t, d in direction_map.items() if t != tf and d == signal.direction]
-        if agree_tfs and mtf_bonus_weight and mtf_bonus_eligible(signal.setup_type, cfg):
-            bonus = mtf_bonus_weight * len(agree_tfs)
-            signal.score = round(signal.score + bonus, 1)
-        info["mtf_agree_tfs"] = agree_tfs
-
-        if signal.score < get_min_score_to_trigger(cfg, tf):
-            info["reject_reason"] = "skor_di_bawah_ambang"
-        elif is_score_excluded(cfg, signal.score, tf, signal.setup_type, signal.direction):
-            info["reject_reason"] = "masuk_excluded_band"
-        else:
-            info["would_trigger"] = True
-
-    # Chart hanya untuk TF yang punya arah
+    # Chart untuk TF yang punya arah
     os.makedirs(os.path.join(OUT_DIR, CHART_SUBDIR), exist_ok=True)
     chart_paths: list[str] = []
     for tf, info in per_tf.items():
@@ -419,6 +365,7 @@ def compose_analysis_text(result: dict) -> str:
     ]
 
     bias_count: dict[str, int] = {}
+    confluence_bias_count: dict[str, int] = {}
 
     for tf, info in per_tf.items():
         lines.append(f"## Timeframe {tf}")
@@ -431,7 +378,8 @@ def compose_analysis_text(result: dict) -> str:
         signal = info["signal"]
         confluence = info.get("confluence", {})
         setup_label = f" ({signal.setup_type})" if getattr(signal, "setup_type", None) else ""
-        lines.append(f"Arah: {signal.direction}{setup_label}")
+        score_label = f" | skor scanner: {signal.score}" if getattr(signal, "score", None) is not None else ""
+        lines.append(f"Arah: {signal.direction}{setup_label}{score_label}")
 
         bull_v = confluence.get("bullish_votes", 0)
         bear_v = confluence.get("bearish_votes", 0)
@@ -448,12 +396,7 @@ def compose_analysis_text(result: dict) -> str:
         for note in confluence.get("notes", []):
             lines.append(f"- {note}")
 
-        if info["would_trigger"]:
-            lines.append("Status: LOLOS semua filter live scanner (setup ini akan memicu sinyal)")
-        else:
-            lines.append(f"Status: TIDAK trigger — {_reject_label(info['reject_reason'], regime)}")
-
-        if info["mtf_agree_tfs"]:
+        if info.get("mtf_agree_tfs"):
             lines.append(f"Searah dengan TF: {', '.join(info['mtf_agree_tfs'])}")
 
         if "chart_path" in info:
@@ -464,20 +407,28 @@ def compose_analysis_text(result: dict) -> str:
         if signal.direction != "NONE":
             bias_count[signal.direction] = bias_count.get(signal.direction, 0) + 1
 
+        c_bias = confluence.get("bias", "")
+        if c_bias and c_bias not in ("DATA KURANG", "ERROR", "NETRAL", "NETRAL / CAMPURAN"):
+            # Group BULLISH / BULLISH KUAT → BULLISH, sama untuk BEARISH
+            key = "BULLISH" if "BULLISH" in c_bias else ("BEARISH" if "BEARISH" in c_bias else c_bias)
+            confluence_bias_count[key] = confluence_bias_count.get(key, 0) + 1
+
     lines.append("## Ringkasan MTF")
     total_tf = len([tf for tf, info in per_tf.items() if "error" not in info])
+
     if bias_count:
         dominant = max(bias_count, key=bias_count.get)
         n_dominant = bias_count[dominant]
-        lines.append(f"Bias dominan: {dominant} ({n_dominant}/{total_tf} timeframe searah)")
+        lines.append(f"Arah scanner dominan: {dominant} ({n_dominant}/{total_tf} timeframe)")
     else:
-        lines.append("Tidak ada arah yang jelas di timeframe manapun saat ini.")
+        lines.append("Scanner: belum ada arah yang jelas di timeframe manapun.")
 
-    triggered = [tf for tf, info in per_tf.items() if info.get("would_trigger")]
-    if triggered:
-        lines.append(f"Timeframe dengan setup valid (lolos filter): {', '.join(triggered)}")
+    if confluence_bias_count:
+        dominant_c = max(confluence_bias_count, key=confluence_bias_count.get)
+        n_c = confluence_bias_count[dominant_c]
+        lines.append(f"Bias teknikal dominan: {dominant_c} ({n_c}/{total_tf} timeframe)")
     else:
-        lines.append("Belum ada timeframe dengan setup yang lolos filter live scanner saat ini.")
+        lines.append("Bias teknikal: netral / campuran di semua timeframe.")
 
     return "\n".join(lines)
 
