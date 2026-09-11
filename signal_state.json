@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T06:04:42.505321+00:00"
   },
-  "RUNEUSDT|1h": {
-    "symbol": "RUNEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T04:04:38.986532+00:00"
-  },
   "ICPUSDT|1h": {
     "symbol": "ICPUSDT",
     "timeframe": "1h",
@@ -46,35 +40,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T06:04:43.780489+00:00"
   },
-  "1000RATSUSDT|1h": {
-    "symbol": "1000RATSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T04:04:33.907774+00:00"
-  },
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
     "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T09:04:14.690487+00:00"
-  },
-  "CRWVUSDT|4h": {
-    "symbol": "CRWVUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T04:04:37.587515+00:00"
-  },
-  "HBARUSDT|4h": {
-    "symbol": "HBARUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T04:04:40.395065+00:00"
-  },
-  "DOTUSDT|1h": {
-    "symbol": "DOTUSDT",
-    "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T04:04:41.797478+00:00"
+    "timestamp": "2026-09-11T16:05:00.613961+00:00"
   },
   "JUPUSDT|1h": {
     "symbol": "JUPUSDT",
@@ -224,7 +194,7 @@
     "symbol": "VELVETUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T11:04:33.189002+00:00"
+    "timestamp": "2026-09-11T16:04:56.856259+00:00"
   },
   "RAVEUSDT|1h": {
     "symbol": "RAVEUSDT",
@@ -236,7 +206,7 @@
     "symbol": "VTHOUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T11:04:36.006773+00:00"
+    "timestamp": "2026-09-11T16:05:03.404138+00:00"
   },
   "SQQQUSDT|4h": {
     "symbol": "SQQQUSDT",
@@ -351,5 +321,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T15:04:50.462564+00:00"
+  },
+  "LTCUSDT|1h": {
+    "symbol": "LTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T16:04:59.125580+00:00"
+  },
+  "WDCUSDT|4h": {
+    "symbol": "WDCUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T16:05:02.021915+00:00"
   }
 }
