@@ -1,10 +1,10 @@
-name: Analyze Symbol
+name: Analyze Symbol(s)
 
 on:
   workflow_dispatch:
     inputs:
-      symbol:
-        description: "Kode koin yang mau dianalisa (contoh: ZEC atau ZECUSDT)"
+      symbols:
+        description: "Kode koin (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
         required: true
         type: string
       chart_format:
@@ -19,13 +19,13 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
@@ -33,17 +33,62 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Jalankan analisa ${{ inputs.symbol }}
+      - name: Jalankan analisa multi-token
         run: |
-          python analyze.py \
-            --symbol "${{ inputs.symbol }}" \
-            --chart-format "${{ inputs.chart_format }}"
+          set -euo pipefail
 
-      - name: Upload hasil analisa (chart + ringkasan)
+          RAW="${{ inputs.symbols }}"
+          # Normalisasi: spasi → koma, hapus spasi berlebih & koma ganda
+          CLEAN=$(echo "\( RAW" | tr ' ' ',' | tr -s ',' | sed 's/^,//;s/, \)//')
+
+          if [ -z "$CLEAN" ]; then
+            echo "ERROR: Tidak ada symbol yang diberikan"
+            exit 1
+          fi
+
+          echo "Symbols yang akan dianalisa: $CLEAN"
+          echo "Chart format: ${{ inputs.chart_format }}"
+          echo "----------------------------------------"
+
+          IFS=',' read -ra SYMBOLS <<< "$CLEAN"
+          FAILED=0
+
+          for SYM in "${SYMBOLS[@]}"; do
+            SYM=$(echo "$SYM" | xargs)   # trim whitespace
+            [ -z "$SYM" ] && continue
+
+            echo ""
+            echo ">>> Analyzing: $SYM"
+            echo "----------------------------------------"
+
+            if python analyze.py \
+                --symbol "$SYM" \
+                --chart-format "${{ inputs.chart_format }}"; then
+              echo "✓ Selesai: $SYM"
+            else
+              echo "✗ Gagal: $SYM"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo ""
+          echo "========================================"
+          if [ "$FAILED" -gt 0 ]; then
+            echo "Selesai dengan $FAILED kegagalan."
+          else
+            echo "Semua analisa berhasil."
+          fi
+
+          # Tampilkan isi folder hasil biar jelas file-nya terpisah
+          echo ""
+          echo "Isi analysis_output/:"
+          find analysis_output -type f | sort || true
+
+      - name: Upload hasil analisa (1 artifact, file terpisah per token)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: analisa-${{ inputs.symbol }}-${{ github.run_number }}
+          name: analisa-multi-${{ github.run_number }}
           path: analysis_output/
           if-no-files-found: warn
           retention-days: 14
