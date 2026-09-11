@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "AEROUSDT|1h": {
-    "symbol": "AEROUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:42.505321+00:00"
-  },
   "ICPUSDT|1h": {
     "symbol": "ICPUSDT",
     "timeframe": "1h",
@@ -38,7 +32,7 @@
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:43.780489+00:00"
+    "timestamp": "2026-09-11T19:03:56.286680+00:00"
   },
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
@@ -51,30 +45,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T10:04:02.620309+00:00"
-  },
-  "ORCLUSDT|1h": {
-    "symbol": "ORCLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:39.215816+00:00"
-  },
-  "SOXSUSDT|1h": {
-    "symbol": "SOXSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:45.052408+00:00"
-  },
-  "ARMUSDT|1h": {
-    "symbol": "ARMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:46.314174+00:00"
-  },
-  "ATUSDT|1h": {
-    "symbol": "ATUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T06:04:47.573045+00:00"
   },
   "SOLVUSDT|1h": {
     "symbol": "SOLVUSDT",
@@ -345,5 +315,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T18:04:24.833695+00:00"
+  },
+  "HBARUSDT|4h": {
+    "symbol": "HBARUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T19:03:58.409268+00:00"
+  },
+  "TIAUSDT|4h": {
+    "symbol": "TIAUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T19:03:59.899664+00:00"
+  },
+  "AXTIUSDT|1h": {
+    "symbol": "AXTIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T19:04:01.323535+00:00"
+  },
+  "ASTERUSDT|4h": {
+    "symbol": "ASTERUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T19:04:02.706447+00:00"
   }
 }

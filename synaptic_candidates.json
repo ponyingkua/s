@@ -16759,5 +16759,123 @@
     "tp": 0.069577,
     "tp1": 0.067409,
     "scanned_at": "2026-09-11T18:03:38.049569+00:00"
+  },
+  {
+    "symbol": "CAKEUSDT",
+    "direction": "LONG",
+    "score": 88.9,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (50) menguatkan momentum naik",
+      "ADX (28.4) tren kuat (+7.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 1.92",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.92 (sisa posisi)"
+    ],
+    "entry": 2.1635,
+    "sl": 2.095746,
+    "tp": 2.2933,
+    "tp1": 2.231254,
+    "scanned_at": "2026-09-11T19:02:51.894298+00:00"
+  },
+  {
+    "symbol": "HBARUSDT",
+    "direction": "LONG",
+    "score": 68.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (40), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (31.3) tren kuat (+11.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 2.82",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.82 (sisa posisi)"
+    ],
+    "entry": 0.07526,
+    "sl": 0.072448,
+    "tp": 0.0832,
+    "tp1": 0.078072,
+    "scanned_at": "2026-09-11T19:02:51.894298+00:00"
+  },
+  {
+    "symbol": "TIAUSDT",
+    "direction": "LONG",
+    "score": 66.6,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (36), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (29.9) tren kuat (+9.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 4.59",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 4.59 (sisa posisi)"
+    ],
+    "entry": 0.367,
+    "sl": 0.342206,
+    "tp": 0.4808,
+    "tp1": 0.391794,
+    "scanned_at": "2026-09-11T19:02:51.894298+00:00"
+  },
+  {
+    "symbol": "AXTIUSDT",
+    "direction": "LONG",
+    "score": 66.4,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (47), tidak menambah skor",
+      "ADX (24.2) tren kuat (+3.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.28",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.28 (sisa posisi)"
+    ],
+    "entry": 65.58,
+    "sl": 63.158504,
+    "tp": 71.1,
+    "tp1": 68.001496,
+    "scanned_at": "2026-09-11T19:02:51.894298+00:00"
+  },
+  {
+    "symbol": "ASTERUSDT",
+    "direction": "SHORT",
+    "score": 65.6,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (30.0) tren kuat (+9.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.6902,
+    "sl": 0.728651,
+    "tp": 0.620988,
+    "tp1": 0.651749,
+    "scanned_at": "2026-09-11T19:02:51.894298+00:00"
   }
 ]
