@@ -76,12 +76,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-11T01:04:53.295401+00:00"
   },
-  "AAPLUSDT|15m": {
-    "symbol": "AAPLUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-10T20:04:21.706262+00:00"
-  },
   "PHAROSUSDT|1h": {
     "symbol": "PHAROSUSDT",
     "timeframe": "1h",
@@ -176,7 +170,7 @@
     "symbol": "BRUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T01:04:47.510917+00:00"
+    "timestamp": "2026-09-11T08:04:37.318582+00:00"
   },
   "PAXGUSDT|1h": {
     "symbol": "PAXGUSDT",
@@ -363,5 +357,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T07:05:20.173869+00:00"
+  },
+  "RAYSOLUSDT|1h": {
+    "symbol": "RAYSOLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T08:04:39.481240+00:00"
+  },
+  "COHRUSDT|4h": {
+    "symbol": "COHRUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T08:04:40.982445+00:00"
+  },
+  "CHIPUSDT|1h": {
+    "symbol": "CHIPUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T08:04:42.373789+00:00"
   }
 }
