@@ -93,12 +93,23 @@ scoring:
       continuation: -35
       breakout: 0
       long:
-        # breakout: -22 (nilai lama, TIDAK ADA alasan tercatat) dihapus --
-        # fallback ke breakout:0 di atas. 71 trade (5 Mar-3 Sep 2026): BREAKOUT
-        # LONG n=8 avg R +0.18 win 50%, tidak mendukung penalti sebesar itu.
-        # n=8 terlalu tipis utk cari ambang baru (base_score 88-90 kalah 3x,
-        # 90-101 menang 4x, 104 kalah lagi -- pola sweet-spot MUNGKIN ada tapi
-        # 1 trade bisa balik cerita, jangan overfit). Cek ulang begitu n nambah.
+        breakout: -20   # KOREKSI dari revisi sebelumnya: sempat dihapus
+        # (fallback ke breakout:0) berdasarkan n=8 (avg R +0.18, kelihatan
+        # spt "sweet-spot" di skor tengah) -- SALAH, populasi n=8 itu
+        # terlalu tipis dan pola yang kelihatan tidak bertahan begitu n
+        # bertambah. Validasi ulang 65 trade 4h (8 Mar-6 Sep 2026,
+        # trades_raw_batch.json, breakout:0 aktif saat data ini terkumpul):
+        # BREAKOUT LONG n=26 (naik dari 8 setelah penalti lama dihapus,
+        # lebih banyak trade lolos threshold) avg R turun ke -0.222 --
+        # kontributor kerugian TERBESAR di semua kategori 4h saat itu.
+        # Breakdown skor jelas: 65-80 (n=20) konsisten negatif (avg R -0.4
+        # s/d -0.5), GAP KOSONG di 80-95 (tidak ada trade), 95-105 (n=6)
+        # positif avg R +0.55/+0.18. Bonus -15 s/d -30 semua menghasilkan
+        # n=6 avg R +0.424 identik (gap kosong bikin rentang ini stabil,
+        # tidak ada trade di pinggir yang tergeser) -- -20 dipilih di
+        # tengah rentang stabil itu, bukan di ekstrem. BELUM di-backtest
+        # ulang dgn nilai -20 ini -- angka di atas dari re-filter trade
+        # existing, bukan re-run backtest.py sungguhan.
         extended: -38
       short:
         # -14 sebelumnya: n=3 saja, avg R -1.04, win 0% — sample sangat tipis,
