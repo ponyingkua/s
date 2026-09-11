@@ -254,7 +254,7 @@
     "symbol": "OPUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-11T04:04:36.191141+00:00"
+    "timestamp": "2026-09-11T09:04:14.690487+00:00"
   },
   "CRWVUSDT|4h": {
     "symbol": "CRWVUSDT",
@@ -375,5 +375,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T08:04:42.373789+00:00"
+  },
+  "AMZNUSDT|1h": {
+    "symbol": "AMZNUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T09:04:09.699006+00:00"
+  },
+  "TSMUSDT|1h": {
+    "symbol": "TSMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T09:04:13.169095+00:00"
+  },
+  "SKYUSDT|1h": {
+    "symbol": "SKYUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T09:04:16.078447+00:00"
   }
 }
