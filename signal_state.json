@@ -34,12 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-10T22:04:14.656045+00:00"
   },
-  "1000SHIBUSDT|1h": {
-    "symbol": "1000SHIBUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T18:05:21.334540+00:00"
-  },
   "GRVTUSDT|1h": {
     "symbol": "GRVTUSDT",
     "timeframe": "1h",
@@ -76,59 +70,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-11T03:04:37.485172+00:00"
   },
-  "APEUSDT|1h": {
-    "symbol": "APEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T18:05:22.393267+00:00"
-  },
-  "ONDOUSDT|1h": {
-    "symbol": "ONDOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T18:05:23.555026+00:00"
-  },
-  "HOLOUSDT|1h": {
-    "symbol": "HOLOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T18:05:24.632716+00:00"
-  },
-  "1000PEPEUSDT|1h": {
-    "symbol": "1000PEPEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T19:04:01.868222+00:00"
-  },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T01:04:53.295401+00:00"
-  },
-  "ZKCUSDT|1h": {
-    "symbol": "ZKCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T19:04:06.322594+00:00"
-  },
-  "BTCUSDT_260925|1h": {
-    "symbol": "BTCUSDT_260925",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T19:04:07.740674+00:00"
-  },
-  "BTCUSDT_261225|1h": {
-    "symbol": "BTCUSDT_261225",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T19:04:09.160116+00:00"
-  },
-  "BTRUSDT|1h": {
-    "symbol": "BTRUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-10T19:04:10.584732+00:00"
   },
   "AAPLUSDT|15m": {
     "symbol": "AAPLUSDT",
@@ -405,5 +351,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T06:04:48.948149+00:00"
+  },
+  "MUBARAKUSDT|1h": {
+    "symbol": "MUBARAKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T07:05:18.211695+00:00"
+  },
+  "ZECUSDT|1h": {
+    "symbol": "ZECUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T07:05:20.173869+00:00"
   }
 }
