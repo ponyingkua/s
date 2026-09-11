@@ -46,47 +46,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T16:05:00.613961+00:00"
   },
-  "JUPUSDT|1h": {
-    "symbol": "JUPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:46.757625+00:00"
-  },
-  "ATUSDT|4h": {
-    "symbol": "ATUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:48.526197+00:00"
-  },
-  "SAGAUSDT|1h": {
-    "symbol": "SAGAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:49.517577+00:00"
-  },
   "IOSTUSDT|1h": {
     "symbol": "IOSTUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T10:04:02.620309+00:00"
-  },
-  "HOODUSDT|1h": {
-    "symbol": "HOODUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T05:03:52.437859+00:00"
-  },
-  "XAUTUSDT|1h": {
-    "symbol": "XAUTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T05:03:53.404647+00:00"
-  },
-  "TRUTHUSDT|1h": {
-    "symbol": "TRUTHUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T05:03:54.436959+00:00"
   },
   "ORCLUSDT|1h": {
     "symbol": "ORCLUSDT",
@@ -333,5 +297,35 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T16:05:02.021915+00:00"
+  },
+  "KNCUSDT|1h": {
+    "symbol": "KNCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T17:03:49.436292+00:00"
+  },
+  "0GUSDT|1h": {
+    "symbol": "0GUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T17:03:51.677975+00:00"
+  },
+  "INTWUSDT|1h": {
+    "symbol": "INTWUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T17:03:53.218589+00:00"
+  },
+  "BIRBUSDT|1h": {
+    "symbol": "BIRBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T17:03:54.688939+00:00"
+  },
+  "INTCUSDT|1h": {
+    "symbol": "INTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T17:03:56.145947+00:00"
   }
 }
