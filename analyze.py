@@ -55,7 +55,7 @@ def _reject_label(reason: str | None, regime: str) -> str:
 
 
 # ============================================================
-# Indicator helpers (fixed + improved)
+# Indicator helpers
 # ============================================================
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -68,7 +68,6 @@ def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
     rs = avg_gain / avg_loss.replace(0, np.nan)
     rsi = 100 - (100 / (1 + rs))
-    # Pure uptrend / downtrend — hindari NaN
     rsi = rsi.mask(avg_loss == 0, 100.0)
     rsi = rsi.mask(avg_gain == 0, 0.0)
     return rsi
@@ -88,7 +87,7 @@ def _bollinger(series: pd.Series, period: int = 20, std_mult: float = 2.0):
     upper = mid + std_mult * std
     lower = mid - std_mult * std
     width_pct = (upper - lower) / mid.replace(0, np.nan) * 100
-    # Saat bandwidth = 0 → percent_b = 0.5 (netral), bukan NaN/inf
+    # Bandwidth = 0 → percent_b = 0.5 (netral), bukan NaN/inf
     denom = upper - lower
     percent_b = np.where(denom == 0, 0.5, (series - lower) / denom)
     percent_b = pd.Series(percent_b, index=series.index)
@@ -112,14 +111,13 @@ def _atr_pct(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 
 def _ema_slope(series: pd.Series, lookback: int = 5) -> float:
-    """Slope relatif EMA (positif = naik)."""
     if len(series) < lookback + 1 or pd.isna(series.iloc[-1]):
         return 0.0
     return float(series.iloc[-1] - series.iloc[-lookback]) / max(abs(series.iloc[-lookback]), 1e-9)
 
 
 # ============================================================
-# Deep confluence analysis (1 token, bukan scanner filter)
+# Confluence analysis (laporan teknikal 1 token)
 # ============================================================
 
 def analyze_confluence(df: pd.DataFrame) -> dict:
@@ -134,11 +132,6 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
             "notes": ["Data kurang dari 30 bar"],
             "volatility_pct": None,
             "bb_width_pct": None,
-            "price": None,
-            "ema20": None,
-            "ema50": None,
-            "ema200": None,
-            "percent_b": None,
             "rsi": None,
         }
 
@@ -167,7 +160,7 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
     hist_now = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
     hist_prev = float(hist.iloc[-2]) if len(hist) >= 2 and pd.notna(hist.iloc[-2]) else None
 
-    # 1. Struktur EMA (bobot lebih tinggi)
+    # 1. Struktur EMA
     if ema20_now > ema50_now:
         bull += 1.5
         notes.append("EMA20 di atas EMA50 (struktur jangka pendek naik)")
@@ -191,7 +184,7 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
             bear += 0.8
             notes.append("Full bearish alignment (EMA20 < EMA50 < EMA200)")
 
-    # 2. Slope EMA (momentum trend)
+    # 2. Slope EMA
     slope20 = _ema_slope(ema20, 5)
     slope50 = _ema_slope(ema50, 5)
     if slope20 > 0 and slope50 > 0:
@@ -217,7 +210,7 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
         elif rsi_now <= 30:
             notes.append("RSI oversold (≤30) — potensi bounce")
 
-    # 4. MACD (hist + crossover)
+    # 4. MACD
     if hist_now is not None and hist_prev is not None:
         if hist_now > 0 and hist_now >= hist_prev:
             bull += 1.0
@@ -244,7 +237,7 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
             bear += 0.9
             notes.append(f"%B rendah ({pb_now:.2f}) — dekat/menembus lower Bollinger Band")
 
-    # 6. OBV + Volume expansion
+    # 6. OBV + Volume
     if len(obv_series) >= 12:
         obv_slope = float(obv_series.iloc[-1] - obv_series.iloc[-12])
         vol_ma = volume.rolling(20).mean().iloc[-1]
@@ -265,7 +258,7 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
                 bear += 0.5
                 notes.append("Volume expansion + close merah")
 
-    # --- Bias determination ---
+    # Bias
     total = bull + bear
     if total == 0:
         bias = "NETRAL"
@@ -289,11 +282,6 @@ def analyze_confluence(df: pd.DataFrame) -> dict:
         "notes": notes,
         "volatility_pct": round(float(atrp.iloc[-1]), 2) if pd.notna(atrp.iloc[-1]) else None,
         "bb_width_pct": round(float(bb_width.iloc[-1]), 2) if pd.notna(bb_width.iloc[-1]) else None,
-        "price": price_now,
-        "ema20": ema20_now,
-        "ema50": ema50_now,
-        "ema200": float(ema200.iloc[-1]) if ema200 is not None and pd.notna(ema200.iloc[-1]) else None,
-        "percent_b": pb_now,
         "rsi": rsi_now,
     }
 
@@ -391,7 +379,7 @@ async def analyze_symbol(symbol: str, cfg: dict, chart_format: str = "wide") -> 
         else:
             info["would_trigger"] = True
 
-    # Chart hanya dibuat untuk TF yang punya arah
+    # Chart hanya untuk TF yang punya arah
     os.makedirs(os.path.join(OUT_DIR, CHART_SUBDIR), exist_ok=True)
     chart_paths: list[str] = []
     for tf, info in per_tf.items():
