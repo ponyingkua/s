@@ -80,7 +80,7 @@
     "symbol": "SOLVUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:10.360166+00:00"
+    "timestamp": "2026-09-11T18:04:21.865042+00:00"
   },
   "MUBARAKUSDT|1h": {
     "symbol": "MUBARAKUSDT",
@@ -254,7 +254,7 @@
     "symbol": "ZHONGJIUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T14:03:55.034571+00:00"
+    "timestamp": "2026-09-11T18:04:23.863996+00:00"
   },
   "1000FLOKIUSDT|4h": {
     "symbol": "1000FLOKIUSDT",
@@ -327,5 +327,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T17:03:56.145947+00:00"
+  },
+  "SAMSUNGUSDT|1h": {
+    "symbol": "SAMSUNGUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T18:04:20.290285+00:00"
+  },
+  "METUSDT|1h": {
+    "symbol": "METUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T18:04:22.895371+00:00"
+  },
+  "LAUSDT|1h": {
+    "symbol": "LAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T18:04:24.833695+00:00"
   }
 }
