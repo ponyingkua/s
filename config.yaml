@@ -245,13 +245,13 @@ scoring:
 risk:
   atr_multiplier_sl: 1.8
   risk_reward_min: 1.8
-  max_signals_per_run: 8
+  max_signals_per_run: 5
   adx_min: 21
   adx_strong: 35
   structure_sl_max_atr_mult: 2.5
   structure_sl_max_atr_mult_breakout: 3.5
   reject_structural_stop_too_wide: true
-  max_signals_per_regime_episode: 4
+  max_signals_per_regime_episode: 2
   # TP final (di atas) tetap dihitung sama seperti sebelumnya (level struktur
   # atau RR minimum) -- partial_tp cuma menambah TP1 di depannya supaya
   # sebagian profit terkunci lebih awal, bukan mengganti logika TP final.
