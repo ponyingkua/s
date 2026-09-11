@@ -22,12 +22,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T13:04:04.665514+00:00"
   },
-  "BRUSDT|1h": {
-    "symbol": "BRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T08:04:37.318582+00:00"
-  },
   "CAKEUSDT|1h": {
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
@@ -58,23 +52,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T12:04:57.624058+00:00"
   },
-  "RAYSOLUSDT|1h": {
-    "symbol": "RAYSOLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T08:04:39.481240+00:00"
-  },
   "COHRUSDT|4h": {
     "symbol": "COHRUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-11T12:04:59.079778+00:00"
-  },
-  "CHIPUSDT|1h": {
-    "symbol": "CHIPUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T08:04:42.373789+00:00"
   },
   "AMZNUSDT|1h": {
     "symbol": "AMZNUSDT",
@@ -134,7 +116,7 @@
     "symbol": "VTHOUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T16:05:03.404138+00:00"
+    "timestamp": "2026-09-11T21:03:52.577230+00:00"
   },
   "SQQQUSDT|4h": {
     "symbol": "SQQQUSDT",
@@ -345,5 +327,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T20:03:50.162608+00:00"
+  },
+  "DOGSUSDT|1h": {
+    "symbol": "DOGSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T21:03:50.779377+00:00"
   }
 }
