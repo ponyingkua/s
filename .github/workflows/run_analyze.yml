@@ -1,0 +1,49 @@
+name: Analyze Symbol
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Kode koin yang mau dianalisa (contoh: ZEC atau ZECUSDT)"
+        required: true
+        type: string
+      chart_format:
+        description: "Format chart"
+        required: false
+        type: choice
+        options:
+          - wide
+          - square
+        default: wide
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Jalankan analisa ${{ inputs.symbol }}
+        run: |
+          python analyze.py \
+            --symbol "${{ inputs.symbol }}" \
+            --chart-format "${{ inputs.chart_format }}"
+
+      - name: Upload hasil analisa (chart + ringkasan)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analisa-${{ inputs.symbol }}-${{ github.run_number }}
+          path: analysis_output/
+          if-no-files-found: warn
+          retention-days: 14
