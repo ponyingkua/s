@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T14:03:52.043510+00:00"
   },
-  "LITUSDT|1h": {
-    "symbol": "LITUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T10:04:07.254032+00:00"
-  },
   "SOLUSDT|1h": {
     "symbol": "SOLUSDT",
     "timeframe": "1h",
@@ -33,12 +27,6 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-11T20:03:48.689039+00:00"
-  },
-  "IOSTUSDT|1h": {
-    "symbol": "IOSTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T10:04:02.620309+00:00"
   },
   "SOLVUSDT|1h": {
     "symbol": "SOLVUSDT",
@@ -58,35 +46,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-11T12:04:59.079778+00:00"
   },
-  "AMZNUSDT|1h": {
-    "symbol": "AMZNUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T09:04:09.699006+00:00"
-  },
   "TSMUSDT|1h": {
     "symbol": "TSMUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T14:03:53.571467+00:00"
-  },
-  "SKYUSDT|1h": {
-    "symbol": "SKYUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T09:04:16.078447+00:00"
-  },
-  "ONGUSDT|1h": {
-    "symbol": "ONGUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T10:04:05.218257+00:00"
-  },
-  "USELESSUSDT|1h": {
-    "symbol": "USELESSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T10:04:06.176006+00:00"
   },
   "EWYUSDT|1h": {
     "symbol": "EWYUSDT",
@@ -333,5 +297,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-11T21:03:50.779377+00:00"
+  },
+  "POLUSDT|1h": {
+    "symbol": "POLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T22:04:33.422468+00:00"
+  },
+  "KOMAUSDT|1h": {
+    "symbol": "KOMAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T22:04:36.387041+00:00"
+  },
+  "XPLUSDT|15m": {
+    "symbol": "XPLUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-11T22:04:37.915076+00:00"
+  },
+  "4USDT|1h": {
+    "symbol": "4USDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T22:04:39.402842+00:00"
+  },
+  "BMNRUSDT|1h": {
+    "symbol": "BMNRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-11T22:04:40.855270+00:00"
   }
 }

@@ -17038,5 +17038,120 @@
     "tp": 0.000735,
     "tp1": 0.000625,
     "scanned_at": "2026-09-11T21:03:12.977148+00:00"
+  },
+  {
+    "symbol": "POLUSDT",
+    "direction": "LONG",
+    "score": 89.2,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (55) menguatkan momentum naik",
+      "ADX (28.7) tren kuat (+8.2 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.09598,
+    "sl": 0.0934,
+    "tp": 0.100624,
+    "tp1": 0.09856,
+    "scanned_at": "2026-09-11T22:03:29.633042+00:00"
+  },
+  {
+    "symbol": "KOMAUSDT",
+    "direction": "LONG",
+    "score": 88.6,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (64) menguatkan momentum naik",
+      "ADX (28.1) tren kuat (+7.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.014155,
+    "sl": 0.013178,
+    "tp": 0.015914,
+    "tp1": 0.015132,
+    "scanned_at": "2026-09-11T22:03:29.633042+00:00"
+  },
+  {
+    "symbol": "XPLUSDT",
+    "direction": "SHORT",
+    "score": 88.2,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (33) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (32.4) tren kuat (+12.2 skor)",
+      "Setup terdeteksi: BREAKOUT (+8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.08148,
+    "sl": 0.083874,
+    "tp": 0.07717,
+    "tp1": 0.079086,
+    "scanned_at": "2026-09-11T22:03:29.633042+00:00"
+  },
+  {
+    "symbol": "4USDT",
+    "direction": "LONG",
+    "score": 83.8,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (58) menguatkan momentum naik",
+      "ADX (23.6) tren kuat (+2.8 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.020953,
+    "sl": 0.019276,
+    "tp": 0.023972,
+    "tp1": 0.02263,
+    "scanned_at": "2026-09-11T22:03:29.633042+00:00"
+  },
+  {
+    "symbol": "BMNRUSDT",
+    "direction": "LONG",
+    "score": 81.9,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "ADX (21.8) tren kuat (+0.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.24",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.24 (sisa posisi)"
+    ],
+    "entry": 25.04,
+    "sl": 24.170251,
+    "tp": 26.99,
+    "tp1": 25.909749,
+    "scanned_at": "2026-09-11T22:03:29.633042+00:00"
   }
 ]
