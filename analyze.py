@@ -13,8 +13,11 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
-# Diperbarui menggunakan mtfk.py untuk generate chart MTF otomatis setelah analisa selesai
-from mtfk import build_mtfk_chart
+# Catatan: build_mtfk_chart TIDAK diimpor di sini (level modul) karena mtfk.py
+# mengimpor balik analyze_symbol/normalize_symbol/_swing_points dari modul ini
+# di level modul juga -> circular import. Import dilakukan lazy di dalam main()
+# (lihat bawah), tepat sebelum dipakai, sehingga modul ini sudah selesai
+# didefinisikan duluan saat mtfk.py balik meng-importnya.
 
 OUT_DIR = "analysis_output"
 
@@ -623,6 +626,8 @@ def main():
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
     # Memanggil build_mtfk_chart dari mtfk.py untuk visualisasi chart MTF
+    # (import lazy di sini, bukan di atas, untuk menghindari circular import)
+    from mtfk import build_mtfk_chart
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
         build_mtfk_chart(
