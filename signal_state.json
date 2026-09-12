@@ -26,7 +26,7 @@
     "symbol": "COINUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T06:04:13.281018+00:00"
+    "timestamp": "2026-09-12T11:03:32.053772+00:00"
   },
   "BNBUSDT|1h": {
     "symbol": "BNBUSDT",
@@ -58,65 +58,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-12T04:04:11.680513+00:00"
   },
-  "POLUSDT|1h": {
-    "symbol": "POLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T22:04:33.422468+00:00"
-  },
   "KOMAUSDT|1h": {
     "symbol": "KOMAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T07:03:52.342407+00:00"
-  },
-  "XPLUSDT|15m": {
-    "symbol": "XPLUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T22:04:37.915076+00:00"
-  },
-  "4USDT|1h": {
-    "symbol": "4USDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T22:04:39.402842+00:00"
-  },
-  "BMNRUSDT|1h": {
-    "symbol": "BMNRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T22:04:40.855270+00:00"
-  },
-  "QCOMUSDT|1h": {
-    "symbol": "QCOMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T23:03:25.056160+00:00"
-  },
-  "MVLLUSDT|1h": {
-    "symbol": "MVLLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T23:03:27.163344+00:00"
-  },
-  "EDGEUSDT|1h": {
-    "symbol": "EDGEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T23:03:27.897040+00:00"
-  },
-  "BEUSDT|1h": {
-    "symbol": "BEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T23:03:28.734560+00:00"
-  },
-  "ETHUSDT|1h": {
-    "symbol": "ETHUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T23:03:29.454805+00:00"
   },
   "NATGASUSDT|1h": {
     "symbol": "NATGASUSDT",
