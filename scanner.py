@@ -1099,20 +1099,35 @@ def _clean_technical_reason(reason: str) -> str:
     return re.sub(r"\s*\([+-]?\d+(\.\d+)?\s*(?:MTF agreement\s*)?skor\)", "", reason).strip()
 
 
+def format_price(value: float | None) -> str:
+    """Format harga sebagai desimal biasa, bukan notasi ilmiah Python
+    (mis. '5.2e-05'). entry/sl/tp/tp1 sudah dibulatkan ke 6 desimal saat
+    SignalResult dibuat (round(x, 6)), jadi format 6 desimal di sini tidak
+    mengurangi presisi apa pun -- cuma mengubah cara tampilnya. Perlu untuk
+    token berharga sangat kecil (mis. DOGSUSDT) yang sebelumnya tampil
+    sebagai '5.2e-05' alih-alih '0.000052'."""
+    if value is None:
+        return "-"
+    text = f"{value:.6f}"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text
+
+
 def format_signal_message(signal: SignalResult) -> str:
     """Pesan singkat untuk caption Telegram (tetap ringkas & ber-Markdown)."""
     tf_label = f" [{signal.timeframe}]" if signal.timeframe else ""
     setup_label = f" · {signal.setup_type}" if signal.setup_type else ""
     lines = [
         f"*{signal.symbol}*{tf_label} — {signal.direction}{setup_label} (score {signal.score})",
-        f"Entry: `{signal.entry}`",
-        f"SL: `{signal.sl}`",
+        f"Entry: `{format_price(signal.entry)}`",
+        f"SL: `{format_price(signal.sl)}`",
     ]
     if signal.tp1 is not None:
-        lines.append(f"TP1 (partial): `{signal.tp1}`")
-        lines.append(f"TP2 (final): `{signal.tp}`")
+        lines.append(f"TP1 (partial): `{format_price(signal.tp1)}`")
+        lines.append(f"TP2 (final): `{format_price(signal.tp)}`")
     else:
-        lines.append(f"TP: `{signal.tp}`")
+        lines.append(f"TP: `{format_price(signal.tp)}`")
     if signal.reasons:
         lines.append("Alasan: " + "; ".join(signal.reasons))
     return "\n".join(lines)
@@ -1137,12 +1152,14 @@ def format_technical_summary(signal: SignalResult) -> str:
         if signal.tp1 is not None:
             rr1 = abs(signal.tp1 - signal.entry) / risk if risk else 0.0
             lines.append(
-                f"Entry: {signal.entry}   SL: {signal.sl}   "
-                f"TP1: {signal.tp1} (R:R ≈ {rr1:.2f})   TP2: {signal.tp} (R:R ≈ {rr:.2f})"
+                f"Entry: {format_price(signal.entry)}   SL: {format_price(signal.sl)}   "
+                f"TP1: {format_price(signal.tp1)} (R:R ≈ {rr1:.2f})   "
+                f"TP2: {format_price(signal.tp)} (R:R ≈ {rr:.2f})"
             )
         else:
             lines.append(
-                f"Entry: {signal.entry}   SL: {signal.sl}   TP: {signal.tp}   (R:R ≈ {rr:.2f})"
+                f"Entry: {format_price(signal.entry)}   SL: {format_price(signal.sl)}   "
+                f"TP: {format_price(signal.tp)}   (R:R ≈ {rr:.2f})"
             )
 
     if signal.reasons:
