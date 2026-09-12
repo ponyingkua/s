@@ -9,19 +9,10 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-# Infrastructure only. The analysis engine below does NOT use scanner scoring,
-# scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
-
-# Dipakai apa adanya dari chart.py untuk generate chart MTF otomatis setelah
-# analisa selesai -- tidak ada logika chart.py yang diubah/diduplikasi di sini.
 from chart import _fetch_and_build_multi
 
 OUT_DIR = "analysis_output"
-
-# Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
-# Backoff eksponensial: percobaan ke-n (0-indexed) menunggu
-# FETCH_RETRY_BACKOFF_SECONDS * 2**n sebelum retry berikutnya.
 FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
 
@@ -34,7 +25,28 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
 
 
 # ============================================================
-# Indicators
+# Dynamic Precision Rounding (Edge Case #2 Fix)
+# ============================================================
+
+def _round_price(value: float) -> float:
+    if value == 0 or pd.isna(value):
+        return 0.0
+    abs_val = abs(value)
+    if abs_val < 0.0001:
+        digits = 8
+    elif abs_val < 0.01:
+        digits = 6
+    elif abs_val < 1:
+        digits = 4
+    elif abs_val < 100:
+        digits = 3
+    else:
+        digits = 2
+    return round(float(value), digits)
+
+
+# ============================================================
+# Core Technical Indicators
 # ============================================================
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -91,17 +103,18 @@ def _ema_slope(series: pd.Series, lookback: int = 5) -> float:
 
 
 # ============================================================
-# Price structure
+# Swing Points & Price Structure
 # ============================================================
 
 def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
     highs = df["high"].to_numpy(float)
     lows = df["low"].to_numpy(float)
     sh, sl = [], []
-    for i in range(left, len(df) - right):
-        if highs[i] >= np.max(highs[i-left:i+right+1]):
+    n = len(df)
+    for i in range(left, n - right):
+        if highs[i] == np.max(highs[i - left : i + right + 1]):
             sh.append((i, highs[i]))
-        if lows[i] <= np.min(lows[i-left:i+right+1]):
+        if lows[i] == np.min(lows[i - left : i + right + 1]):
             sl.append((i, lows[i]))
     return sh, sl
 
@@ -124,18 +137,19 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
         hl = sl[-1][1] > sl[-2][1]
         lh = sh[-1][1] < sh[-2][1]
         ll = sl[-1][1] < sl[-2][1]
+
         if hh and hl:
             bull += 3.0
-            notes.append("Higher-high / higher-low structure is intact.")
+            notes.append("Struktur market: Higher-High & Higher-Low konfirmasi tren naik.")
         elif lh and ll:
             bear += 3.0
-            notes.append("Lower-high / lower-low structure is intact.")
+            notes.append("Struktur market: Lower-High & Lower-Low konfirmasi tren turun.")
         elif hh or hl:
             bull += 1.4
-            notes.append("Recent swing structure leans bullish but is not fully aligned.")
+            notes.append("Struktur cenderung bullish (HH/HL belum sempurna).")
         elif lh or ll:
             bear += 1.4
-            notes.append("Recent swing structure leans bearish but is not fully aligned.")
+            notes.append("Struktur cenderung bearish (LH/LL belum sempurna).")
 
     support, resistance = _levels(df)
     prior_support, prior_resistance = _levels(df.iloc[:-1]) if len(df) > 25 else (support, resistance)
@@ -145,17 +159,17 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
 
     if last_close > prior_resistance and last_high > prior_resistance:
         bull += 2.2
-        notes.append(f"Price is holding above prior resistance ({prior_resistance:.8g}).")
+        notes.append(f"Harga bertahan di atas resistance terdahulu ({prior_resistance:.8g}).")
     elif last_close < prior_support and last_low < prior_support:
         bear += 2.2
-        notes.append(f"Price is holding below prior support ({prior_support:.8g}).")
+        notes.append(f"Harga tertahan di bawah support terdahulu ({prior_support:.8g}).")
 
     total = bull + bear
     if total == 0:
         label = "NEUTRAL"
-    elif bull / total >= 0.67:
+    elif bull / total >= 0.65:
         label = "BULLISH"
-    elif bear / total >= 0.67:
+    elif bear / total >= 0.65:
         label = "BEARISH"
     else:
         label = "MIXED"
@@ -171,7 +185,7 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
 
 
 # ============================================================
-# Independent direction/confluence engine
+# Direction Analysis Engine
 # ============================================================
 
 def _direction_analysis(df: pd.DataFrame) -> dict:
@@ -179,6 +193,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     ema20 = close.ewm(span=20, adjust=False).mean()
     ema50 = close.ewm(span=50, adjust=False).mean()
     ema200 = close.ewm(span=200, adjust=False).mean() if len(df) >= 200 else None
+    
     rsi = _rsi(close)
     _, _, hist = _macd(close)
     _, _, _, bb_width, pb = _bollinger(close)
@@ -189,102 +204,87 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     notes = []
     p = float(close.iloc[-1])
 
-    # Trend is deliberately one coherent component to avoid double-counting EMA facts.
+    # Analisis Tren EMA
     trend = 0.0
     e20, e50 = float(ema20.iloc[-1]), float(ema50.iloc[-1])
     trend += 1.5 if e20 > e50 else -1.5 if e20 < e50 else 0
     s20, s50 = _ema_slope(ema20), _ema_slope(ema50)
     trend += 1.0 if s20 > 0 and s50 > 0 else -1.0 if s20 < 0 and s50 < 0 else 0
+    
     if ema200 is not None and pd.notna(ema200.iloc[-1]):
         trend += 1.3 if p > float(ema200.iloc[-1]) else -1.3
-    else:
-        notes.append(
-            f"EMA200 not available (only {len(df)} candles of history); "
-            f"trend score uses EMA20/EMA50 alignment only."
-        )
+
     if trend > 0:
         bull += min(trend, 3.0)
-        notes.append("Trend structure favors buyers.")
+        notes.append("Struktur EMA mendukung posisi beli.")
     elif trend < 0:
         bear += min(abs(trend), 3.0)
-        notes.append("Trend structure favors sellers.")
+        notes.append("Struktur EMA mendukung posisi jual.")
 
+    # Analisis RSI
     r = float(rsi.iloc[-1]) if pd.notna(rsi.iloc[-1]) else None
     if r is not None:
-        if 55 <= r < 70:
+        if 52 <= r < 68:
             bull += 1.2
-            notes.append(f"RSI {r:.1f} supports bullish momentum.")
-        elif r >= 70:
+            notes.append(f"RSI ({r:.1f}) mendukung momentum bullish.")
+        elif r >= 68:
             bull += 0.4
-            notes.append(f"RSI {r:.1f} shows strong momentum with elevated extension risk.")
-        elif 30 < r <= 45:
+            notes.append(f"RSI ({r:.1f}) memasuki area overbought.")
+        elif 32 < r <= 48:
             bear += 1.2
-            notes.append(f"RSI {r:.1f} favors bearish momentum.")
-        elif r <= 30:
+            notes.append(f"RSI ({r:.1f}) mendukung momentum bearish.")
+        elif r <= 32:
             bear += 0.4
-            notes.append(f"RSI {r:.1f} is deeply weak, increasing bounce risk.")
-        else:
-            notes.append(f"RSI {r:.1f} is transitional.")
+            notes.append(f"RSI ({r:.1f}) memasuki area oversold.")
 
+    # Analisis MACD
     h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
     hp = float(hist.iloc[-2]) if pd.notna(hist.iloc[-2]) else None
     if h is not None and hp is not None:
         if h > 0 and h > hp:
             bull += 1.3
-            notes.append("MACD histogram is positive and expanding.")
+            notes.append("Histogram MACD positif dan melebarkan penguatan.")
         elif h < 0 and h < hp:
             bear += 1.3
-            notes.append("MACD histogram is negative and expanding.")
+            notes.append("Histogram MACD negatif dan melebarkan pelemahan.")
         elif h > 0:
             bull += 0.5
         elif h < 0:
             bear += 0.5
 
-    pb_now = float(pb.iloc[-1]) if pd.notna(pb.iloc[-1]) else None
-    if pb_now is not None and h is not None:
-        if pb_now > 1 and h > 0:
-            bull += 0.6
-            notes.append("Price is pressing above the upper Bollinger area with positive momentum.")
-        elif pb_now < 0 and h < 0:
-            bear += 0.6
-            notes.append("Price is pressing below the lower Bollinger area with negative momentum.")
-
+    # Analisis Volume
     if len(volume) >= 20:
         vma = float(volume.rolling(20).mean().iloc[-1])
         vr = float(volume.iloc[-1]) / vma if vma > 0 else 0
         up = float(close.iloc[-1]) > float(close.iloc[-2])
-        if vr >= 1.5:
+        if vr >= 1.4:
             if up:
                 bull += 1.0
-                notes.append(f"Volume expansion confirms the latest upward candle ({vr:.1f}x average).")
+                notes.append(f"Lonjakan volume mengonfirmasi kenaikan ({vr:.1f}x rata-rata).")
             else:
                 bear += 1.0
-                notes.append(f"Volume expansion confirms the latest downward candle ({vr:.1f}x average).")
-        elif vr >= 1.15:
-            bull += 0.35 if up else 0
-            bear += 0.35 if not up else 0
+                notes.append(f"Lonjakan volume mengonfirmasi penurunan ({vr:.1f}x rata-rata).")
 
+    # Analisis OBV
     if len(obv) >= 12:
         delta = float(obv.iloc[-1] - obv.iloc[-12])
         if delta > 0:
             bull += 0.7
-            notes.append("OBV is rising across the recent window.")
         elif delta < 0:
             bear += 0.7
-            notes.append("OBV is falling across the recent window.")
 
     total = bull + bear
     if total == 0:
         bias = "NEUTRAL"
     else:
         ratio = bull / total
-        if ratio >= 0.70:
+        if ratio >= 0.68:
             bias = "BULLISH STRONG"
-        elif ratio >= 0.57:
+        elif ratio >= 0.55:
             bias = "BULLISH"
-        elif ratio <= 0.30:
+        elif ratio <= 0.32:
             bias = "BEARISH STRONG"
-        elif ratio <= 0.43:
+        elif ratio <= 0.45:
             bias = "BEARISH"
         else:
             bias = "NEUTRAL / MIXED"
@@ -302,7 +302,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
 
 
 # ============================================================
-# Setup selection
+# Setup Detection Logic (Edge Case #1 Fix)
 # ============================================================
 
 def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
@@ -315,58 +315,52 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     setup, score = "NONE", 0.0
 
     last = df.iloc[-1]
-    rng = max(float(last.high - last.low), 1e-12)
+    # Guard: Minimal range tidak boleh 0 atau berharga ekstrem kecil (mencegah ZeroDivision)
+    rng = max(float(last.high - last.low), p * 0.0005)
     body_ratio = abs(float(last.close - last.open)) / rng
 
-    if bull_bias and p > resistance and body_ratio >= 0.45:
+    if bull_bias and p > resistance and body_ratio >= 0.40:
         setup, score = "BREAKOUT", 3.0
-        notes.append("Bullish breakout has a decisive candle behind it.")
-    elif bear_bias and p < support and body_ratio >= 0.45:
+        notes.append("Breakout bullish terkonfirmasi dengan candle solid.")
+    elif bear_bias and p < support and body_ratio >= 0.40:
         setup, score = "BREAKDOWN", 3.0
-        notes.append("Bearish breakdown has a decisive candle behind it.")
+        notes.append("Breakdown bearish terkonfirmasi dengan candle solid.")
     else:
-        if bull_bias and abs(p - support) <= max(1.2 * atr, p * 0.006):
+        if bull_bias and abs(p - support) <= max(1.2 * atr, p * 0.008):
             setup, score = "PULLBACK / RETEST", 2.6
-            notes.append("Price is close to structural support while directional pressure remains bullish.")
-        elif bear_bias and abs(p - resistance) <= max(1.2 * atr, p * 0.006):
+            notes.append("Harga melakukan retest ke area support dalam tren naik.")
+        elif bear_bias and abs(p - resistance) <= max(1.2 * atr, p * 0.008):
             setup, score = "PULLBACK / RETEST", 2.6
-            notes.append("Price is close to structural resistance while directional pressure remains bearish.")
+            notes.append("Harga melakukan retest ke area resistance dalam tren turun.")
 
         upper_wick = float(last.high - max(last.open, last.close))
         lower_wick = float(min(last.open, last.close) - last.low)
-        if bear_bias and upper_wick / rng >= 0.45 and last.high >= resistance:
+        if bear_bias and (upper_wick / rng) >= 0.40 and last.high >= resistance:
             setup, score = "REJECTION", max(score, 2.5)
-            notes.append("Upper-wick rejection is visible at structural resistance.")
-        elif bull_bias and lower_wick / rng >= 0.45 and last.low <= support:
+            notes.append("Penolakan ekor atas (wick rejection) terlihat di area resistance.")
+        elif bull_bias and (lower_wick / rng) >= 0.40 and last.low <= support:
             setup, score = "REJECTION", max(score, 2.5)
-            notes.append("Lower-wick rejection is visible at structural support.")
+            notes.append("Penolakan ekor bawah (wick rejection) terlihat di area support.")
 
     if setup == "NONE":
         if bull_bias and structure["label"] == "BULLISH":
             setup, score = "CONTINUATION", 2.0
-            notes.append("Trend and structure remain aligned for continuation.")
+            notes.append("Struktur dan tren sejalan mendukung kelanjutan tren naik.")
         elif bear_bias and structure["label"] == "BEARISH":
             setup, score = "CONTINUATION", 2.0
-            notes.append("Trend and structure remain aligned for continuation.")
+            notes.append("Struktur dan tren sejalan mendukung kelanjutan tren turun.")
 
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
 
 
 # ============================================================
-# Levels: structure + volatility, not scanner RR
+# Dynamic Level Calculator (Edge Case #3 Fix)
 # ============================================================
-
-def _round_price(value: float) -> float:
-    if value == 0:
-        return 0.0
-    digits = max(2, int(6 - np.floor(np.log10(abs(value)))))
-    return round(float(value), digits)
-
 
 def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dict) -> dict:
     p = float(df["close"].iloc[-1])
-    atr = direction["atr"] or p * 0.01
+    atr = direction["atr"] or (p * 0.01)
     support, resistance = structure["support"], structure["resistance"]
     is_long = direction["bull"] > direction["bear"]
     is_short = direction["bear"] > direction["bull"]
@@ -375,31 +369,58 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
         return {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
 
     if is_long:
-        anchor = support if support is not None and support < p else p - atr
-        sl = min(anchor - 0.25 * atr, p - atr)
-        lo = min(p, max(anchor, p - 0.45 * atr))
-        hi = max(p, lo + 0.15 * atr)
-        risk = max(hi - sl, 0.25 * atr)
+        entry_lo = _round_price(min(p, p - 0.2 * atr))
+        entry_hi = _round_price(max(p, p + 0.1 * atr))
+        
+        anchor_sl = support if (support is not None and support < p) else (p - atr)
+        sl = _round_price(min(anchor_sl - 0.2 * atr, p - 1.2 * atr))
+        
+        # Guard: Pastikan SL selalu di bawah entry_lo
+        if sl >= entry_lo:
+            sl = _round_price(entry_lo - 1.2 * atr)
+            
+        risk = max(entry_hi - sl, p * 0.005)
+        tp1 = _round_price(entry_hi + (1.5 * risk))
+        tp2 = _round_price(entry_hi + (2.8 * risk))
+
+        # Guard: Pastikan TP2 selalu lebih tinggi dari TP1
+        if tp2 <= tp1:
+            tp2 = _round_price(tp1 + (0.5 * risk))
+
         return {
             "direction": "LONG",
-            "entry": (_round_price(lo), _round_price(hi)),
-            "sl": _round_price(sl),
-            "tp1": _round_price(hi + risk),
-            "tp2": _round_price(hi + 1.8 * risk),
+            "entry": (entry_lo, entry_hi),
+            "sl": sl,
+            "tp1": tp1,
+            "tp2": tp2,
         }
 
-    anchor = resistance if resistance is not None and resistance > p else p + atr
-    sl = max(anchor + 0.25 * atr, p + atr)
-    hi = max(p, min(anchor, p + 0.45 * atr))
-    lo = min(p, hi - 0.15 * atr)
-    risk = max(sl - lo, 0.25 * atr)
-    return {
-        "direction": "SHORT",
-        "entry": (_round_price(lo), _round_price(hi)),
-        "sl": _round_price(sl),
-        "tp1": _round_price(lo - risk),
-        "tp2": _round_price(lo - 1.8 * risk),
-    }
+    else:
+        entry_hi = _round_price(max(p, p + 0.2 * atr))
+        entry_lo = _round_price(min(p, p - 0.1 * atr))
+        
+        anchor_sl = resistance if (resistance is not None and resistance > p) else (p + atr)
+        sl = _round_price(max(anchor_sl + 0.2 * atr, p + 1.2 * atr))
+        
+        # Guard: Pastikan SL selalu di atas entry_hi
+        if sl <= entry_hi:
+            sl = _round_price(entry_hi + 1.2 * atr)
+            
+        risk = max(sl - entry_lo, p * 0.005)
+        tp1 = _round_price(entry_lo - (1.5 * risk))
+        tp2 = _round_price(entry_lo - (2.8 * risk))
+
+        # Guard: Pastikan TP2 selalu lebih rendah dari TP1
+        if tp2 >= tp1:
+            tp2 = _round_price(tp1 - (0.5 * risk))
+
+        return {
+            "direction": "SHORT",
+            "entry": (entry_lo, entry_hi),
+            "sl": sl,
+            "tp1": tp1,
+            "tp2": tp2,
+        }
 
 
 def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
@@ -411,26 +432,15 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     conf_bear_strong = direction["bear"] - direction["bull"] >= 1.5
     divergence_notes = []
 
-    # Structure has priority. Indicator confluence confirms rather than
-    # gates -- but confluence is never allowed to flip the call to the
-    # OPPOSITE side of an intact structure (e.g. HH/HL still intact yet
-    # RSI/MACD/volume/OBV are bearish-strong). That combination is a
-    # structure/momentum divergence: flagged explicitly and treated as NOT
-    # actionable (NONE) rather than silently emitting a signal against the
-    # very structure that was just confirmed.
     if structure["label"] == "BULLISH" and conf_bear_strong:
         final = "NONE"
         divergence_notes.append(
-            f"Divergence: structure is BULLISH (HH/HL intact) but indicator "
-            f"confluence is bearish-strong (bull {direction['bull']} / bear "
-            f"{direction['bear']}); not treated as an actionable SHORT."
+            "Divergensi: Struktur HH/HL Bullish, tetapi indikator momentum sangat Bearish. Posisi diabaikan."
         )
     elif structure["label"] == "BEARISH" and conf_bull_strong:
         final = "NONE"
         divergence_notes.append(
-            f"Divergence: structure is BEARISH (LH/LL intact) but indicator "
-            f"confluence is bullish-strong (bull {direction['bull']} / bear "
-            f"{direction['bear']}); not treated as an actionable LONG."
+            "Divergensi: Struktur LH/LL Bearish, tetapi indikator momentum sangat Bullish. Posisi diabaikan."
         )
     elif structure["label"] == "BULLISH" and direction["bull"] >= direction["bear"]:
         final = "LONG"
@@ -460,18 +470,7 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     }
 
 
-# ============================================================
-# Best-setup selection (single verdict across all analyzed TFs)
-# ============================================================
-
 def _select_best_setup(per_tf: dict):
-    """Pilih SATU setup terbaik dari seluruh timeframe yang diminta user.
-    Timeframe dengan error fetch atau direction NONE tidak diikutkan.
-    Ranking (berurutan): skor kualitas setup dari _detect_setup, lalu
-    kekuatan confluence (selisih bull/bear direction_analysis), lalu jumlah
-    timeframe lain yang searah (mtf_agree_tfs) sebagai tie-breaker terakhir.
-    Return (timeframe, info) milik pemenang, atau None kalau tidak ada
-    satupun timeframe yang actionable."""
     candidates = []
     for tf, info in per_tf.items():
         if "error" in info or info.get("direction") == "NONE":
@@ -489,37 +488,28 @@ def _select_best_setup(per_tf: dict):
 
 
 async def _fetch_tf(client: "BinanceFuturesClient", symbol: str, tf: str, klines_limit: int):
-    """Fetch & validasi satu timeframe. Retry dengan backoff eksponensial
-    (FETCH_MAX_RETRIES percobaan) untuk kegagalan transient (timeout, rate
-    limit dari Binance) -- percobaan terakhir yang gagal dilaporkan apa
-    adanya. Tidak pernah melempar exception ke caller: sukses maupun gagal
-    sama-sama dikembalikan sebagai (tf, df, error), df/error salah satunya
-    None, supaya analyze_symbol bisa memproses hasil tiap timeframe secara
-    seragam setelah asyncio.gather selesai."""
     last_err = None
     for attempt in range(FETCH_MAX_RETRIES):
         try:
             kline = await client.get_klines(symbol, tf, limit=klines_limit)
             df = drop_unclosed_candle(kline.df)
             if len(df) < 60:
-                return tf, None, f"Only {len(df)} closed bars available; minimum 60 required."
+                return tf, None, f"Hanya ada {len(df)} candle tertutup; minimal butuh 60 candle."
             return tf, df, None
         except Exception as exc:
             last_err = exc
             if attempt < FETCH_MAX_RETRIES - 1:
                 delay = FETCH_RETRY_BACKOFF_SECONDS * (2 ** attempt)
                 print(
-                    f"[warn] {symbol} {tf}: fetch failed ({exc}); retrying in "
-                    f"{delay:.1f}s (attempt {attempt + 1}/{FETCH_MAX_RETRIES})"
+                    f"[warn] {symbol} {tf}: Fetch gagal ({exc}); mencoba ulang dalam "
+                    f"{delay:.1f}s (percobaan {attempt + 1}/{FETCH_MAX_RETRIES})"
                 )
                 await asyncio.sleep(delay)
-    print(f"[error] Failed to fetch {symbol} {tf} after {FETCH_MAX_RETRIES} attempts: {last_err}")
+    print(f"[error] Gagal mengambil data {symbol} {tf} setelah {FETCH_MAX_RETRIES} percobaan: {last_err}")
     return tf, None, str(last_err)
 
 
 async def analyze_symbol(symbol: str, cfg: dict) -> dict:
-    # Only data-fetch settings are borrowed from config. No scanner thresholds,
-    # filters, scores, or regime decisions are consulted.
     data_cfg = cfg.get("scanning", {})
     klines_limit = int(data_cfg.get("klines_limit", 300))
     timeframes = cfg.get("timeframes", ["1h"])
@@ -527,11 +517,6 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     dfs = {}
 
     async with BinanceFuturesClient() as client:
-        # Tiap timeframe independen satu sama lain (tidak ada dependency),
-        # jadi menunggu satu-satu di sini murni overhead -- di-fetch paralel
-        # lewat asyncio.gather. return_exceptions=True adalah jaring pengaman
-        # tambahan; _fetch_tf sendiri sudah menangkap semua exception-nya
-        # secara internal dan tidak pernah melempar keluar.
         results = await asyncio.gather(
             *(_fetch_tf(client, symbol, tf, klines_limit) for tf in timeframes),
             return_exceptions=True,
@@ -539,7 +524,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
 
     for tf, res in zip(timeframes, results):
         if isinstance(res, Exception):
-            print(f"[error] Failed to analyze {symbol} {tf}: {res}")
+            print(f"[error] Gagal menganalisis {symbol} {tf}: {res}")
             per_tf[tf] = {"error": str(res)}
             continue
         _, df, err = res
@@ -552,7 +537,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
             info["mtf_agree_tfs"] = []
             per_tf[tf] = info
         except Exception as exc:
-            print(f"[error] Failed to analyze {symbol} {tf}: {exc}")
+            print(f"[error] Gagal menganalisis {symbol} {tf}: {exc}")
             per_tf[tf] = {"error": str(exc)}
 
     directions = {tf: x["direction"] for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"}
@@ -585,93 +570,90 @@ def compose_analysis_text(result: dict) -> str:
     per_tf = result["per_tf"]
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [
-        f"# Independent Technical Analysis: {symbol}",
-        f"Time: {now}",
+        f"# Analisis Teknikal Independen: {symbol}",
+        f"Waktu: {now}",
         "",
-        "Analysis is independent of scanner filters, scanner scores, and scanner setup classification.",
+        "Analisis ini berjalan mandiri, bebas dari sistem skoring atau filter bawaan scanner.",
         "",
     ]
 
     best_tf, best_info = result.get("best_tf"), result.get("best")
     lines.append("## 🎯 Best Setup")
     if best_info is None:
-        lines.append("No actionable setup was found on any analyzed timeframe (all NONE).")
+        lines.append("Tidak ditemukan setup yang aman/actionable di semua timeframe (semua NONE).")
     else:
         su, lv = best_info["setup"], best_info["levels"]
         lo, hi = lv["entry"]
         lines.append(f"Timeframe: {best_tf}")
-        lines.append(f"Direction: {best_info['direction']}")
-        lines.append(f"Setup: {su['type']} ({su['quality']}, score {su['score']})")
-        lines.append(f"Entry: {lo} - {hi}")
-        lines.append(f"SL: {lv['sl']}")
-        lines.append(f"TP1: {lv['tp1']}")
-        lines.append(f"TP2: {lv['tp2']}")
+        lines.append(f"Arah: {best_info['direction']}")
+        lines.append(f"Setup: {su['type']} ({su['quality']}, Skor {su['score']})")
+        lines.append(f"Area Entry: {lo} - {hi}")
+        lines.append(f"Stop Loss (SL): {lv['sl']}")
+        lines.append(f"Take Profit 1 (TP1): {lv['tp1']}")
+        lines.append(f"Take Profit 2 (TP2): {lv['tp2']}")
         if best_info.get("mtf_agree_tfs"):
-            lines.append(f"Confirmed by: {', '.join(best_info['mtf_agree_tfs'])}")
-        lines.append("Chosen over the other timeframe(s) by setup quality, confluence strength, and MTF agreement.")
+            lines.append(f"Konfirmasi TF Lain: {', '.join(best_info['mtf_agree_tfs'])}")
     lines.append("")
-    lines.append("## Per-timeframe breakdown")
+    lines.append("## Rincian Per-Timeframe")
     lines.append("")
 
     for tf, info in per_tf.items():
         lines.append(f"## {tf}")
         if "error" in info:
-            lines += [f"Analysis error: {info['error']}", ""]
+            lines += [f"Error Analisis: {info['error']}", ""]
             continue
 
         da, st, su, lv = info["direction_analysis"], info["structure"], info["setup"], info["levels"]
-        lines.append(f"Direction: {info['direction']}")
-        lines.append(f"Technical bias: {info['bias']}")
-        lines.append(f"Structure: {st['label']}")
-        lines.append(f"Confluence: bullish {da['bull']} / bearish {da['bear']}")
+        lines.append(f"Arah Signal: {info['direction']}")
+        lines.append(f"Bias Teknikal: {info['bias']}")
+        lines.append(f"Struktur Price Action: {st['label']}")
+        lines.append(f"Skor Konfluens: Bullish {da['bull']} / Bearish {da['bear']}")
         if da["rsi"] is not None:
             lines.append(f"RSI: {da['rsi']:.1f}")
         if da["atr_pct"] is not None:
-            lines.append(f"ATR: {da['atr_pct']:.2f}%")
+            lines.append(f"ATR Volatilitas: {da['atr_pct']:.2f}%")
         if da["bb_width_pct"] is not None:
-            lines.append(f"Bollinger width: {da['bb_width_pct']:.2f}%")
+            lines.append(f"Lebar Bollinger: {da['bb_width_pct']:.2f}%")
         for note in st["notes"] + da["notes"] + su["notes"] + info.get("divergence_notes", []):
             lines.append(f"- {note}")
-        lines.append(f"Best setup: {su['type']} ({su['quality']})")
+        lines.append(f"Setup Terbaik: {su['type']} ({su['quality']})")
 
         if lv["direction"] != "NONE":
             lo, hi = lv["entry"]
-            lines.append(f"Entry: {lo} - {hi}")
-            lines.append(f"SL: {lv['sl']}")
+            lines.append(f"Area Entry: {lo} - {hi}")
+            lines.append(f"Stop Loss: {lv['sl']}")
             lines.append(f"TP1: {lv['tp1']}")
             lines.append(f"TP2: {lv['tp2']}")
         if info.get("mtf_agree_tfs"):
-            lines.append(f"MTF confirmation: {', '.join(info['mtf_agree_tfs'])}")
+            lines.append(f"Konfirmasi MTF: {', '.join(info['mtf_agree_tfs'])}")
         lines.append("")
 
     mtf = _mtf_alignment(per_tf)
-    lines.append("## MTF Summary")
+    lines.append("## Ringkasan Multi-Timeframe (MTF)")
     if mtf["overall"] is None:
-        lines.append("No sufficiently clear directional alignment was found.")
+        lines.append("Tidak ada keselarasan arah yang cukup kuat antar timeframe.")
     else:
-        lines.append(f"LONG: {mtf['longs']} timeframe(s)")
-        lines.append(f"SHORT: {mtf['shorts']} timeframe(s)")
-        lines.append(f"Overall MTF read: {mtf['overall']}")
+        lines.append(f"LONG: {mtf['longs']} timeframe")
+        lines.append(f"SHORT: {mtf['shorts']} timeframe")
+        lines.append(f"Kesimpulan MTF: {mtf['overall'].upper()}")
     return "\n".join(lines)
 
 
 def compose_console_summary(result: dict) -> str:
-    # Concise CI/console view: one line per timeframe plus the MTF verdict.
-    # The full breakdown (indicators, notes, structure) stays in the markdown file only.
     symbol = result["symbol"]
     per_tf = result["per_tf"]
-    lines = [f"[analyze] {symbol} summary:"]
+    lines = [f"[analyze] Ringkasan {symbol}:"]
 
     best_tf, best_info = result.get("best_tf"), result.get("best")
     if best_info is None:
-        lines.append("[analyze]   BEST SETUP: none (no actionable timeframe)")
+        lines.append("[analyze]   SETUP TERBAIK: Tidak ada (semua TF Netral/Divergen)")
     else:
         su, lv = best_info["setup"], best_info["levels"]
         lo, hi = lv["entry"]
         lines.append(
-            f"[analyze]   BEST SETUP -> {best_tf}: {best_info['direction']} | "
-            f"{su['type']} ({su['quality']}) | entry {lo}-{hi} SL {lv['sl']} "
-            f"TP1 {lv['tp1']} TP2 {lv['tp2']}"
+            f"[analyze]   SETUP TERBAIK -> {best_tf}: {best_info['direction']} | "
+            f"{su['type']} ({su['quality']}) | Entry {lo}-{hi} | SL {lv['sl']} | "
+            f"TP1 {lv['tp1']} | TP2 {lv['tp2']}"
         )
 
     for tf, info in per_tf.items():
@@ -682,23 +664,23 @@ def compose_console_summary(result: dict) -> str:
         line = f"[analyze]   {tf}: {info['direction']} | {info['bias']} | {su['type']} ({su['quality']})"
         if lv["direction"] != "NONE":
             lo, hi = lv["entry"]
-            line += f" | entry {lo}-{hi} SL {lv['sl']} TP1 {lv['tp1']} TP2 {lv['tp2']}"
+            line += f" | Entry {lo}-{hi} SL {lv['sl']} TP1 {lv['tp1']} TP2 {lv['tp2']}"
         if info.get("divergence_notes"):
-            line += " | ⚠ DIVERGENCE (structure vs momentum)"
+            line += " | ⚠ DIVERGENSI (Struktur vs Momentum)"
         lines.append(line)
 
     mtf = _mtf_alignment(per_tf)
     if mtf["overall"] is None:
-        lines.append("[analyze]   MTF: no clear directional alignment")
+        lines.append("[analyze]   MTF: Tidak ada penyesuaian tren yang jelas")
     else:
-        lines.append(f"[analyze]   MTF: {mtf['longs']} LONG / {mtf['shorts']} SHORT -> {mtf['overall']}")
+        lines.append(f"[analyze]   MTF: {mtf['longs']} LONG / {mtf['shorts']} SHORT -> {mtf['overall'].upper()}")
 
     return "\n".join(lines)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="vSynapse — independent single-token MTF analyzer")
-    parser.add_argument("--symbol", required=True, help="Coin code, e.g. ZEC or ZECUSDT")
+    parser = argparse.ArgumentParser(description="vSynapse — Engine Analisis MTF Independen")
+    parser.add_argument("--symbol", required=True, help="Kode koin, contoh: ZEC atau ZECUSDT")
     parser.add_argument("--config", default="config.yaml")
     args = parser.parse_args()
 
@@ -706,8 +688,8 @@ def main():
     symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
     timeframes = cfg.get("timeframes", ["1h"])
 
-    print(f"[analyze] Independent analysis started for {symbol}")
-    print(f"[analyze] Timeframes: {', '.join(timeframes)}")
+    print(f"[analyze] Memulai analisis independen untuk {symbol}")
+    print(f"[analyze] Timeframe yang diproses: {', '.join(timeframes)}")
     result = asyncio.run(analyze_symbol(symbol, cfg))
     text = compose_analysis_text(result)
     print(compose_console_summary(result))
@@ -717,32 +699,18 @@ def main():
     md_path = os.path.join(OUT_DIR, f"analysis_{result['symbol']}_{timestamp}.md")
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(text)
-    print(f"[analyze] Finished. Markdown saved to {md_path}")
+    print(f"[analyze] Selesai. Laporan Markdown disimpan ke {md_path}")
 
-    # Chart MTF otomatis untuk simbol yang dianalisa, memakai
-    # _fetch_and_build_multi dari chart.py apa adanya (fetch klines sendiri,
-    # timeframe mengikuti config yang sama dipakai analisa di atas). Disimpan
-    # di OUT_DIR yang sama dengan markdown-nya (bukan folder terpisah) supaya
-    # artifact workflow tetap satu folder.
-    # notify=False: alur analyze.py ini cuma untuk hasil yang masuk artifact
-    # workflow, bukan dikirim ke Telegram (itu tetap jadi urusan chart.py
-    # sendiri lewat mode CLI/scanner-nya). Dibuat best-effort: kalau gagal
-    # (mis. rate limit / symbol bermasalah), tidak menggagalkan seluruh run
-    # analisa yang sudah berhasil di atas.
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
         asyncio.run(_fetch_and_build_multi(symbol, timeframes, cfg, chart_path, notify=False))
-        print(f"[analyze] Chart MTF saved to {chart_path}")
+        print(f"[analyze] Gambar chart MTF disimpan ke {chart_path}")
     except Exception as exc:
-        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
+        print(f"[warn] Gagal membuat gambar chart MTF {symbol}: {exc}")
 
-    # Kalau SEMUA timeframe gagal (fetch atau analisa), laporan tetap ditulis
-    # di atas untuk jejak, tapi exit code dibuat non-zero supaya CI/workflow
-    # membedakan "beneran gagal dapat data" (symbol salah ketik, API down)
-    # dari "berhasil analisa tapi memang tidak ada setup actionable".
     per_tf = result["per_tf"]
     if per_tf and all("error" in info for info in per_tf.values()):
-        print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
+        print(f"[analyze] Semua {len(per_tf)} timeframe gagal di-fetch/analisis. Exit non-zero.")
         sys.exit(1)
 
 
