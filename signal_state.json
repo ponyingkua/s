@@ -16,12 +16,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-12T03:04:36.060910+00:00"
   },
-  "SOLVUSDT|1h": {
-    "symbol": "SOLVUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T18:04:21.865042+00:00"
-  },
   "TSMUSDT|1h": {
     "symbol": "TSMUSDT",
     "timeframe": "1h",
@@ -52,12 +46,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T02:04:58.232886+00:00"
   },
-  "ZHONGJIUSDT|1h": {
-    "symbol": "ZHONGJIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T18:04:23.863996+00:00"
-  },
   "1000FLOKIUSDT|4h": {
     "symbol": "1000FLOKIUSDT",
     "timeframe": "4h",
@@ -75,18 +63,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T01:03:53.049768+00:00"
-  },
-  "METUSDT|1h": {
-    "symbol": "METUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T18:04:22.895371+00:00"
-  },
-  "LAUSDT|1h": {
-    "symbol": "LAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T18:04:24.833695+00:00"
   },
   "HBARUSDT|4h": {
     "symbol": "HBARUSDT",
@@ -140,7 +116,7 @@
     "symbol": "KOMAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T22:04:36.387041+00:00"
+    "timestamp": "2026-09-12T07:03:52.342407+00:00"
   },
   "XPLUSDT|15m": {
     "symbol": "XPLUSDT",

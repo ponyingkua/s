@@ -17906,5 +17906,28 @@
     "tp": 195.95,
     "tp1": 181.26489,
     "scanned_at": "2026-09-12T06:03:40.955564+00:00"
+  },
+  {
+    "symbol": "KOMAUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (75) overbought \u2014 penalti chasing (-10)",
+      "ADX (40.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.014936,
+    "sl": 0.01399,
+    "tp": 0.016639,
+    "tp1": 0.015882,
+    "scanned_at": "2026-09-12T07:02:48.787261+00:00"
   }
 ]
