@@ -4,18 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "ICPUSDT|1h": {
-    "symbol": "ICPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T14:03:52.043510+00:00"
-  },
-  "SOLUSDT|1h": {
-    "symbol": "SOLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:04.665514+00:00"
-  },
   "CAKEUSDT|1h": {
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
@@ -64,47 +52,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T01:03:55.659022+00:00"
   },
-  "FETUSDT|1h": {
-    "symbol": "FETUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:01.797968+00:00"
-  },
   "BNBUSDT|1h": {
     "symbol": "BNBUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:03.541022+00:00"
-  },
-  "AAVEUSDT|1h": {
-    "symbol": "AAVEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:05.845695+00:00"
-  },
-  "FARTCOINUSDT|1h": {
-    "symbol": "FARTCOINUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:06.967979+00:00"
-  },
-  "COLLECTUSDT|1h": {
-    "symbol": "COLLECTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:08.101076+00:00"
-  },
-  "LSKUSDT|1h": {
-    "symbol": "LSKUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T13:04:09.235411+00:00"
-  },
-  "KORUUSDT|1h": {
-    "symbol": "KORUUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T14:03:54.267566+00:00"
+    "timestamp": "2026-09-12T02:04:58.232886+00:00"
   },
   "ZHONGJIUSDT|1h": {
     "symbol": "ZHONGJIUSDT",
@@ -115,8 +67,8 @@
   "1000FLOKIUSDT|4h": {
     "symbol": "1000FLOKIUSDT",
     "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-11T14:03:55.734012+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-12T02:05:01.185693+00:00"
   },
   "ZAMAUSDT|1h": {
     "symbol": "ZAMAUSDT",
@@ -140,7 +92,7 @@
     "symbol": "SQQQUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T15:04:50.462564+00:00"
+    "timestamp": "2026-09-12T02:04:59.733140+00:00"
   },
   "LTCUSDT|1h": {
     "symbol": "LTCUSDT",
@@ -345,5 +297,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T01:03:51.768020+00:00"
+  },
+  "KAVAUSDT|15m": {
+    "symbol": "KAVAUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T02:04:56.128868+00:00"
+  },
+  "WDCUSDT|1h": {
+    "symbol": "WDCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-12T02:05:02.589812+00:00"
   }
 }
