@@ -11,7 +11,7 @@ on:
         description: "Format chart multi-timeframe untuk tiap simbol"
         required: true
         type: choice
-        default: wide
+        default: square
         options:
           - wide
           - square
