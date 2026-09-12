@@ -8,13 +8,13 @@
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-11T19:03:56.286680+00:00"
+    "timestamp": "2026-09-12T03:04:31.374296+00:00"
   },
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-11T20:03:48.689039+00:00"
+    "timestamp": "2026-09-12T03:04:36.060910+00:00"
   },
   "SOLVUSDT|1h": {
     "symbol": "SOLVUSDT",
@@ -309,5 +309,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-12T02:05:02.589812+00:00"
+  },
+  "ARMUSDT|1h": {
+    "symbol": "ARMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T03:04:34.576305+00:00"
+  },
+  "SOXSUSDT|1h": {
+    "symbol": "SOXSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-12T03:04:37.459298+00:00"
+  },
+  "KAVAUSDT|1h": {
+    "symbol": "KAVAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T03:04:38.895817+00:00"
   }
 }

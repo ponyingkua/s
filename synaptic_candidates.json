@@ -17607,5 +17607,118 @@
     "tp": 435.334494,
     "tp1": 440.941385,
     "scanned_at": "2026-09-12T02:03:52.990196+00:00"
+  },
+  {
+    "symbol": "CAKEUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (68), tidak menambah skor",
+      "ADX (25.6) tren kuat (+5.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 2.2308,
+    "sl": 2.152075,
+    "tp": 2.372506,
+    "tp1": 2.309525,
+    "scanned_at": "2026-09-12T03:03:31.121129+00:00"
+  },
+  {
+    "symbol": "ARMUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (43.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 266.66,
+    "sl": 262.39737,
+    "tp": 274.332733,
+    "tp1": 270.92263,
+    "scanned_at": "2026-09-12T03:03:31.121129+00:00"
+  },
+  {
+    "symbol": "OPUSDT",
+    "direction": "SHORT",
+    "score": 66.6,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (38) menguatkan momentum turun",
+      "ADX (30.9) tren kuat (+10.6 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.09548,
+    "sl": 0.101884,
+    "tp": 0.083952,
+    "tp1": 0.089076,
+    "scanned_at": "2026-09-12T03:03:31.121129+00:00"
+  },
+  {
+    "symbol": "SOXSUSDT",
+    "direction": "SHORT",
+    "score": 66.3,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (32.4) tren kuat (+12.3 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 43.61,
+    "sl": 44.698336,
+    "tp": 41.650996,
+    "tp1": 42.521664,
+    "scanned_at": "2026-09-12T03:03:31.121129+00:00"
+  },
+  {
+    "symbol": "KAVAUSDT",
+    "direction": "LONG",
+    "score": 66.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (71) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.06681,
+    "sl": 0.06531,
+    "tp": 0.06951,
+    "tp1": 0.06831,
+    "scanned_at": "2026-09-12T03:03:31.121129+00:00"
   }
 ]
