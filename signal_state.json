@@ -8,7 +8,7 @@
     "symbol": "CAKEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T03:04:31.374296+00:00"
+    "timestamp": "2026-09-12T10:03:50.295657+00:00"
   },
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
@@ -249,5 +249,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T09:04:24.745792+00:00"
+  },
+  "GRVTUSDT|1h": {
+    "symbol": "GRVTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T10:03:48.234417+00:00"
+  },
+  "KNCUSDT|1h": {
+    "symbol": "KNCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T10:03:51.562011+00:00"
   }
 }
