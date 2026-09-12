@@ -22,24 +22,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T11:03:32.053772+00:00"
   },
-  "BNBUSDT|1h": {
-    "symbol": "BNBUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T02:04:58.232886+00:00"
-  },
-  "1000FLOKIUSDT|4h": {
-    "symbol": "1000FLOKIUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T02:05:01.185693+00:00"
-  },
-  "SQQQUSDT|1h": {
-    "symbol": "SQQQUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T02:04:59.733140+00:00"
-  },
   "ASTERUSDT|4h": {
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
@@ -50,19 +32,7 @@
     "symbol": "KOMAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T07:03:52.342407+00:00"
-  },
-  "KAVAUSDT|15m": {
-    "symbol": "KAVAUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T02:04:56.128868+00:00"
-  },
-  "WDCUSDT|1h": {
-    "symbol": "WDCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-12T02:05:02.589812+00:00"
+    "timestamp": "2026-09-12T15:03:35.322644+00:00"
   },
   "ARMUSDT|1h": {
     "symbol": "ARMUSDT",
@@ -189,5 +159,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T14:03:57.469613+00:00"
+  },
+  "VTHOUSDT|1h": {
+    "symbol": "VTHOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T15:03:37.606813+00:00"
   }
 }
