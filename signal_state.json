@@ -64,36 +64,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T07:03:52.342407+00:00"
   },
-  "NATGASUSDT|1h": {
-    "symbol": "NATGASUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T00:04:47.392038+00:00"
-  },
-  "ZORAUSDT|1h": {
-    "symbol": "ZORAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T00:04:48.957903+00:00"
-  },
-  "DELLUSDT|1h": {
-    "symbol": "DELLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T00:04:49.950110+00:00"
-  },
-  "JTOUSDT|1h": {
-    "symbol": "JTOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T00:04:51.036577+00:00"
-  },
-  "SOXLUSDT|1h": {
-    "symbol": "SOXLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T00:04:52.027953+00:00"
-  },
   "FILUSDT|1h": {
     "symbol": "FILUSDT",
     "timeframe": "1h",
@@ -207,5 +177,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T10:03:51.562011+00:00"
+  },
+  "RAVEUSDT|1h": {
+    "symbol": "RAVEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-12T13:03:39.599422+00:00"
+  },
+  "TRXUSDT|1h": {
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T13:03:41.986239+00:00"
   }
 }
