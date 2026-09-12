@@ -1223,17 +1223,27 @@ def build_comparison_chart(
 # dan _fetch_and_build* di bawah ini tetap persis seperti semula.
 
 def _draw_sr_band(ax, level, pad: float, last_x: int, fill: str, edge: str,
-                    label: str, dec: int, square: bool = False) -> None:
+                    label: str, dec: int, square: bool = False):
     if level is None:
-        return
+        return None
     ax.add_patch(Rectangle(
         (-0.5, level - pad), last_x + 1.0, pad * 2,
         facecolor=fill, edgecolor=edge, alpha=0.30, linewidth=0.9,
         zorder=Z_SR_BAND,
     ))
-    ax.text(0.3, level, f"{label} {format_price(level, dec)}", color=edge,
+    text_obj = ax.text(0.3, level, f"{label} {format_price(level, dec)}", color=edge,
              fontsize=(11.0 if square else 6.0), fontweight="bold",
              ha="left", va="center", zorder=Z_SR_LABEL, clip_on=False)
+
+    # Ambil bounding box teks label ini dalam koordinat data (bukan tebakan
+    # panjang string) supaya caller (build_analysis_chart) bisa mengecek
+    # tabrakan dengan label struktur (HH/HL/LH/LL) di dekatnya dan menggeser
+    # yang numpuk. Butuh axes limit sudah final saat dipanggil, supaya
+    # transData yang dipakai buat konversi pixel->data sudah sama persis
+    # dengan hasil render akhir.
+    renderer = ax.figure.canvas.get_renderer()
+    bbox = text_obj.get_window_extent(renderer=renderer).transformed(ax.transData.inverted())
+    return (bbox.x0, bbox.y0, bbox.x1, bbox.y1)
 
 
 def build_analysis_chart(
@@ -1319,26 +1329,64 @@ def build_analysis_chart(
         structure = info.get("structure", {})
         support = structure.get("support")
         resistance = structure.get("resistance")
-        atr = (info.get("direction_analysis") or {}).get("atr")
         dec = decimals_from_price(float(plot_df["close"].iloc[-1]))
 
         sr_values = [v for v in (support, resistance) if v is not None]
         y_low = min([y_low] + sr_values)
         y_high = max([y_high] + sr_values)
         y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
-        pad_band = atr * 0.18 if atr else y_span * 0.012
+        # Padding band dihitung dari y_span (rentang harga yang kelihatan di
+        # window ini), BUKAN dari ATR mentah. ATR tiap timeframe skalanya
+        # beda-beda relatif ke rentang harga yang ditampilkan -- itu sebabnya
+        # sebelumnya band 15m kelihatan jauh lebih tebal daripada 1h/4h
+        # walau formulanya sama. Dengan y_span, ketebalan band jadi
+        # proporsional & konsisten tipis di semua timeframe.
+        pad_band = y_span * 0.012
 
-        _draw_sr_band(ax_p, support, pad_band, last_x, SUPPORT_FILL, SUPPORT_EDGE,
-                       "SUP", dec, square=square)
-        _draw_sr_band(ax_p, resistance, pad_band, last_x, RESIST_FILL, RESIST_EDGE,
-                       "RES", dec, square=square)
-
-        _draw_structure_labels(ax_p, labeled_points, 0, len(plot_df), y_span, square=square)
-
+        # set_ylim/set_xlim dipindah ke sini (sebelum menggambar band & label
+        # struktur, bukan di akhir seperti semula) supaya transData axes
+        # sudah final saat _draw_sr_band mengukur bounding box label SUP/RES
+        # di bawah -- kalau limit baru diset belakangan, bbox yang diukur
+        # bisa berbeda dari posisi render final.
         pad_y = y_span * 0.14
         ax_p.set_ylim(y_low - pad_y, y_high + pad_y)
         ax_p.set_xlim(-0.6, last_x + 0.6)
         ax_v.set_xlim(-0.6, last_x + 0.6)
+
+        support_bbox = _draw_sr_band(ax_p, support, pad_band, last_x, SUPPORT_FILL, SUPPORT_EDGE,
+                                       "SUP", dec, square=square)
+        resistance_bbox = _draw_sr_band(ax_p, resistance, pad_band, last_x, RESIST_FILL, RESIST_EDGE,
+                                          "RES", dec, square=square)
+
+        # Geser label struktur (HH/HL/LH/LL) yang numpuk sama label SUP/RES.
+        # Dicek pakai bounding box teks SUP/RES yang sebenarnya (dikembalikan
+        # _draw_sr_band lewat renderer, bukan tebakan jarak) -- kalau titik
+        # taruh label struktur jatuh di dalam/deket bbox itu, didorong makin
+        # menjauh dari levelnya (arah sama seperti pad normalnya) supaya
+        # tidak saling timpa. Mirip logika _declutter_labels yang sudah ada,
+        # cuma dibandingkan ke label SUP/RES, bukan ke label struktur lain.
+        sr_bboxes = [b for b in (support_bbox, resistance_bbox) if b is not None]
+        if sr_bboxes:
+            label_pad = y_span * 0.022  # sama seperti pad di _draw_structure_labels
+            x_margin = max(1.0, len(plot_df) * 0.03)
+            declashed = []
+            for pt in labeled_points:
+                px = pt["index"]
+                is_high = pt["type"] == "H"
+                anchor_y = pt["price"] + label_pad if is_high else pt["price"] - label_pad
+                hits = any(
+                    (min(bx0, bx1) - x_margin) <= px <= (max(bx0, bx1) + x_margin)
+                    and (min(by0, by1) - label_pad) <= anchor_y <= (max(by0, by1) + label_pad)
+                    for bx0, by0, bx1, by1 in sr_bboxes
+                )
+                if hits:
+                    pt = dict(pt)
+                    extra = label_pad * 2.2
+                    pt["price"] = pt["price"] + extra if is_high else pt["price"] - extra
+                declashed.append(pt)
+            labeled_points = declashed
+
+        _draw_structure_labels(ax_p, labeled_points, 0, len(plot_df), y_span, square=square)
 
         vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
         _draw_volume(ax_v, plot_df, colors, vol_lookback)
