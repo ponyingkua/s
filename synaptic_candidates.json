@@ -17929,5 +17929,51 @@
     "tp": 0.016639,
     "tp1": 0.015882,
     "scanned_at": "2026-09-12T07:02:48.787261+00:00"
+  },
+  {
+    "symbol": "GIGGLEUSDT",
+    "direction": "LONG",
+    "score": 78.1,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (22.0) tren kuat (+1.1 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 36.13,
+    "sl": 34.149959,
+    "tp": 39.694073,
+    "tp1": 38.110041,
+    "scanned_at": "2026-09-12T08:03:30.356554+00:00"
+  },
+  {
+    "symbol": "ETHFIUSDT",
+    "direction": "LONG",
+    "score": 76.0,
+    "timeframe": "4h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "ADX (44.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (-20 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.7341,
+    "sl": 0.600424,
+    "tp": 0.974718,
+    "tp1": 0.867776,
+    "scanned_at": "2026-09-12T08:03:30.356554+00:00"
   }
 ]

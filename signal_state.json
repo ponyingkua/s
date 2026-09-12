@@ -22,12 +22,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T01:03:54.413700+00:00"
   },
-  "BLURUSDT|1h": {
-    "symbol": "BLURUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T20:03:46.161416+00:00"
-  },
   "VTHOUSDT|1h": {
     "symbol": "VTHOUSDT",
     "timeframe": "1h",
@@ -64,41 +58,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T01:03:53.049768+00:00"
   },
-  "HBARUSDT|4h": {
-    "symbol": "HBARUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T19:03:58.409268+00:00"
-  },
-  "TIAUSDT|4h": {
-    "symbol": "TIAUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T19:03:59.899664+00:00"
-  },
-  "AXTIUSDT|1h": {
-    "symbol": "AXTIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T19:04:01.323535+00:00"
-  },
   "ASTERUSDT|4h": {
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-12T04:04:11.680513+00:00"
-  },
-  "1000RATSUSDT|1h": {
-    "symbol": "1000RATSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T20:03:49.463538+00:00"
-  },
-  "IRENUSDT|1h": {
-    "symbol": "IRENUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-11T20:03:50.162608+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
@@ -273,5 +237,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T06:04:11.040241+00:00"
+  },
+  "GIGGLEUSDT|1h": {
+    "symbol": "GIGGLEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T08:04:06.354464+00:00"
+  },
+  "ETHFIUSDT|4h": {
+    "symbol": "ETHFIUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T08:04:07.698496+00:00"
   }
 }
