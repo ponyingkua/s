@@ -17377,5 +17377,120 @@
     "tp": 128.070132,
     "tp1": 125.505629,
     "scanned_at": "2026-09-12T00:04:07.827966+00:00"
+  },
+  {
+    "symbol": "FILUSDT",
+    "direction": "LONG",
+    "score": 88.4,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (53) menguatkan momentum naik",
+      "ADX (27.9) tren kuat (+7.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.7981,
+    "sl": 0.770327,
+    "tp": 0.848092,
+    "tp1": 0.825873,
+    "scanned_at": "2026-09-12T01:03:03.349528+00:00"
+  },
+  {
+    "symbol": "KAITOUSDT",
+    "direction": "LONG",
+    "score": 87.4,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (26.9) tren kuat (+6.4 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.3109,
+    "sl": 0.301134,
+    "tp": 0.328479,
+    "tp1": 0.320666,
+    "scanned_at": "2026-09-12T01:03:03.349528+00:00"
+  },
+  {
+    "symbol": "SAMSUNGUSDT",
+    "direction": "LONG",
+    "score": 83.0,
+    "timeframe": "1h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (58) menguatkan momentum naik",
+      "ADX (22.9) tren kuat (+2.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.21",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.21 (sisa posisi)"
+    ],
+    "entry": 196.53,
+    "sl": 193.933384,
+    "tp": 202.26,
+    "tp1": 199.126616,
+    "scanned_at": "2026-09-12T01:03:03.349528+00:00"
+  },
+  {
+    "symbol": "TSMUSDT",
+    "direction": "LONG",
+    "score": 71.8,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "ADX (29.3) tren kuat (+8.8 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 432.75,
+    "sl": 429.887679,
+    "tp": 437.902178,
+    "tp1": 435.612321,
+    "scanned_at": "2026-09-12T01:03:03.349528+00:00"
+  },
+  {
+    "symbol": "COINUSDT",
+    "direction": "LONG",
+    "score": 70.5,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (45), tidak menambah skor",
+      "ADX (28.0) tren kuat (+7.5 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 3.59",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.59 (sisa posisi)"
+    ],
+    "entry": 175.27,
+    "sl": 169.508773,
+    "tp": 195.95,
+    "tp1": 181.031227,
+    "scanned_at": "2026-09-12T01:03:03.349528+00:00"
   }
 ]
