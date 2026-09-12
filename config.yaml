@@ -258,9 +258,20 @@ scoring:
     "1h":
       all:
         - [90, 100]
+      # continuation.long DIPERLUAS dari [72,82] ke [65,82] -- divalidasi dari
+      # RE-RUN backtest.py SUNGGUHAN (961 trade 1h, 8 Agu 2025-11 Sep 2026,
+      # trades_raw_batch.json, config dgn long.pullback:-45 di atas SUDAH
+      # aktif -- bukan re-filter approximate). Populasi CONTINUATION LONG naik
+      # dari 162->214 trade (menyerap slot yang dulu diambil PULLBACK LONG),
+      # dan hampir SELURUH sisa yang lolos [72,82] lama ternyata TETAP buruk:
+      #   final_score [65,72): n=208, avg R -0.058, win 20.2%  <- mayoritas, jelek
+      #   final_score >82:      n=6,   avg R +0.929, win 83.3% <- tipis tapi konsisten bagus
+      # Praktis CONTINUATION LONG 1h cuma sehat di atas skor 82 -- band lama
+      # [72,82] cuma membuang bagian tengah, bukan bagian yang benar-benar
+      # jelek (65-72). n=6 di ekor atas tipis, cek ulang begitu n bertambah.
       continuation:
         long:
-          - [72, 82]
+          - [65, 82]
       # EXTENDED SHORT 1h: mayoritas populasi (267/288 = 92.7%) ada di bucket
       # 65-70 dan SEHAT (avg R +0.020, win 31.1%) -- TIDAK dikecualikan.
       # Sisanya (skor >=70, n=21, 1226 trade 1h 8 Aug 2025-12 Sep 2026) justru
@@ -276,6 +287,23 @@ scoring:
       extended:
         short:
           - [70, 100]
+      # BREAKOUT LONG 1h: dip konsisten muncul di DUA dataset berturut-turut
+      # (sebelum & sesudah fix pullback) di rentang skor yang sama --
+      # 85-90 (n=25->31, avg R -0.288->-0.205) dan 100-110 (n=36->45,
+      # avg R -0.25 s/d -0.42 -> -0.227/-0.572), diapit dua rentang yang sehat
+      # (80-85 avg R +0.17-0.19, dan 110-120 avg R +0.06-0.51). Data terbaru
+      # (961 trade, run sama seperti continuation di atas): exclude [85,90)+
+      # [100,110] -> avg R populasi BREAKOUT LONG yang tersisa naik dari
+      # ~+0.02 jadi +0.176 (n=146 dari 222). BELUM ada teori mekanisme (data
+      # trade tidak simpan breakdown komponen skor) -- band deskriptif seperti
+      # continuation/extended.short di atas, bukan hasil analisis sebab-akibat.
+      # BELUM di-backtest ulang lewat backtest.py sungguhan dgn band ini aktif
+      # -- cek ulang begitu n bertambah, terutama gap 90-100 (sudah dikecualikan
+      # oleh "all" di atas, jangan dobel-hitung saat evaluasi ulang).
+      breakout:
+        long:
+          - [85, 90]
+          - [100, 110]
     # 4h: [80, 90] TF-wide (list biasa, bukan dict bersarang spt 1h) --
     # divalidasi dari 71 trade 4h (5 Mar-3 Sep 2026, trades_raw_batch.json).
     # BEDA KARAKTER dari 15m/1h: n jauh lebih tipis (4h candle jauh lebih
