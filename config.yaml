@@ -89,6 +89,44 @@ scoring:
         # Hasil simulasi n=74, avg R +0.31, win 47.3% (dari n=127, avg R +0.02, win 35.4%).
         extended: -2
         pullback: -22    # -6 sebelumnya belum cukup: masih avg R -0.27 (n=16), makin buruk di skor tinggi
+      long:
+        # PULLBACK LONG 1h sebelumnya TIDAK PUNYA override (fallback ke
+        # pullback:0 flat) -- padahal ini KONTRIBUTOR KERUGIAN TERBESAR di
+        # seluruh populasi 1h: 1226 trade (8 Aug 2025-12 Sep 2026, 10 simbol,
+        # trades_raw_batch.json), PULLBACK LONG n=335 (27.3% populasi) avg R
+        # -0.147, win 20.6%, sumR -49.4 -- sendirian lebih besar dari sumR
+        # NEGATIF SEMUA kategori 1h lainnya digabung (overall sumR cuma -36.9).
+        #
+        # BEDA dari 15m: breakdown skor TIDAK monoton membaik di skor tinggi
+        # (pola yang biasanya jadi alasan pakai threshold/band, bukan penalti
+        # flat dalam) -- di sini pola KEBALIKANNYA:
+        #   65-70: n=59  avg R +0.061  win 32.2%  <- satu-satunya bucket tebal yg positif
+        #   70-75: n=62  avg R -0.143  win 17.7%
+        #   75-80: n=65  avg R -0.221  win 12.3%
+        #   80-85: n=92  avg R -0.133  win 23.9%
+        #   85-90: n=52  avg R -0.283  win 15.4%
+        # (bucket >=100 n<=4, terlalu tipis)
+        # Simulasi berbagai penalti (re-filter skor+penalti >= min_score 65)
+        # SEMUA masih net negatif -- penalti dangkal (-8 s/d -20) cuma
+        # menggeser populasi tanpa memperbaiki avg R (-0.20 s/d -0.31 di semua
+        # titik), TIDAK ADA subset skor yang konsisten positif untuk
+        # diselamatkan lewat threshold sendirian. Breakdown per simbol juga
+        # rata (8 dari 10 simbol negatif, LINK & BNB positif tipis) --
+        # bukan masalah satu koin.
+        #
+        # -45 dipilih untuk MENYARING HAMPIR SELURUH populasi (cuma sisa 4
+        # trade skor 107.6-108 di data ini, semua di luar rentang skor wajar
+        # -- bukan strategi "cari ambang optimal" krn tidak ada, ini exclusion
+        # yang disengaja sampai ada bukti subset yang benar-benar sehat).
+        # Simulasi gabungan (fix ini + extended.short band di bawah) pada
+        # SELURUH 1226 trade 1h: overall avg R -0.030 -> +0.027 (sumR -36.9 ->
+        # +23.1), n tersisa 870 (71.0%). BELUM di-backtest ulang lewat
+        # backtest.py sungguhan (angka di atas dari re-filter trade existing)
+        # -- jalankan itu dulu sebelum live, dan cek ulang kalau require_rsi_turn
+        # di pullback_confirmation pernah dicoba (belum, lihat catatan di
+        # setup_engine.pullback_confirmation) karena bisa jadi jalan keluar
+        # lain yang tidak sekadar membuang volume.
+        pullback: -45
     "4h":
       continuation: -35
       breakout: 0
@@ -223,6 +261,21 @@ scoring:
       continuation:
         long:
           - [72, 82]
+      # EXTENDED SHORT 1h: mayoritas populasi (267/288 = 92.7%) ada di bucket
+      # 65-70 dan SEHAT (avg R +0.020, win 31.1%) -- TIDAK dikecualikan.
+      # Sisanya (skor >=70, n=21, 1226 trade 1h 8 Aug 2025-12 Sep 2026) justru
+      # jatuh tajam begitu lolos 70: avg R -0.429 (70-75, n=14), -1.087
+      # (75-80, n=4), -0.086 (80-85, n=3) -- pola "skor tinggi = lebih buruk"
+      # yang sama seperti continuation.long di atas, bukan sekadar noise n
+      # kecil karena konsisten negatif di 3 bucket berurutan. Band dibuka
+      # sampai 100 (bukan cuma ke skor tertinggi yang teramati, 81.0) sebagai
+      # guard kalau skor lebih tinggi muncul di data mendatang dengan pola
+      # yang sama -- tidak mengubah apa pun di bawah 70 saat ini.
+      # BELUM di-backtest ulang lewat backtest.py sungguhan (re-filter trade
+      # existing, bukan re-run) -- cek ulang begitu n bertambah.
+      extended:
+        short:
+          - [70, 100]
     # 4h: [80, 90] TF-wide (list biasa, bukan dict bersarang spt 1h) --
     # divalidasi dari 71 trade 4h (5 Mar-3 Sep 2026, trades_raw_batch.json).
     # BEDA KARAKTER dari 15m/1h: n jauh lebih tipis (4h candle jauh lebih
