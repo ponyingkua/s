@@ -112,6 +112,17 @@ Z_LEVEL_LABEL = 6.5     # kotak label ENTRY/TP/SL (di atas garisnya sendiri)
 
 Z_TARGET_ARROW = 7.0
 
+# Dipakai khusus build_analysis_chart (chart khusus analyze.py) di bawah --
+# tidak dipakai build_chart/build_multi_tf_card yang lama.
+EMA20_COLOR = "#4FC3F7"
+EMA50_COLOR = "#FFD54F"
+SUPPORT_FILL = "#1B5E40"
+SUPPORT_EDGE = UP
+RESIST_FILL = "#6B1F1F"
+RESIST_EDGE = DOWN
+Z_SR_BAND = 1.2
+Z_SR_LABEL = 1.4
+
 MAX_CANDLES_BY_TF = {
     "15m": 50,   # ideal 45-55
     "1h": 60,    # ideal 55-65
@@ -1191,6 +1202,175 @@ def build_comparison_chart(
               linespacing=1.6)
 
     fig.subplots_adjust(left=0.06, right=0.88, top=0.82, bottom=0.12)
+    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
+    plt.close(fig)
+    return out_path
+
+
+# ============================================================
+# INDEPENDENT ANALYSIS CHART -- khusus dipakai analyze.py
+# ============================================================
+# build_analysis_chart() TIDAK dipanggil dari scanner.py atau dari main()
+# CLI chart.py biasa -- satu-satunya pemanggil adalah analyze.py. Fungsi ini
+# menggambar hasil analyze_symbol() (EMA20/EMA50, struktur HH/HL/LH/LL, band
+# Support/Resistance, arah & setup) apa adanya, tanpa memanggil
+# scanner.score_symbol dan tanpa fetch Binance baru (df sudah disediakan
+# analyze.py). Semua helper yang dipakai di bawah (get_candles_shown,
+# _draw_candles, _draw_volume, _find_swings, _label_structure,
+# _declutter_labels, _draw_structure_labels, decimals_from_price,
+# format_price, _draw_change_badge, _calc_24h_change) sudah ada sebelumnya
+# dan tidak diubah -- build_chart, build_multi_tf_card, build_comparison_chart,
+# dan _fetch_and_build* di bawah ini tetap persis seperti semula.
+
+def _draw_sr_band(ax, level, pad: float, last_x: int, fill: str, edge: str,
+                    label: str, dec: int, square: bool = False) -> None:
+    if level is None:
+        return
+    ax.add_patch(Rectangle(
+        (-0.5, level - pad), last_x + 1.0, pad * 2,
+        facecolor=fill, edgecolor=edge, alpha=0.30, linewidth=0.9,
+        zorder=Z_SR_BAND,
+    ))
+    ax.text(0.3, level, f"{label} {format_price(level, dec)}", color=edge,
+             fontsize=(11.0 if square else 6.0), fontweight="bold",
+             ha="left", va="center", zorder=Z_SR_LABEL, clip_on=False)
+
+
+def build_analysis_chart(
+    dfs: dict,
+    symbol: str,
+    timeframes: list,
+    per_tf: dict,
+    cfg: dict,
+    out_path: str,
+    square: bool = False,
+) -> str:
+    """Kartu multi-timeframe untuk independent analysis engine analyze.py:
+    EMA20/EMA50, struktur HH/HL/LH/LL, band Support/Resistance, judul panel
+    dari direction/setup hasil analyze.py sendiri (bukan scanner). Tidak ada
+    ENTRY/SL/TP di chart ini -- levels tetap hanya ada di laporan markdown."""
+    n_panels = len(timeframes)
+    chart_cfg = cfg.get("chart", {})
+    width_px = chart_cfg.get("width_px", 2800)
+    dpi = 200
+    fig_w = width_px / dpi
+    fig_h = fig_w if square else fig_w * 0.40
+    fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
+    fig.patch.set_facecolor(BG)
+
+    if square:
+        outer = GridSpec(n_panels, 1, figure=fig, hspace=0.32,
+                          left=0.09, right=0.93, top=0.90, bottom=0.055)
+    else:
+        outer = GridSpec(1, n_panels, figure=fig, wspace=0.16,
+                          left=0.045, right=0.98, top=0.85, bottom=0.11)
+
+    tick_fs = 9.0 if square else 6.5
+    title_fs = 13.5 if square else 9.5
+    price_fs = 11.0 if square else 8.0
+
+    for idx, tf in enumerate(timeframes):
+        df = dfs.get(tf)
+        info = per_tf.get(tf, {})
+
+        cell = outer[idx, 0] if square else outer[0, idx]
+        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
+        ax_p = fig.add_subplot(inner[0, 0])
+        ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
+
+        for ax in (ax_p, ax_v):
+            ax.set_facecolor(PANEL)
+            ax.grid(True, linestyle="-", alpha=0.7, color=GRID, linewidth=0.4)
+            ax.set_axisbelow(True)
+            ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=tick_fs)
+            for side in ("top", "right"):
+                ax.spines[side].set_visible(False)
+            for side in ("left", "bottom"):
+                ax.spines[side].set_color(SPINE)
+                ax.spines[side].set_linewidth(0.6)
+        ax_p.tick_params(labelbottom=False)
+
+        if df is None or "error" in info:
+            ax_p.set_title(f"{tf}  ·  ERROR", color=AXIS, fontsize=title_fs,
+                             fontweight="bold", loc="left", pad=6)
+            ax_p.text(0.5, 0.5, info.get("error", "no data"), color=AXIS,
+                       fontsize=8, ha="center", va="center", transform=ax_p.transAxes)
+            continue
+
+        n_show = max(30, get_candles_shown(tf, cfg) // 2 + 10)
+        plot_df = df.tail(n_show).reset_index(drop=True)
+        last_x = len(plot_df) - 1
+
+        colors = _draw_candles(ax_p, plot_df)
+
+        ema20 = df["close"].ewm(span=20, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
+        ema50 = df["close"].ewm(span=50, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
+        ax_p.plot(range(len(plot_df)), ema20, color=EMA20_COLOR, linewidth=1.1, zorder=Z_EMA)
+        ax_p.plot(range(len(plot_df)), ema50, color=EMA50_COLOR, linewidth=1.1, zorder=Z_EMA)
+
+        swing_high, swing_low = _find_swings(plot_df)
+        labeled_points = _label_structure(plot_df, swing_high, swing_low)
+        min_label_gap = max(3, int(len(plot_df) * 0.15))
+        labeled_points = _declutter_labels(labeled_points, min_label_gap)
+
+        y_low = float(plot_df["low"].min())
+        y_high = float(plot_df["high"].max())
+
+        structure = info.get("structure", {})
+        support = structure.get("support")
+        resistance = structure.get("resistance")
+        atr = (info.get("direction_analysis") or {}).get("atr")
+        dec = decimals_from_price(float(plot_df["close"].iloc[-1]))
+
+        sr_values = [v for v in (support, resistance) if v is not None]
+        y_low = min([y_low] + sr_values)
+        y_high = max([y_high] + sr_values)
+        y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
+        pad_band = atr * 0.18 if atr else y_span * 0.012
+
+        _draw_sr_band(ax_p, support, pad_band, last_x, SUPPORT_FILL, SUPPORT_EDGE,
+                       "SUP", dec, square=square)
+        _draw_sr_band(ax_p, resistance, pad_band, last_x, RESIST_FILL, RESIST_EDGE,
+                       "RES", dec, square=square)
+
+        _draw_structure_labels(ax_p, labeled_points, 0, len(plot_df), y_span, square=square)
+
+        pad_y = y_span * 0.14
+        ax_p.set_ylim(y_low - pad_y, y_high + pad_y)
+        ax_p.set_xlim(-0.6, last_x + 0.6)
+        ax_v.set_xlim(-0.6, last_x + 0.6)
+
+        vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
+        _draw_volume(ax_v, plot_df, colors, vol_lookback)
+
+        direction = info.get("direction", "NONE")
+        setup_type = (info.get("setup") or {}).get("type", "")
+        badge_color = UP if direction == "LONG" else DOWN if direction == "SHORT" else AXIS
+        setup_txt = f"  ·  {setup_type}" if setup_type and setup_type != "NONE" else ""
+        ax_p.set_title(f"{tf}  ·  {direction}{setup_txt}", color=badge_color,
+                        fontsize=title_fs, fontweight="bold", loc="left", pad=6)
+
+        last_price = format_price(plot_df["close"].iloc[-1], dec)
+        ax_p.text(0.99, 0.03, last_price, transform=ax_p.transAxes, color=TEXT,
+                   fontsize=price_fs, fontweight="bold", ha="right", va="bottom", zorder=9)
+
+    header_fs = 20.0 if square else 17.0
+    badge_fs = 17.0 if square else 14.0
+    footer_fs = 10.0 if square else 7.0
+    disclaimer_fs = 9.0 if square else 6.5
+
+    fig.text(0.045, 0.95, f"{symbol}  ·  INDEPENDENT ANALYSIS", fontsize=header_fs,
+              fontweight="bold", color=TEXT, ha="left", va="top")
+    ref_df = dfs.get(timeframes[0])
+    if ref_df is not None:
+        _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=badge_fs)
+    fig.text(0.045, 0.02,
+              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50  ·  SUP/RES band",
+              fontsize=footer_fs, color=AXIS, ha="left", va="bottom")
+    fig.text(0.98, 0.02,
+              "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+              fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
+
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
     plt.close(fig)
     return out_path
