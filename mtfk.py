@@ -1,37 +1,30 @@
 """
-mtfk.py — Multi-Timeframe Chart Visualizer & entry point untuk analyze.py
+mtfk.py — Multi-Timeframe Chart Renderer
 
-Tugas:
-- Menjalankan analisa independen (analyze_symbol dari analyze.py).
-- Menyimpan hasil analisa sebagai markdown (fungsi compose_analysis_text
-  milik analyze.py, sama persis seperti sebelumnya).
-- Menggambar chart multi-timeframe yang tampilannya memakai ulang
-  styling & helper visual dari chart.py (warna, candle, volume, badge
-  24h, header/footer, format harga) supaya konsisten dengan chart lain
-  di proyek ini -- TAPI indikator yang digambar di tiap panel bukan
-  punya chart.py (EMA tunggal + Supertrend + zona demand/supply + BOS),
-  melainkan langsung dari hasil analyze.py: EMA 20/50/200, garis
-  support/resistance dari structure, swing high/low, serta label
-  arah & setup. Jadi tiap panel chart adalah representasi visual
-  langsung dari analisa yang dihasilkan analyze.py, bukan analisa lain.
+Modul ini murni berisi fungsi penggambar chart (build_mtfk_chart), TIDAK
+punya CLI/main sendiri dan TIDAK menjalankan analisa apa pun. Entry point
+tetap analyze.py (`python analyze.py --symbol <SYMBOL>`) -- yang menjalankan
+analisa, menyimpan markdown, lalu memanggil build_mtfk_chart di sini untuk
+membuat chart-nya.
 
-Arah dependensi sekarang satu arah: mtfk.py -> analyze.py (mtfk yang
-mengimpor analyze, bukan sebaliknya). analyze.py sama sekali tidak
-mengenal modul ini, jadi tidak ada circular import.
+Tampilan (style) memakai ulang helper visual dari chart.py (warna, candle,
+volume, badge 24h, header/footer, format harga) apa adanya, tanpa mengubah
+chart.py, supaya konsisten dengan chart lain di proyek ini. TAPI indikator
+yang digambar di tiap panel bukan punya chart.py (EMA tunggal + Supertrend
++ zona demand/supply + BOS), melainkan langsung dari hasil analyze.py:
+EMA 20/50/200, garis support/resistance dari structure, swing high/low,
+serta label arah & setup -- supaya tiap panel chart adalah representasi
+visual langsung dari analisa yang dihasilkan analyze.py.
 
-Entry point workflow: jalankan `python mtfk.py --symbol <SYMBOL>` untuk
-mendapatkan markdown analisa + chart MTF sekaligus (menggantikan
-`python analyze.py --symbol <SYMBOL>` yang sekarang cuma menghasilkan
-markdown saja, tanpa chart).
+Arah dependensi satu arah: mtfk.py -> analyze.py (mtfk yang mengimpor
+_swing_points dari analyze, bukan sebaliknya). Import "from mtfk import
+build_mtfk_chart" di analyze.py harus tetap lazy (di dalam main(), bukan
+di atas file) -- kalau tidak, circular import lagi seperti sebelumnya.
 """
 
 from __future__ import annotations
 
 import os
-import sys
-import argparse
-import asyncio
-from datetime import datetime, timezone
 
 import pandas as pd
 
@@ -45,15 +38,9 @@ from matplotlib.gridspec import GridSpec
 # tanpa mengubah chart.py.
 import chart
 
-# Modul analisis (satu arah: mtfk depends on analyze, bukan sebaliknya)
-from analyze import (
-    analyze_symbol,
-    normalize_symbol,
-    _swing_points,
-    compose_analysis_text,
-    compose_console_summary,
-    OUT_DIR,
-)
+# Satu-satunya yang dipakai dari analyze.py: fungsi deteksi swing high/low,
+# supaya marker swing di chart konsisten dengan logika analyze.py.
+from analyze import _swing_points
 
 # EMA analyze.py memakai 3 EMA (20/50/200), chart.py cuma 1 -- dikasih
 # warna beda supaya ketiganya kebaca saat ditumpuk di panel yang sama.
@@ -226,55 +213,3 @@ def build_mtfk_chart(
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
     plt.close(fig)
     return out_path
-
-
-def main():
-    parser = argparse.ArgumentParser(description="vSynapse — analisa + chart MTF (satu perintah)")
-    parser.add_argument("--symbol", required=True, help="Kode koin, contoh: BTCUSDT atau RIVER")
-    parser.add_argument("--config", default="config.yaml", help="Path ke file konfigurasi")
-    parser.add_argument("--out", default=None, help="Path file chart output (default: OUT_DIR/<symbol>_multi.png)")
-    parser.add_argument("--ratio", choices=["wide", "square"], default="wide")
-    args = parser.parse_args()
-
-    import yaml
-    with open(args.config) as f:
-        cfg = yaml.safe_load(f) or {}
-
-    symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
-    timeframes = cfg.get("timeframes", ["1h"])
-
-    print(f"[mtfk] Independent analysis started for {symbol}")
-    result = asyncio.run(analyze_symbol(symbol, cfg))
-    text = compose_analysis_text(result)
-    print(compose_console_summary(result))
-
-    os.makedirs(OUT_DIR, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    md_path = os.path.join(OUT_DIR, f"analysis_{result['symbol']}_{timestamp}.md")
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(text)
-    print(f"[mtfk] Markdown saved to {md_path}")
-
-    out_path = args.out or os.path.join(OUT_DIR, f"{symbol}_multi.png")
-    try:
-        build_mtfk_chart(
-            dfs=result["dfs"],
-            symbol=result["symbol"],
-            timeframes=timeframes,
-            per_tf=result["per_tf"],
-            out_path=out_path,
-            cfg=cfg,
-            square=(args.ratio == "square"),
-        )
-        print(f"[mtfk] Chart MTF saved to {out_path}")
-    except Exception as exc:
-        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
-
-    per_tf = result["per_tf"]
-    if per_tf and all("error" in info for info in per_tf.values()):
-        print(f"[mtfk] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
