@@ -34,12 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T15:03:35.322644+00:00"
   },
-  "JSTUSDT|1h": {
-    "symbol": "JSTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T06:04:11.040241+00:00"
-  },
   "GIGGLEUSDT|1h": {
     "symbol": "GIGGLEUSDT",
     "timeframe": "1h",
@@ -147,5 +141,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T18:04:07.783449+00:00"
+  },
+  "PYTHUSDT|1h": {
+    "symbol": "PYTHUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T19:03:27.216232+00:00"
   }
 }
