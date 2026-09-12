@@ -12,11 +12,13 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
-# Chart rendering only: reuses the existing multi-timeframe card generator
-# (chart.py) so the accompanying image matches every other vSynapse chart.
-# That generator still runs chart.py's own scanner-based scoring internally
-# just to label each panel -- separate from the independent engine above.
-from chart import _fetch_and_build_multi
+# Chart rendering only: chart.py exposes build_analysis_chart specifically
+# for this file. It draws EMA20/EMA50, HH/HL/LH/LL structure, and
+# Support/Resistance bands straight from this engine's own per_tf results --
+# no scanner.score_symbol call, no extra Binance fetch. build_chart,
+# build_multi_tf_card, and the scanner-facing _fetch_and_build* helpers in
+# chart.py are untouched and still work exactly as before.
+from chart import build_analysis_chart
 
 OUT_DIR = "analysis_output"
 
@@ -432,6 +434,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     klines_limit = int(data_cfg.get("klines_limit", 300))
     timeframes = cfg.get("timeframes", ["1h"])
     per_tf = {}
+    dfs = {}
 
     async with BinanceFuturesClient() as client:
         for tf in timeframes:
@@ -441,6 +444,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
                 if len(df) < 60:
                     per_tf[tf] = {"error": f"Only {len(df)} closed bars available; minimum 60 required."}
                     continue
+                dfs[tf] = df
                 info = analyze_timeframe(df, symbol, tf)
                 info["mtf_agree_tfs"] = []
                 per_tf[tf] = info
@@ -453,7 +457,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
         if "direction" in info and info["direction"] != "NONE":
             info["mtf_agree_tfs"] = [t for t, d in directions.items() if t != tf and d == info["direction"]]
 
-    return {"symbol": symbol, "per_tf": per_tf}
+    return {"symbol": symbol, "per_tf": per_tf, "dfs": dfs}
 
 
 def _mtf_alignment(per_tf: dict) -> dict:
@@ -580,11 +584,10 @@ def main():
     # Telegram, chart ini murni jadi lampiran artifact workflow "Analyze Symbol(s)".
     chart_path = os.path.join(OUT_DIR, f"chart_{result['symbol']}_{timestamp}.png")
     try:
-        asyncio.run(_fetch_and_build_multi(
-            result["symbol"], timeframes, cfg, chart_path,
+        build_analysis_chart(
+            result["dfs"], result["symbol"], timeframes, result["per_tf"], cfg, chart_path,
             square=(args.chart_format == "square"),
-            notify=False,
-        ))
+        )
         print(f"[analyze] Multi-timeframe chart saved to {chart_path}")
     except Exception as exc:
         print(f"[analyze] Gagal membuat chart multi-timeframe: {exc}")
