@@ -13,6 +13,10 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
+# Dipakai apa adanya dari chart.py untuk generate chart MTF otomatis setelah
+# analisa selesai -- tidak ada logika chart.py yang diubah/diduplikasi di sini.
+from chart import _fetch_and_build_multi
+
 OUT_DIR = "analysis_output"
 
 # Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
@@ -714,6 +718,23 @@ def main():
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
+
+    # Chart MTF otomatis untuk simbol yang dianalisa, memakai
+    # _fetch_and_build_multi dari chart.py apa adanya (fetch klines sendiri,
+    # timeframe mengikuti config yang sama dipakai analisa di atas). Disimpan
+    # di OUT_DIR yang sama dengan markdown-nya (bukan folder terpisah) supaya
+    # artifact workflow tetap satu folder.
+    # notify=False: alur analyze.py ini cuma untuk hasil yang masuk artifact
+    # workflow, bukan dikirim ke Telegram (itu tetap jadi urusan chart.py
+    # sendiri lewat mode CLI/scanner-nya). Dibuat best-effort: kalau gagal
+    # (mis. rate limit / symbol bermasalah), tidak menggagalkan seluruh run
+    # analisa yang sudah berhasil di atas.
+    chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
+    try:
+        asyncio.run(_fetch_and_build_multi(symbol, timeframes, cfg, chart_path, notify=False))
+        print(f"[analyze] Chart MTF saved to {chart_path}")
+    except Exception as exc:
+        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
 
     # Kalau SEMUA timeframe gagal (fetch atau analisa), laporan tetap ditulis
     # di atas untuk jejak, tapi exit code dibuat non-zero supaya CI/workflow
