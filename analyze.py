@@ -15,9 +15,15 @@ from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 # Chart rendering only: chart.py exposes build_analysis_chart specifically
 # for this file. It draws EMA20/EMA50, HH/HL/LH/LL structure, and
 # Support/Resistance bands straight from this engine's own per_tf results --
-# no scanner.score_symbol call, no extra Binance fetch. build_chart,
-# build_multi_tf_card, and the scanner-facing _fetch_and_build* helpers in
-# chart.py are untouched and still work exactly as before.
+# no scanner.score_symbol call, no extra Binance fetch, no Supertrend/S-D-zone
+# machinery from build_chart (that's a different indicator system entirely,
+# built for scanner-generated signals -- deliberately NOT used here so this
+# engine's chart always matches this engine's own numbers).
+# Below, main() now calls build_analysis_chart with just the single best-
+# setup timeframe (a 1-item list) instead of always all configured
+# timeframes -- same function, same indicators, just scoped to the winner.
+# build_chart, build_multi_tf_card, and the scanner-facing _fetch_and_build*
+# helpers in chart.py are untouched and still work exactly as before.
 from chart import build_analysis_chart
 
 OUT_DIR = "analysis_output"
@@ -427,6 +433,34 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     }
 
 
+# ============================================================
+# Best-setup selection (single verdict across all analyzed TFs)
+# ============================================================
+
+def _select_best_setup(per_tf: dict):
+    """Pilih SATU setup terbaik dari seluruh timeframe yang diminta user.
+    Timeframe dengan error fetch atau direction NONE tidak diikutkan.
+    Ranking (berurutan): skor kualitas setup dari _detect_setup, lalu
+    kekuatan confluence (selisih bull/bear direction_analysis), lalu jumlah
+    timeframe lain yang searah (mtf_agree_tfs) sebagai tie-breaker terakhir.
+    Return (timeframe, info) milik pemenang, atau None kalau tidak ada
+    satupun timeframe yang actionable."""
+    candidates = []
+    for tf, info in per_tf.items():
+        if "error" in info or info.get("direction") == "NONE":
+            continue
+        da, su = info["direction_analysis"], info["setup"]
+        strength = abs(da["bull"] - da["bear"])
+        agree = len(info.get("mtf_agree_tfs", []))
+        candidates.append(((su["score"], strength, agree), tf, info))
+
+    if not candidates:
+        return None
+    candidates.sort(key=lambda c: c[0], reverse=True)
+    _, best_tf, best_info = candidates[0]
+    return best_tf, best_info
+
+
 async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     # Only data-fetch settings are borrowed from config. No scanner thresholds,
     # filters, scores, or regime decisions are consulted.
@@ -457,7 +491,14 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
         if "direction" in info and info["direction"] != "NONE":
             info["mtf_agree_tfs"] = [t for t, d in directions.items() if t != tf and d == info["direction"]]
 
-    return {"symbol": symbol, "per_tf": per_tf, "dfs": dfs}
+    best = _select_best_setup(per_tf)
+    return {
+        "symbol": symbol,
+        "per_tf": per_tf,
+        "dfs": dfs,
+        "best_tf": best[0] if best else None,
+        "best": best[1] if best else None,
+    }
 
 
 def _mtf_alignment(per_tf: dict) -> dict:
@@ -481,6 +522,27 @@ def compose_analysis_text(result: dict) -> str:
         "Analysis is independent of scanner filters, scanner scores, and scanner setup classification.",
         "",
     ]
+
+    best_tf, best_info = result.get("best_tf"), result.get("best")
+    lines.append("## 🎯 Best Setup")
+    if best_info is None:
+        lines.append("No actionable setup was found on any analyzed timeframe (all NONE).")
+    else:
+        su, lv = best_info["setup"], best_info["levels"]
+        lo, hi = lv["entry"]
+        lines.append(f"Timeframe: {best_tf}")
+        lines.append(f"Direction: {best_info['direction']}")
+        lines.append(f"Setup: {su['type']} ({su['quality']}, score {su['score']})")
+        lines.append(f"Entry: {lo} - {hi}")
+        lines.append(f"SL: {lv['sl']}")
+        lines.append(f"TP1: {lv['tp1']}")
+        lines.append(f"TP2: {lv['tp2']}")
+        if best_info.get("mtf_agree_tfs"):
+            lines.append(f"Confirmed by: {', '.join(best_info['mtf_agree_tfs'])}")
+        lines.append("Chosen over the other timeframe(s) by setup quality, confluence strength, and MTF agreement.")
+    lines.append("")
+    lines.append("## Per-timeframe breakdown")
+    lines.append("")
 
     for tf, info in per_tf.items():
         lines.append(f"## {tf}")
@@ -531,6 +593,18 @@ def compose_console_summary(result: dict) -> str:
     per_tf = result["per_tf"]
     lines = [f"[analyze] {symbol} summary:"]
 
+    best_tf, best_info = result.get("best_tf"), result.get("best")
+    if best_info is None:
+        lines.append("[analyze]   BEST SETUP: none (no actionable timeframe)")
+    else:
+        su, lv = best_info["setup"], best_info["levels"]
+        lo, hi = lv["entry"]
+        lines.append(
+            f"[analyze]   BEST SETUP -> {best_tf}: {best_info['direction']} | "
+            f"{su['type']} ({su['quality']}) | entry {lo}-{hi} SL {lv['sl']} "
+            f"TP1 {lv['tp1']} TP2 {lv['tp2']}"
+        )
+
     for tf, info in per_tf.items():
         if "error" in info:
             lines.append(f"[analyze]   {tf}: ERROR - {info['error']}")
@@ -556,9 +630,15 @@ def main():
     parser.add_argument("--symbol", required=True, help="Coin code, e.g. ZEC or ZECUSDT")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--chart-format", choices=["wide", "square"], default="wide",
-                          help="Kanvas chart multi-timeframe yang dibuat bersamaan hasil "
-                               "analisa. wide = panel berdampingan (default). "
-                               "square = panel ditumpuk, kanvas 1:1 untuk feed Binance Square/IG.")
+                          help="Kanvas untuk chart yang menyertai hasil analisa (via "
+                               "build_analysis_chart, tidak berubah). Kalau ada best "
+                               "setup, chart jadi single-panel utk TF itu saja; kalau "
+                               "tidak ada, fallback ke panel semua TF. wide = panel "
+                               "berdampingan (default) -- untuk single-panel hasilnya "
+                               "melebar 1 panel penuh (rasio lebar:tinggi tetap fix di "
+                               "build_analysis_chart, tidak menyesuaikan jumlah panel). "
+                               "square = panel ditumpuk, kanvas 1:1 untuk feed Binance "
+                               "Square/IG -- lebih pas dipakai untuk chart single-panel.")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -578,19 +658,43 @@ def main():
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    # Chart multi-timeframe menyertai hasil analisa. Dibungkus try/except supaya
-    # kegagalan render chart (mis. rate limit) tidak menggagalkan analisa teks
-    # yang sudah berhasil ditulis di atas. notify=False -> tidak dikirim ke
-    # Telegram, chart ini murni jadi lampiran artifact workflow "Analyze Symbol(s)".
+    # Chart menyertai hasil analisa -- selalu lewat build_analysis_chart yang
+    # SAMA seperti sebelumnya (EMA20/EMA50 + S/R band + label HH/HL/LH/LL,
+    # semuanya dari per_tf hasil engine independen ini sendiri). build_chart
+    # (Supertrend + zona S/D ala scanner) sengaja TIDAK dipakai supaya tidak
+    # ada dua sistem indikator berbeda tercampur di satu chart.
+    #
+    # Bedanya sekarang: kalau ada satu TF yang actionable (best setup),
+    # build_analysis_chart dipanggil dengan HANYA timeframe itu (list 1
+    # elemen) -> chart jadi single-panel, fokus ke setup yang kepilih, bukan
+    # lagi 3 panel yang menyamaratakan semua TF. Kalau tidak ada satupun TF
+    # yang actionable, fallback ke kartu overview MTF lama (semua TF
+    # ditampilkan) supaya tetap ada konteks visual. Dibungkus try/except
+    # supaya kegagalan render chart (mis. rate limit) tidak menggagalkan
+    # analisa teks yang sudah berhasil ditulis di atas. notify=False -> tidak
+    # dikirim ke Telegram, chart ini murni jadi lampiran artifact workflow
+    # "Analyze Symbol(s)".
+    best_tf, best_info = result.get("best_tf"), result.get("best")
     chart_path = os.path.join(OUT_DIR, f"chart_{result['symbol']}_{timestamp}.png")
     try:
-        build_analysis_chart(
-            result["dfs"], result["symbol"], timeframes, result["per_tf"], cfg, chart_path,
-            square=(args.chart_format == "square"),
-        )
-        print(f"[analyze] Multi-timeframe chart saved to {chart_path}")
+        if best_info is not None:
+            build_analysis_chart(
+                {best_tf: result["dfs"][best_tf]}, result["symbol"], [best_tf],
+                {best_tf: best_info}, cfg, chart_path,
+                square=(args.chart_format == "square"),
+            )
+            print(f"[analyze] Best-setup chart ({best_tf}) saved to {chart_path}")
+        else:
+            build_analysis_chart(
+                result["dfs"], result["symbol"], timeframes, result["per_tf"], cfg, chart_path,
+                square=(args.chart_format == "square"),
+            )
+            print(
+                f"[analyze] Tidak ada setup actionable di {', '.join(timeframes)}; "
+                f"chart overview MTF dibuat sebagai gantinya: {chart_path}"
+            )
     except Exception as exc:
-        print(f"[analyze] Gagal membuat chart multi-timeframe: {exc}")
+        print(f"[analyze] Gagal membuat chart: {exc}")
 
 
 if __name__ == "__main__":
