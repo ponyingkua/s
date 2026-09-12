@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Jalankan analisa multi-token
+      - name: Jalankan analisa multi-timeframe
         run: |
           set -euo pipefail
 
