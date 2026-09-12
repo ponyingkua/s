@@ -1,45 +1,44 @@
-from __future__ import annotations
+    cfg = load_config(args.config)
+    symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
+    timeframes = cfg.get("timeframes", ["1h"])
 
-import argparse
-import asyncio
-import os
-import sys
-from datetime import datetime, timezone
+    print(f"[analyze] Independent analysis started for {symbol}")
+    result = asyncio.run(analyze_symbol(symbol, cfg))
+    text = compose_analysis_text(result)
+    print(compose_console_summary(result))
 
-import numpy as np
-import pandas as pd
+    os.makedirs(OUT_DIR, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    md_path = os.path.join(OUT_DIR, f"analysis_{result['symbol']}_{timestamp}.md")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write(text)
+    print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-# Infrastructure only. The analysis engine below does NOT use scanner scoring,
-# scanner filters, scanner setup classification, or market-regime decisions.
-from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
+    # Chart digambar oleh mtfk.py (murni modul penggambar, tidak punya CLI/main
+    # sendiri). Import HARUS lazy di sini (bukan di atas file). Meskipun mtfk
+    # sekarang juga mengimpor _swing_points secara lazy, chart.py masih
+    # mengimpor analyze di level modul -- top-level "from mtfk import ..."
+    # di analyze akan memicu circular import (analyze -> mtfk -> chart -> analyze).
+    from mtfk import build_mtfk_chart
+    chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
+    try:
+        build_mtfk_chart(
+            dfs=result["dfs"],
+            symbol=result["symbol"],
+            timeframes=timeframes,
+            per_tf=result["per_tf"],
+            out_path=chart_path,
+            cfg=cfg,
+        )
+        print(f"[analyze] Chart MTF saved to {chart_path}")
+    except Exception as exc:
+        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
 
-OUT_DIR = "analysis_output"
-
-# Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
-# Backoff eksponensial: percobaan ke-n (0-indexed) menunggu
-# FETCH_RETRY_BACKOFF_SECONDS * 2**n sebelum retry berikutnya.
-FETCH_MAX_RETRIES = 3
-FETCH_RETRY_BACKOFF_SECONDS = 1.5
+    per_tf = result["per_tf"]
+    if per_tf and all("error" in info for info in per_tf.values()):
+        print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
+        sys.exit(1)
 
 
-def normalize_symbol(raw: str, quote_asset: str) -> str:
-    s = raw.strip().upper()
-    if not s:
-        raise ValueError("Symbol cannot be empty")
-    return s if s.endswith(quote_asset) else f"{s}{quote_asset}"
-
-
-# ============================================================
-# Indicators
-# ============================================================
-
-def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1 / period, min_periods=period).mean()
-    avg_loss = loss.ewm(alpha=1 / period, min_periods=period).mean()
-    rs = avg_gain / avg_loss.replace(0, np.nan)
-    out = 100 - (100 / (1 + rs))
-    out = out.mask((avg_loss == 0) & (avg_gain > 0), 100.0)
-    out = out.mask((avg_gain == 0) & (avg_loss > 0), 0.0)
+if __name__ == "__main__":
+    main()
