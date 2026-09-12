@@ -1,27 +1,3 @@
-"""
-mtfk.py — Multi-Timeframe Chart Renderer
-
-Modul ini murni berisi fungsi penggambar chart (build_mtfk_chart), TIDAK
-punya CLI/main sendiri dan TIDAK menjalankan analisa apa pun. Entry point
-tetap analyze.py (`python analyze.py --symbol <SYMBOL>`) -- yang menjalankan
-analisa, menyimpan markdown, lalu memanggil build_mtfk_chart di sini untuk
-membuat chart-nya.
-
-Tampilan (style) memakai ulang helper visual dari chart.py (warna, candle,
-volume, badge 24h, header/footer, format harga) apa adanya, tanpa mengubah
-chart.py, supaya konsisten dengan chart lain di proyek ini. TAPI indikator
-yang digambar di tiap panel bukan punya chart.py (EMA tunggal + Supertrend
-+ zona demand/supply + BOS), melainkan langsung dari hasil analyze.py:
-EMA 20/50/200, garis support/resistance dari structure, swing high/low,
-serta label arah & setup -- supaya tiap panel chart adalah representasi
-visual langsung dari analisa yang dihasilkan analyze.py.
-
-Arah dependensi satu arah: mtfk.py -> analyze.py (mtfk yang mengimpor
-_swing_points dari analyze, bukan sebaliknya). Import "from mtfk import
-build_mtfk_chart" di analyze.py harus tetap lazy (di dalam main(), bukan
-di atas file) -- kalau tidak, circular import lagi seperti sebelumnya.
-"""
-
 from __future__ import annotations
 
 import os
@@ -33,50 +9,27 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-# Reuse seluruh styling & helper gambar dari chart.py (BG, PANEL, GRID,
-# _draw_candles, _draw_volume, badge 24h, format harga, dst) apa adanya,
-# tanpa mengubah chart.py.
 import chart
 
-# Satu-satunya yang dipakai dari analyze.py: fungsi deteksi swing high/low,
-# supaya marker swing di chart konsisten dengan logika analyze.py.
-from analyze import _swing_points
-
-# EMA analyze.py memakai 3 EMA (20/50/200), chart.py cuma 1 -- dikasih
-# warna beda supaya ketiganya kebaca saat ditumpuk di panel yang sama.
-# (String literal langsung, TIDAK diturunkan dari chart.* -- lihat catatan
-# di _draw_analyze_indicators soal kenapa chart.UP/chart.DOWN sengaja
-# diakses di dalam fungsi, bukan di sini/level modul.)
 EMA20_COLOR = "#FFD54F"
 EMA50_COLOR = "#29B6F6"
 EMA200_COLOR = "#AB47BC"
 
 
+def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
+    highs = df["high"].to_numpy(float)
+    lows = df["low"].to_numpy(float)
+    sh, sl = [], []
+    for i in range(left, len(df) - right):
+        if highs[i] >= highs[i - left:i + right + 1].max():
+            sh.append((i, highs[i]))
+        if lows[i] <= lows[i - left:i + right + 1].min():
+            sl.append((i, lows[i]))
+    return sh, sl
+
+
 def _draw_analyze_indicators(ax, df: pd.DataFrame, n_show: int, tf_info: dict,
                               swing_context: int = 30) -> None:
-    """Gambar EMA20/50/200, garis support/resistance, dan swing high/low
-    di atas candle -- semuanya bersumber dari analyze.py.
-
-    EMA dihitung dari `df` penuh (bukan cuma window yang tampil) lalu
-    diambil ekornya sepanjang n_show, persis seperti perhitungan
-    direction_analysis di analyze.py -- kalau dihitung ulang dari nol
-    hanya dari candle yang kelihatan, nilainya melenceng jauh (apalagi
-    EMA200, yang butuh histori panjang untuk "pemanasan").
-
-    Swing high/low dihitung di window sedikit lebih lebar dari yang
-    ditampilkan (swing_context candle ekstra di kiri) supaya candle di
-    tepi kiri jendela tetap punya cukup konteks kiri/kanan untuk
-    terdeteksi (left=3/right=3), baru posisinya digeser relatif ke
-    window yang benar-benar digambar.
-
-    chart.UP/chart.DOWN sengaja diakses di SINI (saat fungsi dipanggil),
-    bukan disimpan sebagai konstanta level-modul di atas -- karena
-    "import chart" di atas file ini bisa saja mengembalikan modul chart
-    yang belum selesai dieksekusi penuh kalau ada import melingkar lain
-    yang menyentuhnya (mis. lewat scanner.py). Mengakses chart.UP baru
-    di dalam fungsi, yang dipanggil belakangan setelah semua import
-    selesai, menghindari AttributeError akibat itu.
-    """
     close = df["close"]
     ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
     ema50 = close.ewm(span=50, adjust=False).mean().tail(n_show).to_numpy()
@@ -114,9 +67,6 @@ def build_mtfk_chart(
     cfg: dict | None = None,
     square: bool = False,
 ) -> str:
-    """Kartu multi-timeframe: candle + volume + badge 24h + header/footer
-    bergaya chart.py, dengan indikator per panel diambil langsung dari
-    hasil analyze.py (bukan Supertrend/BOS/zona milik chart.py)."""
     cfg = cfg or {}
     valid_tfs = [tf for tf in timeframes if tf in dfs and tf in per_tf]
     n_panels = len(valid_tfs)
