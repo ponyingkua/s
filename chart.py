@@ -123,6 +123,15 @@ RESIST_EDGE = DOWN
 Z_SR_BAND = 1.2
 Z_SR_LABEL = 1.4
 
+# EMA200 (trend filter jangka panjang analyze.py) dan panel RSI(14) --
+# indikator ini dipakai analyze.py._direction_analysis tapi sebelumnya tidak
+# pernah digambar di build_analysis_chart (cuma EMA20/EMA50). Warna dipilih
+# beda dari EMA20 (biru)/EMA50 (kuning)/candle (hijau-merah)/volume MA
+# (oranye) supaya tidak ada yang kebaca ambigu.
+EMA200_COLOR = "#B0BEC5"
+RSI_COLOR = "#AB47BC"
+RSI_REF_COLOR = "#6B6B6B"
+
 MAX_CANDLES_BY_TF = {
     "15m": 50,   # ideal 45-55
     "1h": 60,    # ideal 55-65
@@ -1212,15 +1221,31 @@ def build_comparison_chart(
 # ============================================================
 # build_analysis_chart() TIDAK dipanggil dari scanner.py atau dari main()
 # CLI chart.py biasa -- satu-satunya pemanggil adalah analyze.py. Fungsi ini
-# menggambar hasil analyze_symbol() (EMA20/EMA50, struktur HH/HL/LH/LL, band
-# Support/Resistance, arah & setup) apa adanya, tanpa memanggil
+# menggambar hasil analyze_symbol() apa adanya, tanpa memanggil
 # scanner.score_symbol dan tanpa fetch Binance baru (df sudah disediakan
-# analyze.py). Semua helper yang dipakai di bawah (get_candles_shown,
-# _draw_candles, _draw_volume, _find_swings, _label_structure,
-# _declutter_labels, _draw_structure_labels, decimals_from_price,
-# format_price, _draw_change_badge, _calc_24h_change) sudah ada sebelumnya
-# dan tidak diubah -- build_chart, build_multi_tf_card, build_comparison_chart,
-# dan _fetch_and_build* di bawah ini tetap persis seperti semula.
+# analyze.py). Diperluas supaya indikator yang tampil di chart benar-benar
+# menyamai indikator yang dipakai mesin analyze.py sendiri (bukan cuma
+# EMA20/EMA50 seperti sebelumnya):
+#   - EMA20/EMA50/EMA200 (EMA200 sama seperti analyze.py, cuma digambar
+#     kalau len(df) >= 200, dipakai juga di _direction_analysis)
+#   - Panel RSI(14) baru (helper _analysis_rsi di bawah -- rumus persis sama
+#     dengan _rsi() di analyze.py, diduplikasi bukan di-import supaya tidak
+#     circular import) lengkap dengan garis referensi 30/45/55/70, angka
+#     ambang yang sama persis dipakai _direction_analysis buat baca RSI
+#   - Struktur HH/HL/LH/LL + band Support/Resistance (tidak berubah)
+#   - ENTRY (zona, helper _draw_entry_zone)/TP1/TP2/SL + panah target +
+#     penanda segitiga arah -- BARU, sebelumnya sengaja tidak ada levels di
+#     chart ini. Cuma digambar kalau levels timeframe itu actionable
+#     (direction LONG/SHORT & entry/sl tersedia); di mode overview MTF
+#     fallback (semua TF NONE) tidak ada bedanya secara visual dari
+#     sebelumnya karena memang tidak ada levels untuk digambar.
+# Semua helper lama (get_candles_shown, _draw_candles, _draw_volume,
+# _find_swings, _label_structure, _declutter_labels, _draw_structure_labels,
+# decimals_from_price, format_price, _draw_change_badge, _calc_24h_change,
+# _place_level_labels, _draw_target_arrow, _draw_sr_band) dipakai ulang
+# apa adanya, tidak diubah -- build_chart, build_multi_tf_card,
+# build_comparison_chart, dan _fetch_and_build* di bawah ini tetap persis
+# seperti semula.
 
 def _draw_sr_band(ax, level, pad: float, last_x: int, fill: str, edge: str,
                     label: str, dec: int, square: bool = False):
@@ -1246,6 +1271,39 @@ def _draw_sr_band(ax, level, pad: float, last_x: int, fill: str, edge: str,
     return (bbox.x0, bbox.y0, bbox.x1, bbox.y1)
 
 
+def _analysis_rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """RSI (Wilder smoothing) -- rumus persis sama dengan _rsi() di
+    analyze.py. Sengaja diduplikasi di sini (bukan di-import) karena
+    analyze.py yang mengimpor build_analysis_chart dari chart.py -- kalau
+    chart.py balik mengimpor dari analyze.py jadi circular import. Dipakai
+    khusus panel RSI di build_analysis_chart supaya angka yang tergambar
+    konsisten dengan yang dipakai mesin analisa independen di analyze.py."""
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.ewm(alpha=1 / period, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, min_periods=period).mean()
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    out = 100 - (100 / (1 + rs))
+    out = out.mask((avg_loss == 0) & (avg_gain > 0), 100.0)
+    out = out.mask((avg_gain == 0) & (avg_loss > 0), 0.0)
+    return out
+
+
+def _draw_entry_zone(ax, lo: float, hi: float, last_x: int) -> None:
+    """Zona ENTRY (rentang lo-hi dari levels['entry'] hasil _build_levels()
+    di analyze.py -- bukan satu harga tunggal seperti ENTRY di build_chart).
+    Band transparan biru selebar chart, gaya sama seperti _draw_sr_band.
+    Tanpa teks di dalam band karena harga zona-nya sudah diwakili kotak
+    label ENTRY dari _place_level_labels di sisi kanan chart."""
+    top, bottom = max(lo, hi), min(lo, hi)
+    ax.add_patch(Rectangle(
+        (-0.5, bottom), last_x + 1.0, max(top - bottom, 1e-12),
+        facecolor=ENTRY, edgecolor=ENTRY, alpha=0.16, linewidth=0.9,
+        linestyle="--", zorder=Z_SR_BAND,
+    ))
+
+
 def build_analysis_chart(
     dfs: dict,
     symbol: str,
@@ -1256,9 +1314,10 @@ def build_analysis_chart(
     square: bool = False,
 ) -> str:
     """Kartu multi-timeframe untuk independent analysis engine analyze.py:
-    EMA20/EMA50, struktur HH/HL/LH/LL, band Support/Resistance, judul panel
-    dari direction/setup hasil analyze.py sendiri (bukan scanner). Tidak ada
-    ENTRY/SL/TP di chart ini -- levels tetap hanya ada di laporan markdown."""
+    EMA20/EMA50/EMA200, panel RSI(14), struktur HH/HL/LH/LL, band Support/
+    Resistance, ENTRY (zona)/TP1/TP2/SL + panah target + penanda arah, judul
+    panel dari direction/setup hasil analyze.py sendiri (bukan scanner).
+    ENTRY/TP/SL cuma digambar untuk timeframe yang levels-nya actionable."""
     n_panels = len(timeframes)
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
@@ -1278,17 +1337,23 @@ def build_analysis_chart(
     tick_fs = 9.0 if square else 6.5
     title_fs = 13.5 if square else 9.5
     price_fs = 11.0 if square else 8.0
+    legend_fs = 12.0 if square else 7.0
 
     for idx, tf in enumerate(timeframes):
         df = dfs.get(tf)
         info = per_tf.get(tf, {})
 
         cell = outer[idx, 0] if square else outer[0, idx]
-        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
+        # 3 baris sekarang (price / volume / RSI) -- sebelumnya cuma 2
+        # (price / volume). Rasio price mengecil dari 4:1 (80%) jadi
+        # 3.4:0.9:1.0 (~64%) supaya panel RSI baru tetap kebaca tanpa
+        # bikin kanvas total lebih tinggi.
+        inner = cell.subgridspec(3, 1, height_ratios=[3.4, 0.9, 1.0], hspace=0.10)
         ax_p = fig.add_subplot(inner[0, 0])
         ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
+        ax_r = fig.add_subplot(inner[2, 0], sharex=ax_p)
 
-        for ax in (ax_p, ax_v):
+        for ax in (ax_p, ax_v, ax_r):
             ax.set_facecolor(PANEL)
             ax.grid(True, linestyle="-", alpha=0.7, color=GRID, linewidth=0.4)
             ax.set_axisbelow(True)
@@ -1299,6 +1364,9 @@ def build_analysis_chart(
                 ax.spines[side].set_color(SPINE)
                 ax.spines[side].set_linewidth(0.6)
         ax_p.tick_params(labelbottom=False)
+        # Dulu ax_v yang paling bawah (jadi boleh tampil label sumbu-x).
+        # Sekarang ax_r yang paling bawah -- ax_v ikut disembunyikan.
+        ax_v.tick_params(labelbottom=False)
 
         if df is None or "error" in info:
             ax_p.set_title(f"{tf}  ·  ERROR", color=AXIS, fontsize=title_fs,
@@ -1315,8 +1383,17 @@ def build_analysis_chart(
 
         ema20 = df["close"].ewm(span=20, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
         ema50 = df["close"].ewm(span=50, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
-        ax_p.plot(range(len(plot_df)), ema20, color=EMA20_COLOR, linewidth=1.1, zorder=Z_EMA)
-        ax_p.plot(range(len(plot_df)), ema50, color=EMA50_COLOR, linewidth=1.1, zorder=Z_EMA)
+        ax_p.plot(range(len(plot_df)), ema20, color=EMA20_COLOR, linewidth=1.1,
+                   label="EMA20", zorder=Z_EMA)
+        ax_p.plot(range(len(plot_df)), ema50, color=EMA50_COLOR, linewidth=1.1,
+                   label="EMA50", zorder=Z_EMA)
+        # EMA200 -- sama seperti _direction_analysis di analyze.py, cuma
+        # dihitung/digambar kalau datanya cukup panjang (>= 200 candle).
+        has_ema200 = len(df) >= 200
+        if has_ema200:
+            ema200 = df["close"].ewm(span=200, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
+            ax_p.plot(range(len(plot_df)), ema200, color=EMA200_COLOR, linewidth=1.1,
+                       linestyle=(0, (5, 2)), label="EMA200", zorder=Z_EMA)
 
         swing_high, swing_low = _find_swings(plot_df)
         labeled_points = _label_structure(plot_df, swing_high, swing_low)
@@ -1331,9 +1408,26 @@ def build_analysis_chart(
         resistance = structure.get("resistance")
         dec = decimals_from_price(float(plot_df["close"].iloc[-1]))
 
+        # ENTRY/SL/TP1/TP2 hasil _build_levels() di analyze.py. Cuma
+        # actionable kalau direction timeframe ini LONG/SHORT dan
+        # entry/sl tersedia -- di mode overview MTF fallback (dipanggil
+        # analyze.py cuma kalau SEMUA timeframe NONE) has_levels selalu
+        # False, jadi tidak ada perubahan visual dari versi sebelumnya.
+        lv = info.get("levels") or {}
+        has_levels = (
+            lv.get("direction") in ("LONG", "SHORT")
+            and lv.get("entry") is not None
+            and lv.get("sl") is not None
+        )
+        level_values = []
+        entry_lo = entry_hi = None
+        if has_levels:
+            entry_lo, entry_hi = lv["entry"]
+            level_values = [entry_lo, entry_hi, lv["sl"], lv["tp1"], lv["tp2"]]
+
         sr_values = [v for v in (support, resistance) if v is not None]
-        y_low = min([y_low] + sr_values)
-        y_high = max([y_high] + sr_values)
+        y_low = min([y_low] + sr_values + level_values)
+        y_high = max([y_high] + sr_values + level_values)
         y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
         # Padding band dihitung dari y_span (rentang harga yang kelihatan di
         # window ini), BUKAN dari ATR mentah. ATR tiap timeframe skalanya
@@ -1350,8 +1444,24 @@ def build_analysis_chart(
         # bisa berbeda dari posisi render final.
         pad_y = y_span * 0.14
         ax_p.set_ylim(y_low - pad_y, y_high + pad_y)
-        ax_p.set_xlim(-0.6, last_x + 0.6)
-        ax_v.set_xlim(-0.6, last_x + 0.6)
+
+        # Kalau ada levels, sisakan ruang ekstra di kanan candle terakhir
+        # untuk kotak label ENTRY/SL/TP1/TP2 (gaya & angka sama seperti
+        # build_chart) -- kalau tidak ada levels, tetap margin tipis seperti
+        # sebelumnya (tidak ada perubahan visual utk mode overview MTF).
+        if has_levels:
+            gap_from_candle = 4.0
+            label_width_est = 13.0
+            gap_from_edge = 0.4
+            extra_margin = gap_from_candle + label_width_est + gap_from_edge
+            label_x = last_x + gap_from_candle
+        else:
+            extra_margin = 0.6
+            label_x = None
+
+        ax_p.set_xlim(-0.6, last_x + extra_margin)
+        ax_v.set_xlim(-0.6, last_x + extra_margin)
+        ax_r.set_xlim(-0.6, last_x + extra_margin)
 
         support_bbox = _draw_sr_band(ax_p, support, pad_band, last_x, SUPPORT_FILL, SUPPORT_EDGE,
                                        "SUP", dec, square=square)
@@ -1388,11 +1498,64 @@ def build_analysis_chart(
 
         _draw_structure_labels(ax_p, labeled_points, 0, len(plot_df), y_span, square=square)
 
+        direction = info.get("direction", "NONE")
+        setup_type = (info.get("setup") or {}).get("type", "")
+
+        if has_levels:
+            _draw_entry_zone(ax_p, entry_lo, entry_hi, last_x)
+            entry_mid = (entry_lo + entry_hi) / 2
+            level_items = [
+                {"level": entry_mid, "color": ENTRY,
+                 "text": f"ENTRY {format_price(entry_lo, dec)}-{format_price(entry_hi, dec)}"},
+                {"level": lv["sl"], "color": SL, "text": f"SL  {format_price(lv['sl'], dec)}"},
+                {"level": lv["tp1"], "color": TP1, "text": f"TP1  {format_price(lv['tp1'], dec)}"},
+                {"level": lv["tp2"], "color": TP2, "text": f"TP2  {format_price(lv['tp2'], dec)}"},
+            ]
+            for item in level_items:
+                ax_p.axhline(y=item["level"], color=item["color"], linestyle="--",
+                              linewidth=1.0, alpha=0.70, zorder=Z_LEVEL_LINE)
+            # Panah target: TP1 (dekat/utama) ditonjolkan, TP2 (final) lebih
+            # samar -- gaya & alpha/lw sama persis seperti build_chart.
+            _draw_target_arrow(ax_p, plot_df, lv["tp1"], last_x, alpha=0.85, lw=1.4)
+            _draw_target_arrow(ax_p, plot_df, lv["tp2"], last_x, alpha=0.35, lw=1.0)
+
+            label_min_gap = (ax_p.get_ylim()[1] - ax_p.get_ylim()[0]) * 0.065
+            _place_level_labels(ax_p, level_items, label_x, label_min_gap, square=square)
+
+        # Penanda segitiga arah di candle terakhir -- dipasang berdasarkan
+        # direction final analyze.py (bukan cuma saat levels lengkap),
+        # supaya tetap ada penanda visual arah bahkan kalau setup-nya NONE.
+        if direction in ("LONG", "SHORT"):
+            mark_pad = y_span * 0.02
+            if direction == "LONG":
+                ax_p.plot(last_x, float(plot_df["high"].iloc[-1]) + mark_pad, marker="^",
+                           color=UP, markersize=(13.0 if square else 9.0),
+                           zorder=Z_BOS_MARKER, clip_on=False)
+            else:
+                ax_p.plot(last_x, float(plot_df["low"].iloc[-1]) - mark_pad, marker="v",
+                           color=DOWN, markersize=(13.0 if square else 9.0),
+                           zorder=Z_BOS_MARKER, clip_on=False)
+
         vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
         _draw_volume(ax_v, plot_df, colors, vol_lookback)
 
-        direction = info.get("direction", "NONE")
-        setup_type = (info.get("setup") or {}).get("type", "")
+        # Panel RSI(14) baru -- rumus sama dengan _rsi() di analyze.py
+        # (lewat _analysis_rsi di atas), garis referensi persis di
+        # 30/45/55/70 yaitu ambang yang sama dipakai _direction_analysis
+        # buat menilai RSI bullish/bearish.
+        rsi_series = _analysis_rsi(df["close"]).tail(len(plot_df)).reset_index(drop=True)
+        for ref in (30, 45, 55, 70):
+            ax_r.axhline(ref, color=RSI_REF_COLOR, linestyle=":", linewidth=0.7,
+                          alpha=0.7, zorder=1)
+        ax_r.plot(range(len(plot_df)), rsi_series, color=RSI_COLOR, linewidth=1.2, zorder=2)
+        ax_r.set_ylim(0, 100)
+        ax_r.set_yticks([30, 45, 55, 70])
+        rsi_now = rsi_series.iloc[-1] if len(rsi_series) else float("nan")
+        if pd.notna(rsi_now):
+            ax_r.text(0.99, 0.90, f"RSI {rsi_now:.1f}", transform=ax_r.transAxes,
+                       color=RSI_COLOR, fontsize=price_fs * 0.85, fontweight="bold",
+                       ha="right", va="top", zorder=9)
+
         badge_color = UP if direction == "LONG" else DOWN if direction == "SHORT" else AXIS
         setup_txt = f"  ·  {setup_type}" if setup_type and setup_type != "NONE" else ""
         ax_p.set_title(f"{tf}  ·  {direction}{setup_txt}", color=badge_color,
@@ -1401,6 +1564,14 @@ def build_analysis_chart(
         last_price = format_price(plot_df["close"].iloc[-1], dec)
         ax_p.text(0.99, 0.03, last_price, transform=ax_p.transAxes, color=TEXT,
                    fontsize=price_fs, fontweight="bold", ha="right", va="bottom", zorder=9)
+
+        # Legend EMA cuma di mode single-panel (hasil best-setup) supaya
+        # panel kecil di mode overview MTF (3 timeframe berdampingan) tidak
+        # makin sesak.
+        if n_panels == 1:
+            legend = ax_p.legend(loc="upper left", fontsize=legend_fs, framealpha=0.85,
+                                   facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.35)
+            legend.get_frame().set_linewidth(0.6)
 
     header_fs = 20.0 if square else 17.0
     badge_fs = 17.0 if square else 14.0
@@ -1413,7 +1584,7 @@ def build_analysis_chart(
     if ref_df is not None:
         _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=badge_fs)
     fig.text(0.045, 0.02,
-              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50  ·  SUP/RES band",
+              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50/EMA200  ·  RSI(14)  ·  SUP/RES  ·  ENTRY/TP/SL",
               fontsize=footer_fs, color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
               "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
