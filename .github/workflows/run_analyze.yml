@@ -70,7 +70,7 @@ jobs:
 
           # Tampilkan isi folder hasil biar jelas file-nya terpisah
           echo ""
-          echo "Isi analysis_output/:"
+          echo "Isi analysis_output/ (markdown + chart MTF per token):"
           find analysis_output -type f | sort || true
 
       - name: Upload hasil analisa (1 artifact, file terpisah per token)
