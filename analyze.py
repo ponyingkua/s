@@ -25,7 +25,7 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
 
 
 # ============================================================
-# Dynamic Precision Rounding (Edge Case #2 Fix)
+# Dynamic Precision Rounding
 # ============================================================
 
 def _round_price(value: float) -> float:
@@ -302,7 +302,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
 
 
 # ============================================================
-# Setup Detection Logic (Edge Case #1 Fix)
+# Setup Detection Logic
 # ============================================================
 
 def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
@@ -315,7 +315,6 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     setup, score = "NONE", 0.0
 
     last = df.iloc[-1]
-    # Guard: Minimal range tidak boleh 0 atau berharga ekstrem kecil (mencegah ZeroDivision)
     rng = max(float(last.high - last.low), p * 0.0005)
     body_ratio = abs(float(last.close - last.open)) / rng
 
@@ -355,35 +354,37 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
 
 
 # ============================================================
-# Dynamic Level Calculator (Edge Case #3 Fix)
+# Dynamic Level Calculator (Fix Over-extended SL & Entry)
 # ============================================================
 
 def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dict) -> dict:
     p = float(df["close"].iloc[-1])
     atr = direction["atr"] or (p * 0.01)
-    support, resistance = structure["support"], structure["resistance"]
     is_long = direction["bull"] > direction["bear"]
     is_short = direction["bear"] > direction["bull"]
 
     if not (is_long or is_short) or setup["type"] == "NONE":
         return {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
 
+    recent_low = float(df["low"].tail(3).min())
+    recent_high = float(df["high"].tail(3).max())
+    max_sl_dist = p * 0.075 
+
     if is_long:
-        entry_lo = _round_price(min(p, p - 0.2 * atr))
-        entry_hi = _round_price(max(p, p + 0.1 * atr))
-        
-        anchor_sl = support if (support is not None and support < p) else (p - atr)
-        sl = _round_price(min(anchor_sl - 0.2 * atr, p - 1.2 * atr))
-        
-        # Guard: Pastikan SL selalu di bawah entry_lo
+        entry_lo = _round_price(p - 0.25 * atr)
+        entry_hi = _round_price(p)
+
+        ideal_sl = min(recent_low - 0.1 * atr, p - 0.8 * atr)
+        max_allowed_sl = p - max_sl_dist
+        sl = _round_price(max(ideal_sl, max_allowed_sl))
+
         if sl >= entry_lo:
-            sl = _round_price(entry_lo - 1.2 * atr)
-            
-        risk = max(entry_hi - sl, p * 0.005)
+            sl = _round_price(entry_lo - 0.5 * atr)
+
+        risk = entry_hi - sl
         tp1 = _round_price(entry_hi + (1.5 * risk))
         tp2 = _round_price(entry_hi + (2.8 * risk))
 
-        # Guard: Pastikan TP2 selalu lebih tinggi dari TP1
         if tp2 <= tp1:
             tp2 = _round_price(tp1 + (0.5 * risk))
 
@@ -396,21 +397,20 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
         }
 
     else:
-        entry_hi = _round_price(max(p, p + 0.2 * atr))
-        entry_lo = _round_price(min(p, p - 0.1 * atr))
-        
-        anchor_sl = resistance if (resistance is not None and resistance > p) else (p + atr)
-        sl = _round_price(max(anchor_sl + 0.2 * atr, p + 1.2 * atr))
-        
-        # Guard: Pastikan SL selalu di atas entry_hi
+        entry_lo = _round_price(p)
+        entry_hi = _round_price(p + 0.25 * atr)
+
+        ideal_sl = max(recent_high + 0.1 * atr, p + 0.8 * atr)
+        max_allowed_sl = p + max_sl_dist
+        sl = _round_price(min(ideal_sl, max_allowed_sl))
+
         if sl <= entry_hi:
-            sl = _round_price(entry_hi + 1.2 * atr)
-            
-        risk = max(sl - entry_lo, p * 0.005)
+            sl = _round_price(entry_hi + 0.5 * atr)
+
+        risk = sl - entry_lo
         tp1 = _round_price(entry_lo - (1.5 * risk))
         tp2 = _round_price(entry_lo - (2.8 * risk))
 
-        # Guard: Pastikan TP2 selalu lebih rendah dari TP1
         if tp2 >= tp1:
             tp2 = _round_price(tp1 - (0.5 * risk))
 
