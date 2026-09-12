@@ -44,14 +44,12 @@ from analyze import _swing_points
 
 # EMA analyze.py memakai 3 EMA (20/50/200), chart.py cuma 1 -- dikasih
 # warna beda supaya ketiganya kebaca saat ditumpuk di panel yang sama.
+# (String literal langsung, TIDAK diturunkan dari chart.* -- lihat catatan
+# di _draw_analyze_indicators soal kenapa chart.UP/chart.DOWN sengaja
+# diakses di dalam fungsi, bukan di sini/level modul.)
 EMA20_COLOR = "#FFD54F"
 EMA50_COLOR = "#29B6F6"
 EMA200_COLOR = "#AB47BC"
-
-SUPPORT_COLOR = chart.UP
-RESISTANCE_COLOR = chart.DOWN
-SWING_HIGH_COLOR = chart.DOWN
-SWING_LOW_COLOR = chart.UP
 
 
 def _draw_analyze_indicators(ax, df: pd.DataFrame, n_show: int, tf_info: dict,
@@ -70,6 +68,14 @@ def _draw_analyze_indicators(ax, df: pd.DataFrame, n_show: int, tf_info: dict,
     tepi kiri jendela tetap punya cukup konteks kiri/kanan untuk
     terdeteksi (left=3/right=3), baru posisinya digeser relatif ke
     window yang benar-benar digambar.
+
+    chart.UP/chart.DOWN sengaja diakses di SINI (saat fungsi dipanggil),
+    bukan disimpan sebagai konstanta level-modul di atas -- karena
+    "import chart" di atas file ini bisa saja mengembalikan modul chart
+    yang belum selesai dieksekusi penuh kalau ada import melingkar lain
+    yang menyentuhnya (mis. lewat scanner.py). Mengakses chart.UP baru
+    di dalam fungsi, yang dipanggil belakangan setelah semua import
+    selesai, menghindari AttributeError akibat itu.
     """
     close = df["close"]
     ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
@@ -84,19 +90,19 @@ def _draw_analyze_indicators(ax, df: pd.DataFrame, n_show: int, tf_info: dict,
     structure = tf_info.get("structure") or {}
     support, resistance = structure.get("support"), structure.get("resistance")
     if support:
-        ax.axhline(support, color=SUPPORT_COLOR, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
+        ax.axhline(support, color=chart.UP, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
     if resistance:
-        ax.axhline(resistance, color=RESISTANCE_COLOR, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
+        ax.axhline(resistance, color=chart.DOWN, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
 
     work = df.tail(n_show + swing_context).reset_index(drop=True)
     offset = len(work) - n_show
     sh, sl = _swing_points(work, left=3, right=3)
     for idx, val in sh:
         if idx >= offset:
-            ax.scatter(idx - offset, val * 1.004, marker="v", color=SWING_HIGH_COLOR, s=14, alpha=0.8, zorder=5)
+            ax.scatter(idx - offset, val * 1.004, marker="v", color=chart.DOWN, s=14, alpha=0.8, zorder=5)
     for idx, val in sl:
         if idx >= offset:
-            ax.scatter(idx - offset, val * 0.996, marker="^", color=SWING_LOW_COLOR, s=14, alpha=0.8, zorder=5)
+            ax.scatter(idx - offset, val * 0.996, marker="^", color=chart.UP, s=14, alpha=0.8, zorder=5)
 
 
 def build_mtfk_chart(
