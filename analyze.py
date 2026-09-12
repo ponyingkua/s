@@ -9,11 +9,15 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
+# Infrastructure only. The analysis engine below does NOT use scanner scoring,
+# scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
-from mtfk import build_mtfk_chart
 
 OUT_DIR = "analysis_output"
 
+# Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
+# Backoff eksponensial: percobaan ke-n (0-indexed) menunggu
+# FETCH_RETRY_BACKOFF_SECONDS * 2**n sebelum retry berikutnya.
 FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
 
@@ -24,6 +28,10 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
         raise ValueError("Symbol cannot be empty")
     return s if s.endswith(quote_asset) else f"{s}{quote_asset}"
 
+
+# ============================================================
+# Indicators
+# ============================================================
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -77,6 +85,10 @@ def _ema_slope(series: pd.Series, lookback: int = 5) -> float:
     base = max(abs(float(series.iloc[-lookback])), 1e-12)
     return float(series.iloc[-1] - series.iloc[-lookback]) / base
 
+
+# ============================================================
+# Price structure
+# ============================================================
 
 def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
     highs = df["high"].to_numpy(float)
@@ -153,6 +165,10 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
         "notes": notes,
     }
 
+
+# ============================================================
+# Independent direction/confluence engine
+# ============================================================
 
 def _direction_analysis(df: pd.DataFrame) -> dict:
     close, volume = df["close"], df["volume"]
@@ -280,6 +296,10 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     }
 
 
+# ============================================================
+# Setup selection
+# ============================================================
+
 def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     p = float(df["close"].iloc[-1])
     atr = direction["atr"] or p * 0.01
@@ -327,6 +347,10 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
 
+
+# ============================================================
+# Levels: structure + volatility
+# ============================================================
 
 def _round_price(value: float) -> float:
     if value == 0:
@@ -595,8 +619,13 @@ def main():
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
+    # Chart digambar oleh mtfk.py (murni modul penggambar, tidak punya CLI/main
+    # sendiri). Import HARUS lazy di sini (bukan di atas file). Meskipun mtfk
+    # sekarang juga mengimpor _swing_points secara lazy, chart.py masih
+    # mengimpor analyze di level modul -- top-level "from mtfk import ..."
+    # di analyze akan memicu circular import (analyze -> mtfk -> chart -> analyze).
+    from mtfk import build_mtfk_chart
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
-    chart_failed = False
     try:
         build_mtfk_chart(
             dfs=result["dfs"],
@@ -608,16 +637,11 @@ def main():
         )
         print(f"[analyze] Chart MTF saved to {chart_path}")
     except Exception as exc:
-        chart_failed = True
         print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
 
     per_tf = result["per_tf"]
     if per_tf and all("error" in info for info in per_tf.values()):
         print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
-        sys.exit(1)
-
-    if chart_failed:
-        print(f"[analyze] Chart MTF gagal dibuat untuk {symbol}. Exiting non-zero.")
         sys.exit(1)
 
 
