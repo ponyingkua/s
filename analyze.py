@@ -12,20 +12,6 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
-# Chart rendering only: chart.py exposes build_analysis_chart specifically
-# for this file. It draws EMA20/EMA50, HH/HL/LH/LL structure, and
-# Support/Resistance bands straight from this engine's own per_tf results --
-# no scanner.score_symbol call, no extra Binance fetch, no Supertrend/S-D-zone
-# machinery from build_chart (that's a different indicator system entirely,
-# built for scanner-generated signals -- deliberately NOT used here so this
-# engine's chart always matches this engine's own numbers).
-# Below, main() now calls build_analysis_chart with just the single best-
-# setup timeframe (a 1-item list) instead of always all configured
-# timeframes -- same function, same indicators, just scoped to the winner.
-# build_chart, build_multi_tf_card, and the scanner-facing _fetch_and_build*
-# helpers in chart.py are untouched and still work exactly as before.
-from chart import build_analysis_chart
-
 OUT_DIR = "analysis_output"
 
 
@@ -629,16 +615,6 @@ def main():
     parser = argparse.ArgumentParser(description="vSynapse — independent single-token MTF analyzer")
     parser.add_argument("--symbol", required=True, help="Coin code, e.g. ZEC or ZECUSDT")
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--chart-format", choices=["wide", "square"], default="wide",
-                          help="Kanvas untuk chart yang menyertai hasil analisa (via "
-                               "build_analysis_chart, tidak berubah). Kalau ada best "
-                               "setup, chart jadi single-panel utk TF itu saja; kalau "
-                               "tidak ada, fallback ke panel semua TF. wide = panel "
-                               "berdampingan (default) -- untuk single-panel hasilnya "
-                               "melebar 1 panel penuh (rasio lebar:tinggi tetap fix di "
-                               "build_analysis_chart, tidak menyesuaikan jumlah panel). "
-                               "square = panel ditumpuk, kanvas 1:1 untuk feed Binance "
-                               "Square/IG -- lebih pas dipakai untuk chart single-panel.")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -657,44 +633,6 @@ def main():
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
-
-    # Chart menyertai hasil analisa -- selalu lewat build_analysis_chart yang
-    # SAMA seperti sebelumnya (EMA20/EMA50 + S/R band + label HH/HL/LH/LL,
-    # semuanya dari per_tf hasil engine independen ini sendiri). build_chart
-    # (Supertrend + zona S/D ala scanner) sengaja TIDAK dipakai supaya tidak
-    # ada dua sistem indikator berbeda tercampur di satu chart.
-    #
-    # Bedanya sekarang: kalau ada satu TF yang actionable (best setup),
-    # build_analysis_chart dipanggil dengan HANYA timeframe itu (list 1
-    # elemen) -> chart jadi single-panel, fokus ke setup yang kepilih, bukan
-    # lagi 3 panel yang menyamaratakan semua TF. Kalau tidak ada satupun TF
-    # yang actionable, fallback ke kartu overview MTF lama (semua TF
-    # ditampilkan) supaya tetap ada konteks visual. Dibungkus try/except
-    # supaya kegagalan render chart (mis. rate limit) tidak menggagalkan
-    # analisa teks yang sudah berhasil ditulis di atas. notify=False -> tidak
-    # dikirim ke Telegram, chart ini murni jadi lampiran artifact workflow
-    # "Analyze Symbol(s)".
-    best_tf, best_info = result.get("best_tf"), result.get("best")
-    chart_path = os.path.join(OUT_DIR, f"chart_{result['symbol']}_{timestamp}.png")
-    try:
-        if best_info is not None:
-            build_analysis_chart(
-                {best_tf: result["dfs"][best_tf]}, result["symbol"], [best_tf],
-                {best_tf: best_info}, cfg, chart_path,
-                square=(args.chart_format == "square"),
-            )
-            print(f"[analyze] Best-setup chart ({best_tf}) saved to {chart_path}")
-        else:
-            build_analysis_chart(
-                result["dfs"], result["symbol"], timeframes, result["per_tf"], cfg, chart_path,
-                square=(args.chart_format == "square"),
-            )
-            print(
-                f"[analyze] Tidak ada setup actionable di {', '.join(timeframes)}; "
-                f"chart overview MTF dibuat sebagai gantinya: {chart_path}"
-            )
-    except Exception as exc:
-        print(f"[analyze] Gagal membuat chart: {exc}")
 
 
 if __name__ == "__main__":
