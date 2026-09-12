@@ -17975,5 +17975,52 @@
     "tp": 0.974718,
     "tp1": 0.867776,
     "scanned_at": "2026-09-12T08:03:30.356554+00:00"
+  },
+  {
+    "symbol": "MITOUSDT",
+    "direction": "LONG",
+    "score": 75.1,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (74) overbought \u2014 penalti chasing (-10)",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (34.2) tren kuat (+14.1 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.01519,
+    "sl": 0.013695,
+    "tp": 0.017882,
+    "tp1": 0.016685,
+    "scanned_at": "2026-09-12T09:03:18.527800+00:00"
+  },
+  {
+    "symbol": "ANTHROPICUSDT",
+    "direction": "LONG",
+    "score": 66.4,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (28.0) tren kuat (+7.4 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.59",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.59 (sisa posisi)"
+    ],
+    "entry": 2114.99,
+    "sl": 2089.056904,
+    "tp": 2182.08,
+    "tp1": 2140.923096,
+    "scanned_at": "2026-09-12T09:03:18.527800+00:00"
   }
 ]
