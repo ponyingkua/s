@@ -16,12 +16,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T12:04:37.478011+00:00"
   },
-  "TSMUSDT|1h": {
-    "symbol": "TSMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T01:03:54.413700+00:00"
-  },
   "COINUSDT|4h": {
     "symbol": "COINUSDT",
     "timeframe": "4h",
@@ -46,12 +40,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T02:04:59.733140+00:00"
   },
-  "SAMSUNGUSDT|1h": {
-    "symbol": "SAMSUNGUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T01:03:53.049768+00:00"
-  },
   "ASTERUSDT|4h": {
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
@@ -63,18 +51,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T07:03:52.342407+00:00"
-  },
-  "FILUSDT|1h": {
-    "symbol": "FILUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T01:03:49.862979+00:00"
-  },
-  "KAITOUSDT|1h": {
-    "symbol": "KAITOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T01:03:51.768020+00:00"
   },
   "KAVAUSDT|15m": {
     "symbol": "KAVAUSDT",
@@ -189,5 +165,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T13:03:41.986239+00:00"
+  },
+  "SKYUSDT|15m": {
+    "symbol": "SKYUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T14:03:51.351105+00:00"
+  },
+  "MTLUSDT|1h": {
+    "symbol": "MTLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T14:03:54.660969+00:00"
+  },
+  "MUBARAKUSDT|1h": {
+    "symbol": "MUBARAKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T14:03:56.068432+00:00"
+  },
+  "DOGSUSDT|1h": {
+    "symbol": "DOGSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T14:03:57.469613+00:00"
   }
 }
