@@ -44,7 +44,7 @@
     "symbol": "COINUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T01:03:55.659022+00:00"
+    "timestamp": "2026-09-12T06:04:13.281018+00:00"
   },
   "BNBUSDT|1h": {
     "symbol": "BNBUSDT",
@@ -291,5 +291,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T05:03:59.308361+00:00"
+  },
+  "JSTUSDT|1h": {
+    "symbol": "JSTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T06:04:11.040241+00:00"
   }
 }
