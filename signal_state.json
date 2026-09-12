@@ -13,8 +13,8 @@
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
     "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-12T03:04:36.060910+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-12T12:04:37.478011+00:00"
   },
   "TSMUSDT|1h": {
     "symbol": "TSMUSDT",
@@ -56,7 +56,7 @@
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-12T04:04:11.680513+00:00"
+    "timestamp": "2026-09-12T12:04:39.593052+00:00"
   },
   "KOMAUSDT|1h": {
     "symbol": "KOMAUSDT",
