@@ -18393,5 +18393,53 @@
     "tp": 0.008432,
     "tp1": 0.00799,
     "scanned_at": "2026-09-12T16:03:35.032149+00:00"
+  },
+  {
+    "symbol": "ZAMAUSDT",
+    "direction": "LONG",
+    "score": 73.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (70), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (23.1) tren kuat (+2.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.04945,
+    "sl": 0.047285,
+    "tp": 0.053347,
+    "tp1": 0.051615,
+    "scanned_at": "2026-09-12T17:02:59.894182+00:00"
+  },
+  {
+    "symbol": "OPUSDT",
+    "direction": "LONG",
+    "score": 67.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (45), tidak menambah skor",
+      "ADX (24.7) tren kuat (+4.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 2.86",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.86 (sisa posisi)"
+    ],
+    "entry": 0.09748,
+    "sl": 0.091666,
+    "tp": 0.11409,
+    "tp1": 0.103294,
+    "scanned_at": "2026-09-12T17:02:59.894182+00:00"
   }
 ]

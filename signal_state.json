@@ -14,7 +14,7 @@
     "symbol": "OPUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T12:04:37.478011+00:00"
+    "timestamp": "2026-09-12T17:03:52.659164+00:00"
   },
   "COINUSDT|4h": {
     "symbol": "COINUSDT",
@@ -141,5 +141,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T16:04:27.462292+00:00"
+  },
+  "ZAMAUSDT|1h": {
+    "symbol": "ZAMAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T17:03:50.484847+00:00"
   }
 }
