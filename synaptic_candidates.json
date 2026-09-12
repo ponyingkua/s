@@ -18441,5 +18441,51 @@
     "tp": 0.11409,
     "tp1": 0.103294,
     "scanned_at": "2026-09-12T17:02:59.894182+00:00"
+  },
+  {
+    "symbol": "PYTHUSDT",
+    "direction": "LONG",
+    "score": 88.0,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (39.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.05514,
+    "sl": 0.054,
+    "tp": 0.057192,
+    "tp1": 0.05628,
+    "scanned_at": "2026-09-12T18:03:28.643416+00:00"
+  },
+  {
+    "symbol": "BTWUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (50.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.5548,
+    "sl": 0.517872,
+    "tp": 0.621271,
+    "tp1": 0.591728,
+    "scanned_at": "2026-09-12T18:03:28.643416+00:00"
   }
 ]

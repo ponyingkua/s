@@ -34,18 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T15:03:35.322644+00:00"
   },
-  "TRIAUSDT|1h": {
-    "symbol": "TRIAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T05:03:57.113375+00:00"
-  },
-  "BOMEUSDT|1h": {
-    "symbol": "BOMEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T05:03:59.308361+00:00"
-  },
   "JSTUSDT|1h": {
     "symbol": "JSTUSDT",
     "timeframe": "1h",
@@ -147,5 +135,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T17:03:50.484847+00:00"
+  },
+  "PYTHUSDT|15m": {
+    "symbol": "PYTHUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T18:04:05.092376+00:00"
+  },
+  "BTWUSDT|1h": {
+    "symbol": "BTWUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-12T18:04:07.783449+00:00"
   }
 }
