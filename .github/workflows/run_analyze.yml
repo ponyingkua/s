@@ -7,6 +7,14 @@ on:
         description: "Kode koin (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
         required: true
         type: string
+      chart_format:
+        description: "Format chart multi-timeframe untuk tiap simbol"
+        required: true
+        type: choice
+        default: wide
+        options:
+          - wide
+          - square
 
 jobs:
   analyze:
@@ -39,6 +47,7 @@ jobs:
           fi
 
           echo "Symbols yang akan dianalisa: $CLEAN"
+          echo "Format chart: ${{ inputs.chart_format }}"
           echo "----------------------------------------"
 
           IFS=',' read -ra SYMBOLS <<< "$CLEAN"
@@ -52,7 +61,7 @@ jobs:
             echo ">>> Analyzing: $SYM"
             echo "----------------------------------------"
 
-            if python analyze.py --symbol "$SYM"; then
+            if python analyze.py --symbol "$SYM" --chart-format "${{ inputs.chart_format }}"; then
               echo "✓ Selesai: $SYM"
             else
               echo "✗ Gagal: $SYM"
