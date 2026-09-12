@@ -62,16 +62,17 @@ jobs:
 
           echo ""
           echo "========================================"
-          if [ "$FAILED" -gt 0 ]; then
-            echo "Selesai dengan $FAILED kegagalan."
-          else
-            echo "Semua analisa berhasil."
-          fi
-
-          # Tampilkan isi folder hasil biar jelas file-nya terpisah
           echo ""
           echo "Isi analysis_output/ (markdown + chart MTF per token):"
           find analysis_output -type f | sort || true
+
+          echo ""
+          if [ "$FAILED" -gt 0 ]; then
+            echo "Selesai dengan $FAILED kegagalan."
+            exit 1
+          else
+            echo "Semua analisa berhasil."
+          fi
 
       - name: Upload hasil analisa (1 artifact, file terpisah per token)
         if: always()
