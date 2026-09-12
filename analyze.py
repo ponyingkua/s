@@ -13,12 +13,6 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
-# Catatan: build_mtfk_chart TIDAK diimpor di sini (level modul) karena mtfk.py
-# mengimpor balik analyze_symbol/normalize_symbol/_swing_points dari modul ini
-# di level modul juga -> circular import. Import dilakukan lazy di dalam main()
-# (lihat bawah), tepat sebelum dipakai, sehingga modul ini sudah selesai
-# didefinisikan duluan saat mtfk.py balik meng-importnya.
-
 OUT_DIR = "analysis_output"
 
 # Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
@@ -625,8 +619,11 @@ def main():
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    # Memanggil build_mtfk_chart dari mtfk.py untuk visualisasi chart MTF
-    # (import lazy di sini, bukan di atas, untuk menghindari circular import)
+    # Chart digambar oleh mtfk.py (murni modul penggambar, tidak punya CLI/main
+    # sendiri). Import di sini (lazy, bukan di atas file) karena mtfk.py
+    # mengimpor balik _swing_points dari modul ini di level modul -- kalau
+    # "from mtfk import build_mtfk_chart" ditaruh di atas, jadi circular
+    # import waktu analyze.py dijalankan sebagai skrip (python analyze.py).
     from mtfk import build_mtfk_chart
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
@@ -636,6 +633,7 @@ def main():
             timeframes=timeframes,
             per_tf=result["per_tf"],
             out_path=chart_path,
+            cfg=cfg,
         )
         print(f"[analyze] Chart MTF saved to {chart_path}")
     except Exception as exc:
