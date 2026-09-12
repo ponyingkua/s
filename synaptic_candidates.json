@@ -18348,5 +18348,50 @@
     "tp": 0.000801,
     "tp1": 0.000734,
     "scanned_at": "2026-09-12T15:02:56.522489+00:00"
+  },
+  {
+    "symbol": "ETHFIUSDT",
+    "direction": "LONG",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (30.3) tren kuat (+10.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.7477,
+    "sl": 0.701389,
+    "tp": 0.83106,
+    "tp1": 0.794011,
+    "scanned_at": "2026-09-12T16:03:35.032149+00:00"
+  },
+  {
+    "symbol": "VETUSDT",
+    "direction": "LONG",
+    "score": 66.8,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (28.3) tren kuat (+7.8 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 3.08",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.08 (sisa posisi)"
+    ],
+    "entry": 0.007777,
+    "sl": 0.007564,
+    "tp": 0.008432,
+    "tp1": 0.00799,
+    "scanned_at": "2026-09-12T16:03:35.032149+00:00"
   }
 ]
