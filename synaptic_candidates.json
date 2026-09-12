@@ -17813,5 +17813,51 @@
     "tp": 0.19759,
     "tp1": 0.190123,
     "scanned_at": "2026-09-12T04:03:21.901873+00:00"
+  },
+  {
+    "symbol": "TRIAUSDT",
+    "direction": "LONG",
+    "score": 83.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (26.9) tren kuat (+6.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.003742,
+    "sl": 0.003548,
+    "tp": 0.004092,
+    "tp1": 0.003936,
+    "scanned_at": "2026-09-12T05:02:52.399602+00:00"
+  },
+  {
+    "symbol": "BOMEUSDT",
+    "direction": "LONG",
+    "score": 79.6,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (23.4) tren kuat (+2.6 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.000876,
+    "sl": 0.000839,
+    "tp": 0.000943,
+    "tp1": 0.000914,
+    "scanned_at": "2026-09-12T05:02:52.399602+00:00"
   }
 ]
