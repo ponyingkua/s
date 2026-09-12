@@ -1578,16 +1578,16 @@ def build_analysis_chart(
     footer_fs = 10.0 if square else 7.0
     disclaimer_fs = 9.0 if square else 6.5
 
-    fig.text(0.045, 0.95, f"{symbol}  ·  INDEPENDENT ANALYSIS", fontsize=header_fs,
+    fig.text(0.045, 0.95, f"{symbol}  ·  CHART-BASED ANALYSIS", fontsize=header_fs,
               fontweight="bold", color=TEXT, ha="left", va="top")
     ref_df = dfs.get(timeframes[0])
     if ref_df is not None:
         _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=badge_fs)
     fig.text(0.045, 0.02,
-              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50/EMA200  ·  RSI(14)  ·  SUP/RES  ·  ENTRY/TP/SL",
+              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50/EMA200  ·  RSI(14)  ·  SUP/RES",
               fontsize=footer_fs, color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
-              "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+              "NOT FINANCIAL ADVICE, DYOR.",
               fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
