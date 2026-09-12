@@ -996,24 +996,36 @@ def build_multi_tf_card(
     signals: dict,
     cfg: dict,
     out_path: str,
+    square: bool = False,
 ) -> str:
-    """Kartu multi-timeframe: N panel berdampingan (candle+EMA+Supertrend+
-    volume mini per timeframe) dalam 1 gambar -- untuk konten "gimana
-    posisi multi-TF" di Binance Square. Tidak menyentuh build_chart/
-    scanner.py sama sekali, cuma memakai ulang helper gambar yang sudah ada."""
+    """Kartu multi-timeframe: N panel (candle+EMA+Supertrend+volume mini per
+    timeframe) dalam 1 gambar -- untuk konten "gimana posisi multi-TF" di
+    Binance Square. Tidak menyentuh build_chart/scanner.py sama sekali, cuma
+    memakai ulang helper gambar yang sudah ada. square=False (default) =
+    panel berdampingan dalam kanvas wide (perilaku asli, tidak berubah).
+    square=True = panel ditumpuk vertikal dalam kanvas 1:1, cocok untuk post
+    feed Binance Square/IG."""
     n_panels = len(timeframes)
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
     dpi = 200
     fig_w = width_px / dpi
-    fig_h = fig_w * 0.40
+    fig_h = fig_w if square else fig_w * 0.40
     fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor(BG)
 
-    outer = GridSpec(1, n_panels, figure=fig, wspace=0.16,
-                      left=0.045, right=0.98, top=0.85, bottom=0.11)
+    if square:
+        outer = GridSpec(n_panels, 1, figure=fig, hspace=0.32,
+                          left=0.09, right=0.93, top=0.90, bottom=0.055)
+    else:
+        outer = GridSpec(1, n_panels, figure=fig, wspace=0.16,
+                          left=0.045, right=0.98, top=0.85, bottom=0.11)
 
-    for col, tf in enumerate(timeframes):
+    tick_fs = 9.0 if square else 6.5
+    title_fs = 13.5 if square else 9.5
+    price_fs = 11.0 if square else 8.0
+
+    for idx, tf in enumerate(timeframes):
         df = dfs[tf]
         signal = signals[tf]
 
@@ -1026,7 +1038,8 @@ def build_multi_tf_card(
         )
         plot_df = work_df.iloc[start_idx:end_idx + 1].reset_index(drop=True)
 
-        inner = outer[0, col].subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
+        cell = outer[idx, 0] if square else outer[0, idx]
+        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
         ax_p = fig.add_subplot(inner[0, 0])
         ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
 
@@ -1034,7 +1047,7 @@ def build_multi_tf_card(
             ax.set_facecolor(PANEL)
             ax.grid(True, linestyle="-", alpha=0.7, color=GRID, linewidth=0.4)
             ax.set_axisbelow(True)
-            ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=6.5)
+            ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=tick_fs)
             for side in ("top", "right"):
                 ax.spines[side].set_visible(False)
             for side in ("left", "bottom"):
@@ -1070,22 +1083,27 @@ def build_multi_tf_card(
         badge_color = UP if str(signal.direction).upper().startswith("LONG") else DOWN
         setup_txt = f"  ·  {signal.setup_type}" if getattr(signal, "setup_type", None) else ""
         ax_p.set_title(f"{tf}  ·  {signal.direction}{setup_txt}", color=badge_color,
-                        fontsize=9.5, fontweight="bold", loc="left", pad=6)
+                        fontsize=title_fs, fontweight="bold", loc="left", pad=6)
 
         dec = decimals_from_price(float(plot_df["close"].iloc[-1]))
         last_price = format_price(plot_df["close"].iloc[-1], dec)
         ax_p.text(0.99, 0.03, last_price, transform=ax_p.transAxes, color=TEXT,
-                   fontsize=8, fontweight="bold", ha="right", va="bottom", zorder=9)
+                   fontsize=price_fs, fontweight="bold", ha="right", va="bottom", zorder=9)
 
-    fig.text(0.045, 0.95, f"{symbol}  ·  MULTI-TIMEFRAME", fontsize=17,
+    header_fs = 20.0 if square else 17.0
+    badge_fs = 17.0 if square else 14.0
+    footer_fs = 10.0 if square else 7.0
+    disclaimer_fs = 9.0 if square else 6.5
+
+    fig.text(0.045, 0.95, f"{symbol}  ·  MULTI-TIMEFRAME", fontsize=header_fs,
               fontweight="bold", color=TEXT, ha="left", va="top")
     ref_df = dfs[timeframes[0]]
-    _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=14)
-    fig.text(0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}", fontsize=7,
+    _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=badge_fs)
+    fig.text(0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}", fontsize=footer_fs,
               color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
               "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
-              fontsize=6.5, fontweight="bold", color=TEXT, ha="right", va="bottom")
+              fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
     plt.close(fig)
@@ -1209,7 +1227,14 @@ async def _fetch_and_build(
     return result_path
 
 
-async def _fetch_and_build_multi(symbol: str, timeframes: list, cfg: dict, out_path: str) -> str:
+async def _fetch_and_build_multi(
+    symbol: str,
+    timeframes: list,
+    cfg: dict,
+    out_path: str,
+    square: bool = False,
+    notify: bool = True,
+) -> str:
     dfs = {}
     async with BinanceFuturesClient() as client:
         for tf in timeframes:
@@ -1219,15 +1244,16 @@ async def _fetch_and_build_multi(symbol: str, timeframes: list, cfg: dict, out_p
             dfs[tf] = kline.df
 
     signals = {tf: score_symbol(dfs[tf], symbol, cfg, timeframe=tf) for tf in timeframes}
-    result_path = build_multi_tf_card(dfs, symbol, timeframes, signals, cfg, out_path)
+    result_path = build_multi_tf_card(dfs, symbol, timeframes, signals, cfg, out_path, square=square)
 
-    caption = f"{symbol} multi-timeframe: " + " | ".join(
-        f"{tf} {signals[tf].direction}" for tf in timeframes
-    )
-    try:
-        await send_telegram_photo(result_path, caption, cfg)
-    except Exception as exc:
-        print(f"Gagal kirim chart ke Telegram: {exc}")
+    if notify:
+        caption = f"{symbol} multi-timeframe: " + " | ".join(
+            f"{tf} {signals[tf].direction}" for tf in timeframes
+        )
+        try:
+            await send_telegram_photo(result_path, caption, cfg)
+        except Exception as exc:
+            print(f"Gagal kirim chart ke Telegram: {exc}")
 
     return result_path
 
@@ -1307,7 +1333,7 @@ def main():
     parser.add_argument("--ratio", choices=["wide", "square"], default="wide",
                           help="wide = rasio asli chart (default). "
                                "square = kanvas 1:1 untuk post feed Binance Square/IG. "
-                               "Berlaku untuk mode standard/clean/compare.")
+                               "Berlaku untuk mode standard/clean/compare/multi.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -1320,7 +1346,10 @@ def main():
         out_path = args.out or f"charts/{args.symbol.upper()}_multi.png"
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         result_path = asyncio.run(
-            _fetch_and_build_multi(args.symbol.upper(), timeframes, cfg, out_path)
+            _fetch_and_build_multi(
+                args.symbol.upper(), timeframes, cfg, out_path,
+                square=(args.ratio == "square"),
+            )
         )
 
     elif args.mode == "compare":
