@@ -1,206 +1,280 @@
 """
-mtfk.py — Multi-Timeframe Chart Visualizer for analyze.py
+mtfk.py — Multi-Timeframe Chart Visualizer & entry point untuk analyze.py
 
-Fungsi utama:
-- Memvisualisasikan hasil analisa dari analyze.py per timeframe.
-- Mengadopsi styling layout dark-theme modern dari chart.py.
-- Menampilkan penanda visual poin analisa:
-  * EMA 20, 50, dan 200 (jika bar mencukupi).
-  * Area Support & Resistance dari _levels().
-  * Penanda Swing High (v) & Swing Low (^) dari _swing_points().
-  * Volume & Volume MA 20.
-- Tidak menampilkan garis Entry, TP, dan SL (murni visualisasi struktur & tren).
+Tugas:
+- Menjalankan analisa independen (analyze_symbol dari analyze.py).
+- Menyimpan hasil analisa sebagai markdown (fungsi compose_analysis_text
+  milik analyze.py, sama persis seperti sebelumnya).
+- Menggambar chart multi-timeframe yang tampilannya memakai ulang
+  styling & helper visual dari chart.py (warna, candle, volume, badge
+  24h, header/footer, format harga) supaya konsisten dengan chart lain
+  di proyek ini -- TAPI indikator yang digambar di tiap panel bukan
+  punya chart.py (EMA tunggal + Supertrend + zona demand/supply + BOS),
+  melainkan langsung dari hasil analyze.py: EMA 20/50/200, garis
+  support/resistance dari structure, swing high/low, serta label
+  arah & setup. Jadi tiap panel chart adalah representasi visual
+  langsung dari analisa yang dihasilkan analyze.py, bukan analisa lain.
+
+Arah dependensi sekarang satu arah: mtfk.py -> analyze.py (mtfk yang
+mengimpor analyze, bukan sebaliknya). analyze.py sama sekali tidak
+mengenal modul ini, jadi tidak ada circular import.
+
+Entry point workflow: jalankan `python mtfk.py --symbol <SYMBOL>` untuk
+mendapatkan markdown analisa + chart MTF sekaligus (menggantikan
+`python analyze.py --symbol <SYMBOL>` yang sekarang cuma menghasilkan
+markdown saja, tanpa chart).
 """
 
 from __future__ import annotations
 
 import os
+import sys
 import argparse
 import asyncio
-import yaml
-import numpy as np
+from datetime import datetime, timezone
+
 import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from matplotlib.gridspec import GridSpec
 
-# Mengimpor modul analisis dan helper dasar
-from analyze import analyze_symbol, normalize_symbol, _swing_points
+# Reuse seluruh styling & helper gambar dari chart.py (BG, PANEL, GRID,
+# _draw_candles, _draw_volume, badge 24h, format harga, dst) apa adanya,
+# tanpa mengubah chart.py.
+import chart
 
-# Skema Warna Dark UI (Menyesuaikan standar tampilan chart.py)
-BG_COLOR = "#0D1117"
-PANEL_BG = "#161B22"
-GRID_COLOR = "#21262D"
-TEXT_COLOR = "#C9D1D9"
-MUTED_TEXT = "#8B949E"
-BULL_COLOR = "#26A69A"
-BEAR_COLOR = "#EF5350"
-ACCENT_YELLOW = "#F1C40F"
-ACCENT_BLUE = "#29B6F6"
-ACCENT_PURPLE = "#AB47BC"
+# Modul analisis (satu arah: mtfk depends on analyze, bukan sebaliknya)
+from analyze import (
+    analyze_symbol,
+    normalize_symbol,
+    _swing_points,
+    compose_analysis_text,
+    compose_console_summary,
+    OUT_DIR,
+)
+
+# EMA analyze.py memakai 3 EMA (20/50/200), chart.py cuma 1 -- dikasih
+# warna beda supaya ketiganya kebaca saat ditumpuk di panel yang sama.
+EMA20_COLOR = "#FFD54F"
+EMA50_COLOR = "#29B6F6"
+EMA200_COLOR = "#AB47BC"
+
+SUPPORT_COLOR = chart.UP
+RESISTANCE_COLOR = chart.DOWN
+SWING_HIGH_COLOR = chart.DOWN
+SWING_LOW_COLOR = chart.UP
 
 
-def render_tf_panel(
-    ax_price: plt.Axes,
-    ax_vol: plt.Axes,
-    df: pd.DataFrame,
-    tf_name: str,
-    tf_info: dict,
-):
-    """Menggambar candlestick dan penanda analisa untuk 1 timeframe."""
-    df = df.copy().reset_index(drop=True)
-    n = len(df)
-    x = np.arange(n)
+def _draw_analyze_indicators(ax, df: pd.DataFrame, n_show: int, tf_info: dict,
+                              swing_context: int = 30) -> None:
+    """Gambar EMA20/50/200, garis support/resistance, dan swing high/low
+    di atas candle -- semuanya bersumber dari analyze.py.
 
-    # 1. Plot Candlesticks
-    for i in range(n):
-        open_p, high_p, low_p, close_p = df.loc[i, ["open", "high", "low", "close"]]
-        color = BULL_COLOR if close_p >= open_p else BEAR_COLOR
-        # Wick
-        ax_price.plot([i, i], [low_p, high_p], color=color, linewidth=1.1, alpha=0.85)
-        # Body
-        body_bottom = min(open_p, close_p)
-        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.001)
-        ax_price.bar(i, body_height, bottom=body_bottom, color=color, width=0.6, align="center")
+    EMA dihitung dari `df` penuh (bukan cuma window yang tampil) lalu
+    diambil ekornya sepanjang n_show, persis seperti perhitungan
+    direction_analysis di analyze.py -- kalau dihitung ulang dari nol
+    hanya dari candle yang kelihatan, nilainya melenceng jauh (apalagi
+    EMA200, yang butuh histori panjang untuk "pemanasan").
 
-    # 2. Indikator EMA (Sesuai perhitungan analyze.py)
+    Swing high/low dihitung di window sedikit lebih lebar dari yang
+    ditampilkan (swing_context candle ekstra di kiri) supaya candle di
+    tepi kiri jendela tetap punya cukup konteks kiri/kanan untuk
+    terdeteksi (left=3/right=3), baru posisinya digeser relatif ke
+    window yang benar-benar digambar.
+    """
     close = df["close"]
-    ema20 = close.ewm(span=20, adjust=False).mean()
-    ema50 = close.ewm(span=50, adjust=False).mean()
+    ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
+    ema50 = close.ewm(span=50, adjust=False).mean().tail(n_show).to_numpy()
+    x = range(n_show)
+    ax.plot(x, ema20, color=EMA20_COLOR, linewidth=1.1, alpha=0.95, zorder=4)
+    ax.plot(x, ema50, color=EMA50_COLOR, linewidth=1.1, alpha=0.95, zorder=4)
+    if len(df) >= 200:
+        ema200 = close.ewm(span=200, adjust=False).mean().tail(n_show).to_numpy()
+        ax.plot(x, ema200, color=EMA200_COLOR, linewidth=1.1, alpha=0.95, zorder=4)
 
-    ax_price.plot(x, ema20, color=ACCENT_YELLOW, linewidth=1.2, label="EMA 20", alpha=0.9)
-    ax_price.plot(x, ema50, color=ACCENT_BLUE, linewidth=1.2, label="EMA 50", alpha=0.9)
+    structure = tf_info.get("structure") or {}
+    support, resistance = structure.get("support"), structure.get("resistance")
+    if support:
+        ax.axhline(support, color=SUPPORT_COLOR, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
+    if resistance:
+        ax.axhline(resistance, color=RESISTANCE_COLOR, linestyle="--", linewidth=1.0, alpha=0.55, zorder=3)
 
-    if n >= 200:
-        ema200 = close.ewm(span=200, adjust=False).mean()
-        ax_price.plot(x, ema200, color=ACCENT_PURPLE, linewidth=1.2, label="EMA 200", alpha=0.9)
-
-    # 3. Penanda Support & Resistance (Dari struktur analyze.py)
-    if "structure" in tf_info:
-        st = tf_info["structure"]
-        sup, res = st.get("support"), st.get("resistance")
-        if sup:
-            ax_price.axhline(sup, color=BULL_COLOR, linestyle="--", linewidth=1.0, alpha=0.6)
-        if res:
-            ax_price.axhline(res, color=BEAR_COLOR, linestyle="--", linewidth=1.0, alpha=0.6)
-
-    # 4. Penanda Swing High & Swing Low
-    sh, sl = _swing_points(df, left=3, right=3)
+    work = df.tail(n_show + swing_context).reset_index(drop=True)
+    offset = len(work) - n_show
+    sh, sl = _swing_points(work, left=3, right=3)
     for idx, val in sh:
-        if idx < n:
-            ax_price.scatter(idx, val * 1.002, marker="v", color=BEAR_COLOR, s=15, alpha=0.75)
+        if idx >= offset:
+            ax.scatter(idx - offset, val * 1.004, marker="v", color=SWING_HIGH_COLOR, s=14, alpha=0.8, zorder=5)
     for idx, val in sl:
-        if idx < n:
-            ax_price.scatter(idx, val * 0.998, marker="^", color=BULL_COLOR, s=15, alpha=0.75)
-
-    # 5. Volume Subplot & Volume MA
-    for i in range(n):
-        open_p, close_p, vol = df.loc[i, ["open", "close", "volume"]]
-        color = BULL_COLOR if close_p >= open_p else BEAR_COLOR
-        ax_vol.bar(i, vol, color=color, width=0.6, alpha=0.6)
-
-    vma = df["volume"].rolling(20).mean()
-    ax_vol.plot(x, vma, color=ACCENT_YELLOW, linewidth=1.0, alpha=0.8)
-
-    # 6. Styling Header Panel (Menampilkan Arah Bias & Jenis Setup)
-    direction = tf_info.get("direction", "NONE")
-    setup_type = tf_info.get("setup", {}).get("type", "NONE") if isinstance(tf_info.get("setup"), dict) else "NONE"
-    
-    dir_color = BULL_COLOR if direction == "LONG" else BEAR_COLOR if direction == "SHORT" else MUTED_TEXT
-    title_str = f"{tf_name}  ·  {direction}  ·  {setup_type}"
-
-    ax_price.set_title(title_str, color=dir_color, fontsize=11, fontweight="bold", loc="left", pad=8)
-
-    for ax in (ax_price, ax_vol):
-        ax.set_facecolor(PANEL_BG)
-        ax.grid(True, color=GRID_COLOR, linestyle="-", linewidth=0.5, alpha=0.5)
-        ax.tick_params(colors=MUTED_TEXT, labelsize=8)
-        for spine in ax.spines.values():
-            spine.set_color(GRID_COLOR)
-
-    ax_price.set_xlim(-1, n)
-    ax_vol.set_xlim(-1, n)
-    ax_price.xaxis.set_ticklabels([])
+        if idx >= offset:
+            ax.scatter(idx - offset, val * 0.996, marker="^", color=SWING_LOW_COLOR, s=14, alpha=0.8, zorder=5)
 
 
 def build_mtfk_chart(
-    dfs: dict[str, pd.DataFrame],
+    dfs: dict,
     symbol: str,
-    timeframes: list[str],
-    per_tf: dict[str, dict],
+    timeframes: list,
+    per_tf: dict,
     out_path: str,
+    cfg: dict | None = None,
+    square: bool = False,
 ) -> str:
-    """Membuat grid multi-timeframe secara dinamis berdasarkan data analyze.py."""
+    """Kartu multi-timeframe: candle + volume + badge 24h + header/footer
+    bergaya chart.py, dengan indikator per panel diambil langsung dari
+    hasil analyze.py (bukan Supertrend/BOS/zona milik chart.py)."""
+    cfg = cfg or {}
     valid_tfs = [tf for tf in timeframes if tf in dfs and tf in per_tf]
-    num_tfs = len(valid_tfs)
-
-    if num_tfs == 0:
+    n_panels = len(valid_tfs)
+    if n_panels == 0:
         raise ValueError("Tidak ada data timeframe yang valid untuk membuat chart.")
 
-    fig = plt.figure(figsize=(6 * num_tfs, 7), facecolor=BG_COLOR)
-    gs = gridspec.GridSpec(2, num_tfs, height_ratios=[3.5, 1.0], hspace=0.05, wspace=0.15)
+    chart_cfg = cfg.get("chart", {})
+    width_px = chart_cfg.get("width_px", 2800)
+    dpi = 200
+    fig_w = width_px / dpi
+    fig_h = fig_w if square else fig_w * 0.40
+    fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
+    fig.patch.set_facecolor(chart.BG)
+
+    if square:
+        outer = GridSpec(n_panels, 1, figure=fig, hspace=0.32,
+                          left=0.09, right=0.93, top=0.90, bottom=0.055)
+    else:
+        outer = GridSpec(1, n_panels, figure=fig, wspace=0.16,
+                          left=0.045, right=0.98, top=0.85, bottom=0.11)
+
+    tick_fs = 9.0 if square else 6.5
+    title_fs = 13.5 if square else 9.5
+    price_fs = 11.0 if square else 8.0
 
     for idx, tf in enumerate(valid_tfs):
-        ax_price = fig.add_subplot(gs[0, idx])
-        ax_vol = fig.add_subplot(gs[1, idx], sharex=ax_price)
-        render_tf_panel(ax_price, ax_vol, dfs[tf], tf, per_tf[tf])
+        df = dfs[tf]
+        tf_info = per_tf[tf]
+        has_error = "error" in tf_info
 
-    # Header & Footer Utama
-    fig.suptitle(
-        f"{symbol.upper()}  ·  MULTI-TIMEFRAME ANALYSIS",
-        color=TEXT_COLOR,
-        fontsize=16,
-        fontweight="bold",
-        x=0.02,
-        y=0.96,
-        ha="left",
-    )
+        n_show = chart.get_candles_shown(tf, cfg)
+        plot_df = df.tail(n_show).reset_index(drop=True)
 
-    fig.text(0.02, 0.02, "BINANCE FUTURES · vSynapse Visualizer Engine", color=MUTED_TEXT, fontsize=8, ha="left")
-    fig.text(
-        0.98,
-        0.02,
-        "Indicators: EMA 20/50/200 | Volume MA | Support & Resistance | Swing Points",
-        color=MUTED_TEXT,
-        fontsize=8,
-        ha="right",
-    )
+        cell = outer[idx, 0] if square else outer[0, idx]
+        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
+        ax_p = fig.add_subplot(inner[0, 0])
+        ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
+
+        for ax in (ax_p, ax_v):
+            ax.set_facecolor(chart.PANEL)
+            ax.grid(True, linestyle="-", alpha=0.7, color=chart.GRID, linewidth=0.4)
+            ax.set_axisbelow(True)
+            ax.tick_params(colors=chart.AXIS, labelcolor=chart.AXIS, labelsize=tick_fs)
+            for side in ("top", "right"):
+                ax.spines[side].set_visible(False)
+            for side in ("left", "bottom"):
+                ax.spines[side].set_color(chart.SPINE)
+                ax.spines[side].set_linewidth(0.6)
+        ax_p.tick_params(labelbottom=False)
+
+        colors = chart._draw_candles(ax_p, plot_df)
+        if not has_error:
+            _draw_analyze_indicators(ax_p, df, n_show, tf_info)
+
+        last_x = len(plot_df) - 1
+        y_low = float(plot_df["low"].min())
+        y_high = float(plot_df["high"].max())
+        y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
+        pad = y_span * 0.12
+        ax_p.set_ylim(y_low - pad, y_high + pad)
+        ax_p.set_xlim(-0.6, last_x + 0.6)
+        ax_v.set_xlim(-0.6, last_x + 0.6)
+
+        vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
+        chart._draw_volume(ax_v, plot_df, colors, vol_lookback)
+
+        direction = "NONE" if has_error else tf_info.get("direction", "NONE")
+        setup_info = tf_info.get("setup") if isinstance(tf_info.get("setup"), dict) else {}
+        setup_type = "NONE" if has_error else setup_info.get("type", "NONE")
+        badge_color = chart.UP if direction == "LONG" else chart.DOWN if direction == "SHORT" else chart.AXIS
+        setup_txt = f"  ·  {setup_type}" if setup_type and setup_type != "NONE" else ""
+        ax_p.set_title(f"{tf}  ·  {direction}{setup_txt}", color=badge_color,
+                        fontsize=title_fs, fontweight="bold", loc="left", pad=6)
+
+        dec = chart.decimals_from_price(float(plot_df["close"].iloc[-1]))
+        last_price = chart.format_price(plot_df["close"].iloc[-1], dec)
+        ax_p.text(0.99, 0.03, last_price, transform=ax_p.transAxes, color=chart.TEXT,
+                   fontsize=price_fs, fontweight="bold", ha="right", va="bottom", zorder=9)
+
+        if has_error:
+            ax_p.text(0.5, 0.5, "NO DATA", transform=ax_p.transAxes, color=chart.DOWN,
+                       fontsize=title_fs, fontweight="bold", ha="center", va="center")
+
+    header_fs = 20.0 if square else 17.0
+    badge_fs = 17.0 if square else 14.0
+    footer_fs = 10.0 if square else 7.0
+    disclaimer_fs = 9.0 if square else 6.5
+
+    fig.text(0.045, 0.95, f"{symbol}  ·  MULTI-TIMEFRAME", fontsize=header_fs,
+              fontweight="bold", color=chart.TEXT, ha="left", va="top")
+    ref_df = dfs[valid_tfs[0]]
+    chart._draw_change_badge(fig, 0.975, 0.95, chart._calc_24h_change(ref_df), fontsize=badge_fs)
+    fig.text(0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}", fontsize=footer_fs,
+              color=chart.AXIS, ha="left", va="bottom")
+    fig.text(0.98, 0.02,
+              "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+              fontsize=disclaimer_fs, fontweight="bold", color=chart.TEXT, ha="right", va="bottom")
 
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    plt.savefig(out_path, dpi=150, bbox_inches="tight", facecolor=BG_COLOR)
-    plt.close()
+    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
+    plt.close(fig)
     return out_path
 
 
-async def main():
-    parser = argparse.ArgumentParser(description="Generate Multi-TF Chart Visualizer (mtfk.py)")
+def main():
+    parser = argparse.ArgumentParser(description="vSynapse — analisa + chart MTF (satu perintah)")
     parser.add_argument("--symbol", required=True, help="Kode koin, contoh: BTCUSDT atau RIVER")
     parser.add_argument("--config", default="config.yaml", help="Path ke file konfigurasi")
-    parser.add_argument("--out", default="analysis_output/mtfk_chart.png", help="Path file output gambar")
+    parser.add_argument("--out", default=None, help="Path file chart output (default: OUT_DIR/<symbol>_multi.png)")
+    parser.add_argument("--ratio", choices=["wide", "square"], default="wide")
     args = parser.parse_args()
 
-    cfg = {}
-    if os.path.exists(args.config):
-        with open(args.config, "r") as f:
-            cfg = yaml.safe_load(f) or {}
+    import yaml
+    with open(args.config) as f:
+        cfg = yaml.safe_load(f) or {}
 
-    quote = cfg.get("exchange", {}).get("quote_asset", "USDT")
-    symbol = normalize_symbol(args.symbol, quote)
+    symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
+    timeframes = cfg.get("timeframes", ["1h"])
 
-    # Menjalankan analisa independen menggunakan analyze.py
-    res = await analyze_symbol(symbol, cfg)
+    print(f"[mtfk] Independent analysis started for {symbol}")
+    result = asyncio.run(analyze_symbol(symbol, cfg))
+    text = compose_analysis_text(result)
+    print(compose_console_summary(result))
 
-    build_mtfk_chart(
-        dfs=res["dfs"],
-        symbol=res["symbol"],
-        timeframes=cfg.get("timeframes", list(res["per_tf"].keys())),
-        per_tf=res["per_tf"],
-        out_path=args.out,
-    )
-    print(f"[mtfk] Berhasil membuat visual chart di: {args.out}")
+    os.makedirs(OUT_DIR, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    md_path = os.path.join(OUT_DIR, f"analysis_{result['symbol']}_{timestamp}.md")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write(text)
+    print(f"[mtfk] Markdown saved to {md_path}")
+
+    out_path = args.out or os.path.join(OUT_DIR, f"{symbol}_multi.png")
+    try:
+        build_mtfk_chart(
+            dfs=result["dfs"],
+            symbol=result["symbol"],
+            timeframes=timeframes,
+            per_tf=result["per_tf"],
+            out_path=out_path,
+            cfg=cfg,
+            square=(args.ratio == "square"),
+        )
+        print(f"[mtfk] Chart MTF saved to {out_path}")
+    except Exception as exc:
+        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
+
+    per_tf = result["per_tf"]
+    if per_tf and all("error" in info for info in per_tf.values()):
+        print(f"[mtfk] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
