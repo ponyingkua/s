@@ -12,6 +12,12 @@ import pandas as pd
 # scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
+# Chart rendering only: reuses the existing multi-timeframe card generator
+# (chart.py) so the accompanying image matches every other vSynapse chart.
+# That generator still runs chart.py's own scanner-based scoring internally
+# just to label each panel -- separate from the independent engine above.
+from chart import _fetch_and_build_multi
+
 OUT_DIR = "analysis_output"
 
 
@@ -450,6 +456,16 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     return {"symbol": symbol, "per_tf": per_tf}
 
 
+def _mtf_alignment(per_tf: dict) -> dict:
+    actionable = [(tf, x["direction"]) for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"]
+    longs = sum(d == "LONG" for _, d in actionable)
+    shorts = sum(d == "SHORT" for _, d in actionable)
+    overall = None
+    if actionable:
+        overall = "bullish" if longs > shorts else "bearish" if shorts > longs else "mixed"
+    return {"longs": longs, "shorts": shorts, "overall": overall}
+
+
 def compose_analysis_text(result: dict) -> str:
     symbol = result["symbol"]
     per_tf = result["per_tf"]
@@ -493,16 +509,41 @@ def compose_analysis_text(result: dict) -> str:
             lines.append(f"MTF confirmation: {', '.join(info['mtf_agree_tfs'])}")
         lines.append("")
 
-    actionable = [(tf, x["direction"]) for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"]
+    mtf = _mtf_alignment(per_tf)
     lines.append("## MTF Summary")
-    if not actionable:
+    if mtf["overall"] is None:
         lines.append("No sufficiently clear directional alignment was found.")
     else:
-        longs = sum(d == "LONG" for _, d in actionable)
-        shorts = sum(d == "SHORT" for _, d in actionable)
-        lines.append(f"LONG: {longs} timeframe(s)")
-        lines.append(f"SHORT: {shorts} timeframe(s)")
-        lines.append("Overall MTF read: " + ("bullish" if longs > shorts else "bearish" if shorts > longs else "mixed"))
+        lines.append(f"LONG: {mtf['longs']} timeframe(s)")
+        lines.append(f"SHORT: {mtf['shorts']} timeframe(s)")
+        lines.append(f"Overall MTF read: {mtf['overall']}")
+    return "\n".join(lines)
+
+
+def compose_console_summary(result: dict) -> str:
+    # Concise CI/console view: one line per timeframe plus the MTF verdict.
+    # The full breakdown (indicators, notes, structure) stays in the markdown file only.
+    symbol = result["symbol"]
+    per_tf = result["per_tf"]
+    lines = [f"[analyze] {symbol} summary:"]
+
+    for tf, info in per_tf.items():
+        if "error" in info:
+            lines.append(f"[analyze]   {tf}: ERROR - {info['error']}")
+            continue
+        su, lv = info["setup"], info["levels"]
+        line = f"[analyze]   {tf}: {info['direction']} | {info['bias']} | {su['type']} ({su['quality']})"
+        if lv["direction"] != "NONE":
+            lo, hi = lv["entry"]
+            line += f" | entry {lo}-{hi} SL {lv['sl']} TP1 {lv['tp1']} TP2 {lv['tp2']}"
+        lines.append(line)
+
+    mtf = _mtf_alignment(per_tf)
+    if mtf["overall"] is None:
+        lines.append("[analyze]   MTF: no clear directional alignment")
+    else:
+        lines.append(f"[analyze]   MTF: {mtf['longs']} LONG / {mtf['shorts']} SHORT -> {mtf['overall']}")
+
     return "\n".join(lines)
 
 
@@ -510,23 +551,43 @@ def main():
     parser = argparse.ArgumentParser(description="vSynapse — independent single-token MTF analyzer")
     parser.add_argument("--symbol", required=True, help="Coin code, e.g. ZEC or ZECUSDT")
     parser.add_argument("--config", default="config.yaml")
+    parser.add_argument("--chart-format", choices=["wide", "square"], default="wide",
+                          help="Kanvas chart multi-timeframe yang dibuat bersamaan hasil "
+                               "analisa. wide = panel berdampingan (default). "
+                               "square = panel ditumpuk, kanvas 1:1 untuk feed Binance Square/IG.")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
     symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
+    timeframes = cfg.get("timeframes", ["1h"])
 
     print(f"[analyze] Independent analysis started for {symbol}")
-    print(f"[analyze] Timeframes: {', '.join(cfg.get('timeframes', ['1h']))}")
+    print(f"[analyze] Timeframes: {', '.join(timeframes)}")
     result = asyncio.run(analyze_symbol(symbol, cfg))
     text = compose_analysis_text(result)
-    print("\n" + text)
+    print(compose_console_summary(result))
 
     os.makedirs(OUT_DIR, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     md_path = os.path.join(OUT_DIR, f"analysis_{result['symbol']}_{timestamp}.md")
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(text)
-    print(f"\n[analyze] Finished. Markdown saved to {md_path}")
+    print(f"[analyze] Finished. Markdown saved to {md_path}")
+
+    # Chart multi-timeframe menyertai hasil analisa. Dibungkus try/except supaya
+    # kegagalan render chart (mis. rate limit) tidak menggagalkan analisa teks
+    # yang sudah berhasil ditulis di atas. notify=False -> tidak dikirim ke
+    # Telegram, chart ini murni jadi lampiran artifact workflow "Analyze Symbol(s)".
+    chart_path = os.path.join(OUT_DIR, f"chart_{result['symbol']}_{timestamp}.png")
+    try:
+        asyncio.run(_fetch_and_build_multi(
+            result["symbol"], timeframes, cfg, chart_path,
+            square=(args.chart_format == "square"),
+            notify=False,
+        ))
+        print(f"[analyze] Multi-timeframe chart saved to {chart_path}")
+    except Exception as exc:
+        print(f"[analyze] Gagal membuat chart multi-timeframe: {exc}")
 
 
 if __name__ == "__main__":
