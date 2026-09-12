@@ -148,7 +148,17 @@ scoring:
         # tengah rentang stabil itu, bukan di ekstrem. BELUM di-backtest
         # ulang dgn nilai -20 ini -- angka di atas dari re-filter trade
         # existing, bukan re-run backtest.py sungguhan.
-        extended: -38
+        #
+        # DIPERDALAM lagi dari -38 ke -50: 98 trade 4h (8 Agu 2025-18 Agu
+        # 2026, trades_raw_batch.json, -38 sudah aktif) -- cuma n=4 yang masih
+        # lolos, tapi 3 dari 4 nyaris full stop-loss (r_multiple -1.01 s/d
+        # -1.03), skor semuanya mepet ambang (65.4-68.2). Preseden SAMA
+        # seperti short.extended di bawah (n=3, diperdalam konservatif tanpa
+        # klaim ambang optimal) -- di sini n=4 dgn pola sama-sama nyaris
+        # seragam buruk. -50 dipilih supaya rentang skor 65-68 yang keempatnya
+        # ada di situ ikut tersaring; BUKAN hasil pencarian titik infleksi
+        # (data tidak cukup untuk itu). Cek ulang begitu n bertambah.
+        extended: -50
       short:
         # -14 sebelumnya: n=3 saja, avg R -1.04, win 0% — sample sangat tipis,
         # diperdalam sebagai langkah konservatif, BUKAN hasil pencarian ambang
