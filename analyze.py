@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import sys
 from datetime import datetime, timezone
 
 import numpy as np
@@ -13,6 +14,12 @@ import pandas as pd
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
 OUT_DIR = "analysis_output"
+
+# Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
+# Backoff eksponensial: percobaan ke-n (0-indexed) menunggu
+# FETCH_RETRY_BACKOFF_SECONDS * 2**n sebelum retry berikutnya.
+FETCH_MAX_RETRIES = 3
+FETCH_RETRY_BACKOFF_SECONDS = 1.5
 
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
@@ -186,6 +193,11 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     trend += 1.0 if s20 > 0 and s50 > 0 else -1.0 if s20 < 0 and s50 < 0 else 0
     if ema200 is not None and pd.notna(ema200.iloc[-1]):
         trend += 1.3 if p > float(ema200.iloc[-1]) else -1.3
+    else:
+        notes.append(
+            f"EMA200 not available (only {len(df)} candles of history); "
+            f"trend score uses EMA20/EMA50 alignment only."
+        )
     if trend > 0:
         bull += min(trend, 3.0)
         notes.append("Trend structure favors buyers.")
@@ -391,14 +403,38 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     structure = _structure_analysis(df)
     setup = _detect_setup(df, structure, direction)
 
-    # Structure has priority. Indicator confluence confirms rather than gates.
-    if structure["label"] == "BULLISH" and direction["bull"] >= direction["bear"]:
+    conf_bull_strong = direction["bull"] - direction["bear"] >= 1.5
+    conf_bear_strong = direction["bear"] - direction["bull"] >= 1.5
+    divergence_notes = []
+
+    # Structure has priority. Indicator confluence confirms rather than
+    # gates -- but confluence is never allowed to flip the call to the
+    # OPPOSITE side of an intact structure (e.g. HH/HL still intact yet
+    # RSI/MACD/volume/OBV are bearish-strong). That combination is a
+    # structure/momentum divergence: flagged explicitly and treated as NOT
+    # actionable (NONE) rather than silently emitting a signal against the
+    # very structure that was just confirmed.
+    if structure["label"] == "BULLISH" and conf_bear_strong:
+        final = "NONE"
+        divergence_notes.append(
+            f"Divergence: structure is BULLISH (HH/HL intact) but indicator "
+            f"confluence is bearish-strong (bull {direction['bull']} / bear "
+            f"{direction['bear']}); not treated as an actionable SHORT."
+        )
+    elif structure["label"] == "BEARISH" and conf_bull_strong:
+        final = "NONE"
+        divergence_notes.append(
+            f"Divergence: structure is BEARISH (LH/LL intact) but indicator "
+            f"confluence is bullish-strong (bull {direction['bull']} / bear "
+            f"{direction['bear']}); not treated as an actionable LONG."
+        )
+    elif structure["label"] == "BULLISH" and direction["bull"] >= direction["bear"]:
         final = "LONG"
     elif structure["label"] == "BEARISH" and direction["bear"] >= direction["bull"]:
         final = "SHORT"
-    elif direction["bull"] - direction["bear"] >= 1.5:
+    elif conf_bull_strong:
         final = "LONG"
-    elif direction["bear"] - direction["bull"] >= 1.5:
+    elif conf_bear_strong:
         final = "SHORT"
     else:
         final = "NONE"
@@ -416,6 +452,7 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
         "direction_analysis": direction,
         "setup": setup,
         "levels": levels,
+        "divergence_notes": divergence_notes,
     }
 
 
@@ -447,6 +484,35 @@ def _select_best_setup(per_tf: dict):
     return best_tf, best_info
 
 
+async def _fetch_tf(client: "BinanceFuturesClient", symbol: str, tf: str, klines_limit: int):
+    """Fetch & validasi satu timeframe. Retry dengan backoff eksponensial
+    (FETCH_MAX_RETRIES percobaan) untuk kegagalan transient (timeout, rate
+    limit dari Binance) -- percobaan terakhir yang gagal dilaporkan apa
+    adanya. Tidak pernah melempar exception ke caller: sukses maupun gagal
+    sama-sama dikembalikan sebagai (tf, df, error), df/error salah satunya
+    None, supaya analyze_symbol bisa memproses hasil tiap timeframe secara
+    seragam setelah asyncio.gather selesai."""
+    last_err = None
+    for attempt in range(FETCH_MAX_RETRIES):
+        try:
+            kline = await client.get_klines(symbol, tf, limit=klines_limit)
+            df = drop_unclosed_candle(kline.df)
+            if len(df) < 60:
+                return tf, None, f"Only {len(df)} closed bars available; minimum 60 required."
+            return tf, df, None
+        except Exception as exc:
+            last_err = exc
+            if attempt < FETCH_MAX_RETRIES - 1:
+                delay = FETCH_RETRY_BACKOFF_SECONDS * (2 ** attempt)
+                print(
+                    f"[warn] {symbol} {tf}: fetch failed ({exc}); retrying in "
+                    f"{delay:.1f}s (attempt {attempt + 1}/{FETCH_MAX_RETRIES})"
+                )
+                await asyncio.sleep(delay)
+    print(f"[error] Failed to fetch {symbol} {tf} after {FETCH_MAX_RETRIES} attempts: {last_err}")
+    return tf, None, str(last_err)
+
+
 async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     # Only data-fetch settings are borrowed from config. No scanner thresholds,
     # filters, scores, or regime decisions are consulted.
@@ -457,20 +523,33 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     dfs = {}
 
     async with BinanceFuturesClient() as client:
-        for tf in timeframes:
-            try:
-                kline = await client.get_klines(symbol, tf, limit=klines_limit)
-                df = drop_unclosed_candle(kline.df)
-                if len(df) < 60:
-                    per_tf[tf] = {"error": f"Only {len(df)} closed bars available; minimum 60 required."}
-                    continue
-                dfs[tf] = df
-                info = analyze_timeframe(df, symbol, tf)
-                info["mtf_agree_tfs"] = []
-                per_tf[tf] = info
-            except Exception as exc:
-                print(f"[error] Failed to analyze {symbol} {tf}: {exc}")
-                per_tf[tf] = {"error": str(exc)}
+        # Tiap timeframe independen satu sama lain (tidak ada dependency),
+        # jadi menunggu satu-satu di sini murni overhead -- di-fetch paralel
+        # lewat asyncio.gather. return_exceptions=True adalah jaring pengaman
+        # tambahan; _fetch_tf sendiri sudah menangkap semua exception-nya
+        # secara internal dan tidak pernah melempar keluar.
+        results = await asyncio.gather(
+            *(_fetch_tf(client, symbol, tf, klines_limit) for tf in timeframes),
+            return_exceptions=True,
+        )
+
+    for tf, res in zip(timeframes, results):
+        if isinstance(res, Exception):
+            print(f"[error] Failed to analyze {symbol} {tf}: {res}")
+            per_tf[tf] = {"error": str(res)}
+            continue
+        _, df, err = res
+        if err is not None:
+            per_tf[tf] = {"error": err}
+            continue
+        try:
+            dfs[tf] = df
+            info = analyze_timeframe(df, symbol, tf)
+            info["mtf_agree_tfs"] = []
+            per_tf[tf] = info
+        except Exception as exc:
+            print(f"[error] Failed to analyze {symbol} {tf}: {exc}")
+            per_tf[tf] = {"error": str(exc)}
 
     directions = {tf: x["direction"] for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"}
     for tf, info in per_tf.items():
@@ -547,7 +626,7 @@ def compose_analysis_text(result: dict) -> str:
             lines.append(f"ATR: {da['atr_pct']:.2f}%")
         if da["bb_width_pct"] is not None:
             lines.append(f"Bollinger width: {da['bb_width_pct']:.2f}%")
-        for note in st["notes"] + da["notes"] + su["notes"]:
+        for note in st["notes"] + da["notes"] + su["notes"] + info.get("divergence_notes", []):
             lines.append(f"- {note}")
         lines.append(f"Best setup: {su['type']} ({su['quality']})")
 
@@ -600,6 +679,8 @@ def compose_console_summary(result: dict) -> str:
         if lv["direction"] != "NONE":
             lo, hi = lv["entry"]
             line += f" | entry {lo}-{hi} SL {lv['sl']} TP1 {lv['tp1']} TP2 {lv['tp2']}"
+        if info.get("divergence_notes"):
+            line += " | ⚠ DIVERGENCE (structure vs momentum)"
         lines.append(line)
 
     mtf = _mtf_alignment(per_tf)
@@ -633,6 +714,15 @@ def main():
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
+
+    # Kalau SEMUA timeframe gagal (fetch atau analisa), laporan tetap ditulis
+    # di atas untuk jejak, tapi exit code dibuat non-zero supaya CI/workflow
+    # membedakan "beneran gagal dapat data" (symbol salah ketik, API down)
+    # dari "berhasil analisa tapi memang tidak ada setup actionable".
+    per_tf = result["per_tf"]
+    if per_tf and all("error" in info for info in per_tf.values()):
+        print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
