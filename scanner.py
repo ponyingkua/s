@@ -5,6 +5,7 @@ import asyncio
 import glob
 import json
 import os
+import random
 import re
 import zipfile
 from dataclasses import dataclass, field
@@ -1307,6 +1308,10 @@ def load_config(path: str = "config.yaml") -> dict:
 
 
 async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list[dict]:
+    # Catatan: chart_format tidak lagi dipakai di sini -- chart yang di-zip &
+    # dikirim ke Telegram sekarang selalu mengacak rasio wide/square sendiri
+    # (lihat blok auto_generate_charts di bawah). Parameter ini dipertahankan
+    # hanya untuk kompatibilitas signature/CLI.
     scan_timestamp = datetime.now(timezone.utc).isoformat()
     results = []
     captions: list[str] = []
@@ -1532,7 +1537,14 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                 import chart as chart_module
 
                 os.makedirs("charts", exist_ok=True)
-                is_square = chart_format == "square"
+                # Chart di jalur ini masuk ke zip yang dikirim ke Telegram
+                # (lihat zip_charts di bawah) -- rasio wide/square DAN warna
+                # background sengaja diacak per-chart di sini supaya tiap
+                # sinyal terlihat sedikit berbeda satu sama lain. Ini TIDAK
+                # memengaruhi --chart-format/chart_format: nilai itu tetap
+                # dipakai apa adanya oleh semua jalur manual lain (mis.
+                # generate chart lewat CLI chart.py langsung).
+                is_square = random.choice([False, True])
                 suffix = "_square" if is_square else ""
                 chart_path = f"charts/{kline.symbol}_{signal.timeframe}{suffix}.png"
                 chart_module.build_chart(
@@ -1543,6 +1555,7 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                     cfg,
                     chart_path,
                     square=is_square,
+                    random_bg=True,
                 )
                 chart_paths.append(chart_path)
 
@@ -1596,9 +1609,10 @@ def main():
         choices=["wide", "square"],
         default=None,
         help=(
-            "Format chart yang digenerate & dikirim ke Telegram. "
-            "Default: wide. Isi 'square' untuk mengganti sementara ke versi 1:1 "
-            "(dipakai saat run manual, mis. lewat workflow_dispatch)."
+            "(Tidak lagi berpengaruh ke chart yang dikirim ke Telegram lewat "
+            "zip -- rasio wide/square untuk chart tersebut sekarang selalu "
+            "diacak per-chart, lihat run_scan(). Argumen ini dipertahankan "
+            "hanya untuk kompatibilitas parameter/CLI."
         ),
     )
     args = parser.parse_args()
