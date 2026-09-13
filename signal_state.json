@@ -8,25 +8,13 @@
     "symbol": "MTLUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T02:03:51.524524+00:00"
+    "timestamp": "2026-09-13T06:04:10.287677+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T00:05:03.447601+00:00"
-  },
-  "PYTHUSDT|15m": {
-    "symbol": "PYTHUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T18:04:05.092376+00:00"
-  },
-  "BTWUSDT|1h": {
-    "symbol": "BTWUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T18:04:07.783449+00:00"
   },
   "PYTHUSDT|1h": {
     "symbol": "PYTHUSDT",
@@ -68,7 +56,7 @@
     "symbol": "1000PEPEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T02:03:52.923408+00:00"
+    "timestamp": "2026-09-13T06:04:08.664674+00:00"
   },
   "ILVUSDT|1h": {
     "symbol": "ILVUSDT",
