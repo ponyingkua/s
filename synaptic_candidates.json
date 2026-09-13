@@ -18882,5 +18882,28 @@
     "tp": 0.020145,
     "tp1": 0.01944,
     "scanned_at": "2026-09-13T08:03:13.208381+00:00"
+  },
+  {
+    "symbol": "THETAUSDT",
+    "direction": "LONG",
+    "score": 67.3,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "ADX (28.7) tren kuat (+8.3 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.1962,
+    "sl": 0.188374,
+    "tp": 0.210288,
+    "tp1": 0.204026,
+    "scanned_at": "2026-09-13T09:23:34.851155+00:00"
   }
 ]
