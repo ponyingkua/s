@@ -16,17 +16,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T15:03:35.322644+00:00"
   },
-  "SKYUSDT|15m": {
-    "symbol": "SKYUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T14:03:51.351105+00:00"
-  },
   "MTLUSDT|1h": {
     "symbol": "MTLUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T14:03:54.660969+00:00"
+    "timestamp": "2026-09-13T02:03:51.524524+00:00"
   },
   "MUBARAKUSDT|1h": {
     "symbol": "MUBARAKUSDT",
@@ -105,5 +99,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T01:03:43.705085+00:00"
+  },
+  "BLURUSDT|1h": {
+    "symbol": "BLURUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T02:03:49.427278+00:00"
+  },
+  "1000PEPEUSDT|1h": {
+    "symbol": "1000PEPEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T02:03:52.923408+00:00"
+  },
+  "ILVUSDT|1h": {
+    "symbol": "ILVUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T02:03:54.341595+00:00"
   }
 }
