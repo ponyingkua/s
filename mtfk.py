@@ -340,7 +340,7 @@ def build_mtfk_chart(
     )
     fig.text(
         0.98, 0.02,
-        "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+        "Chart-based analysis. NOT FINANCIAL ADVICE, DYOR.",
         fontsize=disclaimer_fs, fontweight="bold", color=chart.TEXT,
         ha="right", va="bottom",
     )
