@@ -47,8 +47,6 @@ RANDOM_BG_PALETTE = [
     "#bdbdbd",
     "#32393d",
     "#373737",
-    "#2d2d2d",
-    "#464646",
 ]
 
 # Warna teks/grid/axis/spine dipakai saat bg acak tergolong TERANG (mis.
