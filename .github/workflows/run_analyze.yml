@@ -26,53 +26,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Jalankan analisa multi-timeframe
-        run: |
-          set -euo pipefail
-
-          RAW="${{ inputs.symbols }}"
-          # Normalisasi: spasi → koma, hapus spasi berlebih & koma ganda
-          CLEAN=$(echo "$RAW" | tr ' ' ',' | tr -s ',' | sed 's/^,//;s/,$//')
-
-          if [ -z "$CLEAN" ]; then
-            echo "ERROR: Tidak ada symbol yang diberikan"
-            exit 1
-          fi
-
-          echo "Symbols yang akan dianalisa: $CLEAN"
-          echo "----------------------------------------"
-
-          IFS=',' read -ra SYMBOLS <<< "$CLEAN"
-          FAILED=0
-
-          for SYM in "${SYMBOLS[@]}"; do
-            SYM=$(echo "$SYM" | xargs)   # trim whitespace
-            [ -z "$SYM" ] && continue
-
-            echo ""
-            echo ">>> Analyzing: $SYM"
-            echo "----------------------------------------"
-
-            if python analyze.py --symbol "$SYM"; then
-              echo "✓ Selesai: $SYM"
-            else
-              echo "✗ Gagal: $SYM"
-              FAILED=$((FAILED + 1))
-            fi
-          done
-
-          echo ""
-          echo "========================================"
-          echo ""
-          echo "Isi analysis_output/ (markdown + chart MTF per token):"
-          find analysis_output -type f | sort || true
-
-          echo ""
-          if [ "$FAILED" -gt 0 ]; then
-            echo "Selesai dengan $FAILED kegagalan."
-            exit 1
-          else
-            echo "Semua analisa berhasil."
-          fi
+        run: python analyze.py --symbols "${{ inputs.symbols }}"
 
       - name: Upload hasil analisa (1 artifact, file terpisah per token)
         if: always()
