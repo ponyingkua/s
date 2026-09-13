@@ -87,5 +87,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T09:24:14.847826+00:00"
+  },
+  "POWRUSDT|1h": {
+    "symbol": "POWRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T10:12:20.886447+00:00"
+  },
+  "LITUSDT|1h": {
+    "symbol": "LITUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-13T10:12:23.084211+00:00"
   }
 }
