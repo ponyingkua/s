@@ -105,5 +105,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T03:03:44.618093+00:00"
+  },
+  "KAVAUSDT|1h": {
+    "symbol": "KAVAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T04:04:02.337042+00:00"
   }
 }
