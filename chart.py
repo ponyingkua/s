@@ -1197,7 +1197,7 @@ def build_comparison_chart(
     fig.text(0.06, 0.02, "BINANCE FUTURES  ·  Normalized % Change", fontsize=7,
               color=AXIS, ha="left", va="bottom")
     fig.text(0.94, 0.02,
-              "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
+              "Chart-based analysis.\nNOT FINANCIAL ADVICE, DYOR.",
               fontsize=7.5, fontweight="bold", color=TEXT, ha="right", va="bottom",
               linespacing=1.6)
 
