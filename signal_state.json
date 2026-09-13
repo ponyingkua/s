@@ -225,5 +225,11 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-13T21:03:54.770098+00:00"
+  },
+  "CVCUSDT|1h": {
+    "symbol": "CVCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T22:03:50.354674+00:00"
   }
 }
