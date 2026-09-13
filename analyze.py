@@ -9,15 +9,9 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-# Infrastructure only. The analysis engine below does NOT use scanner scoring,
-# scanner filters, scanner setup classification, or market-regime decisions.
 from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 
 OUT_DIR = "analysis_output"
-
-# Retry/backoff untuk fetch klines per timeframe -- lihat _fetch_tf().
-# Backoff eksponensial: percobaan ke-n (0-indexed) menunggu
-# FETCH_RETRY_BACKOFF_SECONDS * 2**n sebelum retry berikutnya.
 FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
 
@@ -29,9 +23,10 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
     return s if s.endswith(quote_asset) else f"{s}{quote_asset}"
 
 
-# ============================================================
-# Indicators
-# ============================================================
+def _fmt_price(value: float) -> str:
+    import chart
+    return chart.format_price(value, chart.decimals_from_price(value))
+
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -86,10 +81,6 @@ def _ema_slope(series: pd.Series, lookback: int = 5) -> float:
     return float(series.iloc[-1] - series.iloc[-lookback]) / base
 
 
-# ============================================================
-# Price structure
-# ============================================================
-
 def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
     highs = df["high"].to_numpy(float)
     lows = df["low"].to_numpy(float)
@@ -141,10 +132,10 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
 
     if last_close > prior_resistance and last_high > prior_resistance:
         bull += 2.2
-        notes.append(f"Price is holding above prior resistance ({prior_resistance:.8g}).")
+        notes.append(f"Price is holding above prior resistance ({_fmt_price(prior_resistance)}).")
     elif last_close < prior_support and last_low < prior_support:
         bear += 2.2
-        notes.append(f"Price is holding below prior support ({prior_support:.8g}).")
+        notes.append(f"Price is holding below prior support ({_fmt_price(prior_support)}).")
 
     total = bull + bear
     if total == 0:
@@ -165,10 +156,6 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
         "notes": notes,
     }
 
-
-# ============================================================
-# Independent direction/confluence engine
-# ============================================================
 
 def _direction_analysis(df: pd.DataFrame) -> dict:
     close, volume = df["close"], df["volume"]
@@ -196,9 +183,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
 
     if ema200 is not None and pd.notna(ema200.iloc[-1]):
         e200 = float(ema200.iloc[-1])
-        # Base side of EMA200
         trend += 1.3 if p > e200 else -1.3
-        # Extra weight when price is meaningfully away from EMA200 (in ATR units)
         dist_atr = abs(p - e200) / atr_now if atr_now > 0 else 0.0
         if dist_atr >= 1.0:
             trend += 0.4 if p > e200 else -0.4
@@ -211,7 +196,6 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
             f"trend score uses EMA20/EMA50 alignment only."
         )
 
-    # Soft ATR regime: very quiet markets weaken pure trend conviction slightly
     if atr_pct < 0.35:
         trend *= 0.85
         notes.append(f"ATR {atr_pct:.2f}% is compressed; trend weight reduced.")
@@ -317,10 +301,6 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     }
 
 
-# ============================================================
-# Setup selection
-# ============================================================
-
 def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     p = float(df["close"].iloc[-1])
     atr = direction["atr"] or p * 0.01
@@ -358,7 +338,6 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             notes.append("Lower-wick rejection is visible at structural support.")
 
     if setup == "NONE":
-        # CONTINUATION requires aligned structure + non-fading momentum
         ema20 = df["close"].ewm(span=20, adjust=False).mean()
         slope20 = _ema_slope(ema20)
         _, _, hist = _macd(df["close"])
@@ -367,19 +346,17 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
         rsi = _rsi(df["close"])
         r = float(rsi.iloc[-1]) if pd.notna(rsi.iloc[-1]) else 50.0
 
-        cont_ok = False
         if bull_bias and structure["label"] == "BULLISH":
             momentum_ok = slope20 > 0 and h >= 0 and not (h < hp and h < 0.0)
-            rsi_ok = r < 75  # avoid chasing extreme extension
+            rsi_ok = r < 75
             atr_ok = True
             if direction.get("atr_pct") is not None and direction["atr_pct"] < 0.30:
                 atr_ok = False
                 notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
             if momentum_ok and rsi_ok and atr_ok:
-                cont_ok = True
                 setup, score = "CONTINUATION", 2.2
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
-            elif bull_bias and structure["label"] == "BULLISH":
+            else:
                 notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
         elif bear_bias and structure["label"] == "BEARISH":
             momentum_ok = slope20 < 0 and h <= 0 and not (h > hp and h > 0.0)
@@ -389,25 +366,20 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
                 atr_ok = False
                 notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
             if momentum_ok and rsi_ok and atr_ok:
-                cont_ok = True
                 setup, score = "CONTINUATION", 2.2
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
-            elif bear_bias and structure["label"] == "BEARISH":
+            else:
                 notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
 
 
-# ============================================================
-# Levels: structure + volatility
-# ============================================================
-
 def _round_price(value: float) -> float:
     if value == 0:
         return 0.0
-    digits = max(2, int(6 - np.floor(np.log10(abs(value)))))
-    return round(float(value), digits)
+    import chart
+    return round(float(value), chart.decimals_from_price(value))
 
 
 def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dict) -> dict:
@@ -509,7 +481,6 @@ def _select_best_setup(per_tf: dict):
         strength = abs(da["bull"] - da["bear"])
         agree = len(info.get("mtf_agree_tfs", []))
         row = ((su["score"], strength, agree), tf, info)
-        # Prefer MEDIUM/HIGH; keep LOW only as fallback
         if su.get("quality") == "LOW" or su.get("score", 0) < 2.0:
             weak.append(row)
         else:
@@ -614,10 +585,10 @@ def compose_analysis_text(result: dict) -> str:
         lines.append(f"Timeframe: {best_tf}")
         lines.append(f"Direction: {best_info['direction']}")
         lines.append(f"Setup: {su['type']} ({su['quality']}, score {su['score']})")
-        lines.append(f"Entry: {lo} - {hi}")
-        lines.append(f"SL: {lv['sl']}")
-        lines.append(f"TP1: {lv['tp1']}")
-        lines.append(f"TP2: {lv['tp2']}")
+        lines.append(f"Entry: {_fmt_price(lo)} - {_fmt_price(hi)}")
+        lines.append(f"SL: {_fmt_price(lv['sl'])}")
+        lines.append(f"TP1: {_fmt_price(lv['tp1'])}")
+        lines.append(f"TP2: {_fmt_price(lv['tp2'])}")
     lines.append("")
     lines.append("## Per-timeframe breakdown")
     lines.append("")
@@ -652,7 +623,7 @@ def compose_console_summary(result: dict) -> str:
         lo, hi = lv["entry"]
         lines.append(
             f"[analyze]   BEST SETUP -> {best_tf}: {best_info['direction']} | "
-            f"{su['type']} ({su['quality']}) | entry {lo}-{hi} SL {lv['sl']}"
+            f"{su['type']} ({su['quality']}) | entry {_fmt_price(lo)}-{_fmt_price(hi)} SL {_fmt_price(lv['sl'])}"
         )
     return "\n".join(lines)
 
@@ -679,11 +650,7 @@ def main():
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    # Chart digambar oleh mtfk.py (murni modul penggambar, tidak punya CLI/main
-    # sendiri). Import HARUS lazy di sini (bukan di atas file). Meskipun mtfk
-    # sekarang juga mengimpor _swing_points secara lazy, chart.py masih
-    # mengimpor analyze di level modul -- top-level "from mtfk import ..."
-    # di analyze akan memicu circular import (analyze -> mtfk -> chart -> analyze).
+    # import lazy: chart.py impor analyze di level modul, kalau ditaruh di atas jadi circular import
     from mtfk import build_mtfk_chart
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
