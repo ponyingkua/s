@@ -662,7 +662,7 @@ def run_one(symbol_raw: str, cfg: dict) -> bool:
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    from mtfk import build_mtfk_chart
+    from mtfk import build_mtfk_chart, single_mtfk
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
         build_mtfk_chart(
@@ -676,6 +676,22 @@ def run_one(symbol_raw: str, cfg: dict) -> bool:
         print(f"[analyze] Chart MTF saved to {chart_path}")
     except Exception as exc:
         print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
+
+    best_tf = result.get("best_tf")
+    if best_tf is not None:
+        single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}.png")
+        try:
+            single_mtfk(
+                df=result["dfs"][best_tf],
+                symbol=result["symbol"],
+                timeframe=best_tf,
+                tf_info=result["per_tf"][best_tf],
+                out_path=single_path,
+                cfg=cfg,
+            )
+            print(f"[analyze] Chart drill-down ({best_tf}) saved to {single_path}")
+        except Exception as exc:
+            print(f"[warn] Gagal membuat chart drill-down untuk {symbol} ({best_tf}): {exc}")
 
     per_tf = result["per_tf"]
     if per_tf and all("error" in info for info in per_tf.values()):
