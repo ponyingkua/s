@@ -472,6 +472,11 @@ def build_single_mtfk_chart(
     return out_path
 
 
+# Alias: analyze.py mengimpor & memanggil fungsi ini dengan nama `single_mtfk`
+# (keyword args df/symbol/timeframe/tf_info/out_path/cfg persis sama).
+single_mtfk = build_single_mtfk_chart
+
+
 def build_mtfk_chart(
     dfs: dict,
     symbol: str,
