@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import random
 
 import matplotlib
 matplotlib.use("Agg")
@@ -29,6 +30,22 @@ GRID = "#3A3A3A"
 TEXT = "#F2F2F2"
 AXIS = "#B8B8B8"
 SPINE = "#4A4A4A"
+
+# Variasi warna background acak -- HANYA dipakai untuk chart yang dikirim ke
+# Telegram sebagai file zip (lihat build_chart(..., random_bg=True) yang
+# dipanggil dari scanner.run_scan). Semua tetap gelap netral/sedikit ber-hue
+# supaya TEXT, AXIS, GRID, SPINE, dan semua warna sinyal (UP/DOWN/EMA/dst)
+# tidak perlu ikut berubah -- kontrasnya sengaja dijaga setara dengan BG asli.
+RANDOM_BG_PALETTE = [
+    "#121417",  # netral gelap (default asli)
+    "#14181C",  # abu kebiruan gelap
+    "#16181A",  # abu netral gelap
+    "#12151A",  # navy sangat gelap
+    "#151318",  # ungu gelap redup
+    "#131917",  # hijau gelap redup
+    "#1A1517",  # coklat/merah gelap redup
+    "#111417",  # slate gelap
+]
 
 UP = "#26A69A"
 DOWN = "#EF5350"
@@ -87,6 +104,11 @@ STRUCTURE_CONTEXT = 30
 MAX_BOS_EVENTS = 1
 MIN_BOS_GAP_FRACTION = 0.10
 MIN_LABEL_GAP_FRACTION = 0.18
+
+
+def _pick_random_bg() -> str:
+    """Pilih warna background acak dari RANDOM_BG_PALETTE."""
+    return random.choice(RANDOM_BG_PALETTE)
 
 
 def get_candles_shown(timeframe: str, cfg: dict) -> int:
@@ -674,7 +696,16 @@ def build_chart(
     preset: str = "standard",
     hide_indicators: bool = False,
     square: bool = False,
+    random_bg: bool = False,
 ) -> str:
+    # random_bg HANYA dipakai untuk chart yang dikirim ke Telegram sebagai
+    # file zip (dipanggil dari scanner.run_scan, yang juga mengacak `square`
+    # sendiri sebelum memanggil fungsi ini). Saat True, warna background
+    # dipilih acak per-chart dari RANDOM_BG_PALETTE. Semua pemanggil lain
+    # (generate manual, workflow manual lewat CLI chart.py, _fetch_and_build*)
+    # tidak mengirim random_bg sehingga perilakunya tetap persis seperti semula.
+    bg_color = _pick_random_bg() if random_bg else BG
+
     show_levels = preset != "clean"
     n_show_max = get_candles_shown(timeframe, cfg)
 
@@ -718,7 +749,7 @@ def build_chart(
     fig_h = (width_px * height_ratio) / dpi
 
     fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
-    fig.patch.set_facecolor(BG)
+    fig.patch.set_facecolor(bg_color)
 
     gs = GridSpec(
         2, 1, figure=fig,
@@ -730,7 +761,7 @@ def build_chart(
     ax_vol = fig.add_subplot(gs[1, 0], sharex=ax_price)
 
     for ax in (ax_price, ax_vol):
-        ax.set_facecolor(PANEL)
+        ax.set_facecolor(bg_color)
         ax.grid(True, linestyle="-", alpha=0.8, color=GRID, linewidth=0.5)
         ax.set_axisbelow(True)
         ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
@@ -835,7 +866,7 @@ def build_chart(
     if not hide_indicators:
         legend = ax_price.legend(
             loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
-            facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
+            facecolor=bg_color, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
 
