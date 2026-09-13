@@ -34,12 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-13T06:04:08.664674+00:00"
   },
-  "ILVUSDT|1h": {
-    "symbol": "ILVUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T02:03:54.341595+00:00"
-  },
   "TSLAUSDT|1h": {
     "symbol": "TSLAUSDT",
     "timeframe": "1h",
@@ -135,5 +129,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T13:03:42.365066+00:00"
+  },
+  "POLYXUSDT|1h": {
+    "symbol": "POLYXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T14:03:54.454368+00:00"
+  },
+  "HIVEUSDT|1h": {
+    "symbol": "HIVEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T14:03:56.662958+00:00"
   }
 }
