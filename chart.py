@@ -1368,7 +1368,7 @@ def build_analysis_chart(
               f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50  ·  SUP/RES band",
               fontsize=footer_fs, color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
-              "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+              "Chart-based analysis. NOT FINANCIAL ADVICE, DYOR.",
               fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
