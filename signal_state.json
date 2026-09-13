@@ -201,5 +201,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-13T19:03:35.467849+00:00"
+  },
+  "CTSIUSDT|4h": {
+    "symbol": "CTSIUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T20:04:18.471098+00:00"
+  },
+  "TIAUSDT|4h": {
+    "symbol": "TIAUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T20:04:19.966399+00:00"
+  },
+  "DOGSUSDT|1h": {
+    "symbol": "DOGSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T20:04:20.978394+00:00"
   }
 }
