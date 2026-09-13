@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       symbols:
-        description: "Kode koin (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
+        description: "Nama Symbol (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
         required: true
         type: string
 
