@@ -16,18 +16,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T15:03:35.322644+00:00"
   },
-  "RAVEUSDT|1h": {
-    "symbol": "RAVEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-12T13:03:39.599422+00:00"
-  },
-  "TRXUSDT|1h": {
-    "symbol": "TRXUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T13:03:41.986239+00:00"
-  },
   "SKYUSDT|15m": {
     "symbol": "SKYUSDT",
     "timeframe": "15m",
@@ -111,5 +99,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T00:05:02.013179+00:00"
+  },
+  "PUNDIXUSDT|1h": {
+    "symbol": "PUNDIXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T01:03:43.705085+00:00"
   }
 }

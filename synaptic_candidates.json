@@ -18603,5 +18603,28 @@
     "tp": 5.7e-05,
     "tp1": 5.5e-05,
     "scanned_at": "2026-09-13T00:04:12.879683+00:00"
+  },
+  {
+    "symbol": "PUNDIXUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (38.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.10657,
+    "sl": 0.100075,
+    "tp": 0.118261,
+    "tp1": 0.113065,
+    "scanned_at": "2026-09-13T01:02:57.250558+00:00"
   }
 ]
