@@ -34,12 +34,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-13T06:04:08.664674+00:00"
   },
-  "KAVAUSDT|1h": {
-    "symbol": "KAVAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T04:04:02.337042+00:00"
-  },
   "TREEUSDT|1h": {
     "symbol": "TREEUSDT",
     "timeframe": "1h",
@@ -153,5 +147,35 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-13T15:03:57.806020+00:00"
+  },
+  "SOLVUSDT|1h": {
+    "symbol": "SOLVUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T16:04:13.351759+00:00"
+  },
+  "0GUSDT|4h": {
+    "symbol": "0GUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T16:04:14.935219+00:00"
+  },
+  "BLURUSDT|4h": {
+    "symbol": "BLURUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T16:04:15.776604+00:00"
+  },
+  "BNBUSDT|1h": {
+    "symbol": "BNBUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-13T16:04:17.190237+00:00"
+  },
+  "SOPHUSDT|1h": {
+    "symbol": "SOPHUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-13T16:04:18.598595+00:00"
   }
 }
