@@ -1,10 +1,3 @@
-"""
-mtfk.py — Multi-Timeframe Chart Renderer (clean)
-
-Entry point: analyze.py. Styling dari chart.py.
-Indikator: EMA20/50 (+EMA200 selektif), 1 S/R, tint arah, last price.
-"""
-
 from __future__ import annotations
 
 import os
@@ -16,6 +9,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import FuncFormatter
 
 import chart
 
@@ -23,10 +17,56 @@ EMA20_COLOR = "#FFD54F"
 EMA50_COLOR = "#29B6F6"
 EMA200_COLOR = "#AB47BC"
 
-# Tint panel sangat tipis sesuai direction
-TINT_LONG = (0.15, 0.65, 0.45, 0.05)   # hijau transparan
-TINT_SHORT = (0.85, 0.25, 0.25, 0.05)  # merah transparan
-TINT_NONE = (0.5, 0.5, 0.5, 0.03)      # netral
+TINT_LONG = (0.15, 0.65, 0.45, 0.05)
+TINT_SHORT = (0.85, 0.25, 0.25, 0.05)
+TINT_NONE = (0.5, 0.5, 0.5, 0.03)
+
+
+def _fmt_volume(value: float, _pos=None) -> str:
+    v = abs(value)
+    if v >= 1_000_000_000:
+        return f"{value / 1_000_000_000:.1f}B"
+    if v >= 1_000_000:
+        return f"{value / 1_000_000:.1f}M"
+    if v >= 1_000:
+        return f"{value / 1_000:.1f}K"
+    return f"{value:.0f}"
+
+
+def _time_axis_labels(df: pd.DataFrame, n_show: int, tf: str):
+    tail = df.tail(n_show)
+    m = len(tail)
+    if m == 0:
+        return None
+    ts = None
+    if isinstance(tail.index, pd.DatetimeIndex):
+        ts = list(tail.index)
+    else:
+        for col in ("timestamp", "open_time", "time", "date", "datetime"):
+            if col in tail.columns:
+                parsed = pd.to_datetime(tail[col], unit="ms", errors="coerce")
+                if parsed.isna().all():
+                    parsed = pd.to_datetime(tail[col], errors="coerce")
+                if not parsed.isna().all():
+                    ts = list(parsed)
+                break
+    if ts is None or len(ts) != m:
+        return None
+
+    fmt = "%d %b" if tf in ("4h", "1d") else "%H:%M"
+    step = max(m // 6, 1)
+    positions = list(range(0, m, step))
+    if positions[-1] != m - 1:
+        positions.append(m - 1)
+    labels = [pd.Timestamp(ts[p]).strftime(fmt) for p in positions]
+
+    dedup_pos, dedup_lab = [], []
+    for i, (pos, lab) in enumerate(zip(positions, labels)):
+        if dedup_lab and lab == dedup_lab[-1] and i != len(positions) - 1:
+            continue
+        dedup_pos.append(pos)
+        dedup_lab.append(lab)
+    return dedup_pos, dedup_lab
 
 
 def _atr_last(df: pd.DataFrame, period: int = 14) -> float:
@@ -50,6 +90,7 @@ def _draw_analyze_indicators(
     n_show: int,
     tf: str,
     tf_info: dict,
+    label_fs: float = 6.5,
 ) -> None:
     close = df["close"]
     p = float(close.iloc[-1])
@@ -66,15 +107,12 @@ def _draw_analyze_indicators(
         zorder=4, solid_capstyle="round",
     )
 
-    # EMA200: hanya di 1h/4h, atau jika harga dekat (dalam 2×ATR)
-    show_ema200 = False
     if len(df) >= 200:
         ema200_s = close.ewm(span=200, adjust=False).mean()
         ema200_val = float(ema200_s.iloc[-1])
         atr = _atr_last(df)
         near = atr > 0 and abs(p - ema200_val) <= 2.0 * atr
         if tf in ("1h", "4h", "1d") or near:
-            show_ema200 = True
             ax.plot(
                 x, ema200_s.tail(n_show).to_numpy(),
                 color=EMA200_COLOR, linewidth=0.9, alpha=0.88,
@@ -85,17 +123,34 @@ def _draw_analyze_indicators(
     support = structure.get("support")
     resistance = structure.get("resistance")
     if support:
+        s_val = float(support)
         ax.axhline(
-            support, color=chart.UP, linestyle="--",
+            s_val, color=chart.UP, linestyle="--",
             linewidth=0.9, alpha=0.50, zorder=3,
+        )
+        ax.text(
+            0.012, s_val,
+            f"S {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
+            transform=ax.get_yaxis_transform(), color=chart.UP,
+            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            zorder=5,
+            bbox=dict(boxstyle="round,pad=0.15", facecolor=chart.BG, edgecolor="none", alpha=0.7),
         )
     if resistance:
+        r_val = float(resistance)
         ax.axhline(
-            resistance, color=chart.DOWN, linestyle="--",
+            r_val, color=chart.DOWN, linestyle="--",
             linewidth=0.9, alpha=0.50, zorder=3,
         )
+        ax.text(
+            0.012, r_val,
+            f"R {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
+            transform=ax.get_yaxis_transform(), color=chart.DOWN,
+            fontsize=label_fs, fontweight="bold", ha="left", va="top",
+            zorder=5,
+            bbox=dict(boxstyle="round,pad=0.15", facecolor=chart.BG, edgecolor="none", alpha=0.7),
+        )
 
-    # Marker kecil di candle terakhir (warna = direction)
     direction = tf_info.get("direction", "NONE")
     last_c = float(df["close"].iloc[-1])
     if direction == "LONG":
@@ -113,7 +168,6 @@ def _draw_analyze_indicators(
 
 
 def _nearest_level_text(price: float, support, resistance) -> str:
-    """Jarak % ke level terdekat (S atau R)."""
     candidates = []
     if support is not None:
         candidates.append(("S", float(support)))
@@ -124,7 +178,7 @@ def _nearest_level_text(price: float, support, resistance) -> str:
     label, level = min(candidates, key=lambda t: abs(price - t[1]))
     pct = (price - level) / price * 100
     sign = "+" if pct >= 0 else ""
-    return f"  ·  {sign}{pct:.2f}% ke {label}"
+    return f"  ·  {sign}{pct:.2f}% → {label}"
 
 
 def build_mtfk_chart(
@@ -170,7 +224,6 @@ def build_mtfk_chart(
         tf_info = per_tf[tf]
         has_error = "error" in tf_info
 
-        # Samakan densitas candle dengan chart.py multi-card
         n_show = max(30, chart.get_candles_shown(tf, cfg) // 2 + 10)
         plot_df = df.tail(n_show).reset_index(drop=True)
 
@@ -191,7 +244,6 @@ def build_mtfk_chart(
                 ax.spines[side].set_linewidth(0.6)
         ax_p.tick_params(labelbottom=False)
 
-        # Tint panel sesuai direction (sangat tipis)
         direction = "NONE" if has_error else tf_info.get("direction", "NONE")
         if direction == "LONG":
             tint = TINT_LONG
@@ -208,7 +260,7 @@ def build_mtfk_chart(
 
         colors = chart._draw_candles(ax_p, plot_df)
         if not has_error:
-            _draw_analyze_indicators(ax_p, df, n_show, tf, tf_info)
+            _draw_analyze_indicators(ax_p, df, n_show, tf, tf_info, tick_fs)
 
         last_x = len(plot_df) - 1
         y_low = float(plot_df["low"].min())
@@ -222,7 +274,17 @@ def build_mtfk_chart(
         vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
         chart._draw_volume(ax_v, plot_df, colors, vol_lookback)
 
-        setup_info = tf_info.get("setup") if isinstance(tf_info.get("setup"), dict) else {}
+        ax_v.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
+        ax_v.yaxis.get_offset_text().set_visible(False)
+
+        time_ticks = _time_axis_labels(df, n_show, tf)
+        if time_ticks:
+            positions, labels = time_ticks
+            ax_v.set_xticks(positions)
+            ax_v.set_xticklabels(labels, fontsize=tick_fs, color=chart.AXIS)
+
+        setup_info = tf_info.get("setup")
+        setup_info = setup_info if isinstance(setup_info, dict) else {}
         setup_type = "NONE" if has_error else setup_info.get("type", "NONE")
         badge_color = (
             chart.UP if direction == "LONG"
@@ -236,7 +298,6 @@ def build_mtfk_chart(
             loc="left", pad=6,
         )
 
-        # Last price + jarak ke level terdekat
         last_px = float(plot_df["close"].iloc[-1])
         dec = chart.decimals_from_price(last_px)
         last_price = chart.format_price(last_px, dec)
