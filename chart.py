@@ -39,14 +39,14 @@ SPINE = "#4A4A4A"
 # otomatis memilih set warna teks/grid gelap saat bg-nya terang, dan set
 # warna terang (sama seperti default) saat bg-nya gelap.
 RANDOM_BG_PALETTE = [
-    "#636363",
-    "#3b3b3b",
-    "#222222",
-    "#141414",
+    "#050505",
+    "#0b0b0b",
+    "#121212",
+    "#161618",
     "#000000",
-    "#bdbdbd",
-    "#32393d",
-    "#373737",
+    "#181818",
+    "#1f1f1f",
+    "#000401",
 ]
 
 # Warna teks/grid/axis/spine dipakai saat bg acak tergolong TERANG (mis.
