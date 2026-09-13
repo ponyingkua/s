@@ -28,18 +28,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-13T15:03:53.873208+00:00"
   },
-  "POWRUSDT|1h": {
-    "symbol": "POWRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T10:12:20.886447+00:00"
-  },
-  "LITUSDT|1h": {
-    "symbol": "LITUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-13T10:12:23.084211+00:00"
-  },
   "WIFUSDT|15m": {
     "symbol": "WIFUSDT",
     "timeframe": "15m",
@@ -231,5 +219,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T22:03:50.354674+00:00"
+  },
+  "REZUSDT|1h": {
+    "symbol": "REZUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T23:03:46.552500+00:00"
   }
 }

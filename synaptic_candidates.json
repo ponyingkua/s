@@ -19880,5 +19880,28 @@
     "tp": 0.044673,
     "tp1": 0.040538,
     "scanned_at": "2026-09-13T22:03:18.058613+00:00"
+  },
+  {
+    "symbol": "REZUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (54.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.004542,
+    "sl": 0.00369,
+    "tp": 0.006076,
+    "tp1": 0.005394,
+    "scanned_at": "2026-09-13T23:02:49.185475+00:00"
   }
 ]
