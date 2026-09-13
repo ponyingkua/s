@@ -18766,5 +18766,51 @@
     "tp": 0.08235,
     "tp1": 0.077135,
     "scanned_at": "2026-09-13T04:03:27.616606+00:00"
+  },
+  {
+    "symbol": "GOOGLUSDT",
+    "direction": "LONG",
+    "score": 94.1,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (64) menguatkan momentum naik",
+      "ADX (33.2) tren kuat (+13.1 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 341.46,
+    "sl": 337.694115,
+    "tp": 348.238593,
+    "tp1": 345.225885,
+    "scanned_at": "2026-09-13T05:03:03.018632+00:00"
+  },
+  {
+    "symbol": "TREEUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (74) overbought \u2014 penalti chasing (-10)",
+      "ADX (49.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.04573,
+    "sl": 0.041773,
+    "tp": 0.052853,
+    "tp1": 0.049687,
+    "scanned_at": "2026-09-13T05:03:03.018632+00:00"
   }
 ]

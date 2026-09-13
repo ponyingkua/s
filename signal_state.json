@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "OPUSDT|4h": {
-    "symbol": "OPUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T17:03:52.659164+00:00"
-  },
   "MTLUSDT|1h": {
     "symbol": "MTLUSDT",
     "timeframe": "1h",
@@ -21,24 +15,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T00:05:03.447601+00:00"
-  },
-  "ETHFIUSDT|1h": {
-    "symbol": "ETHFIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T16:04:25.354143+00:00"
-  },
-  "VETUSDT|1h": {
-    "symbol": "VETUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T16:04:27.462292+00:00"
-  },
-  "ZAMAUSDT|1h": {
-    "symbol": "ZAMAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T17:03:50.484847+00:00"
   },
   "PYTHUSDT|15m": {
     "symbol": "PYTHUSDT",
@@ -62,7 +38,7 @@
     "symbol": "GOOGLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T00:04:58.485431+00:00"
+    "timestamp": "2026-09-13T05:03:48.986497+00:00"
   },
   "THEUSDT|4h": {
     "symbol": "THEUSDT",
@@ -111,5 +87,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T04:04:02.337042+00:00"
+  },
+  "TREEUSDT|1h": {
+    "symbol": "TREEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T05:03:51.891579+00:00"
   }
 }
