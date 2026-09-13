@@ -62,7 +62,7 @@
     "symbol": "NEOUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T12:04:26.092696+00:00"
+    "timestamp": "2026-09-13T19:03:31.081722+00:00"
   },
   "ASTERUSDT|4h": {
     "symbol": "ASTERUSDT",
@@ -189,5 +189,17 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-13T18:04:38.949186+00:00"
+  },
+  "BABYUSDT|1h": {
+    "symbol": "BABYUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T19:03:33.981397+00:00"
+  },
+  "GIGGLEUSDT|1h": {
+    "symbol": "GIGGLEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-13T19:03:35.467849+00:00"
   }
 }

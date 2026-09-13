@@ -19650,5 +19650,73 @@
     "tp": 1271.741364,
     "tp1": 1284.678536,
     "scanned_at": "2026-09-13T18:03:40.021562+00:00"
+  },
+  {
+    "symbol": "NEOUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (40.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 2.318,
+    "sl": 2.240642,
+    "tp": 2.457245,
+    "tp1": 2.395358,
+    "scanned_at": "2026-09-13T19:02:35.572009+00:00"
+  },
+  {
+    "symbol": "BABYUSDT",
+    "direction": "LONG",
+    "score": 69.2,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "ADX (30.5) tren kuat (+10.2 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 1.86",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.86 (sisa posisi)"
+    ],
+    "entry": 0.01211,
+    "sl": 0.01168,
+    "tp": 0.01291,
+    "tp1": 0.01254,
+    "scanned_at": "2026-09-13T19:02:35.572009+00:00"
+  },
+  {
+    "symbol": "GIGGLEUSDT",
+    "direction": "SHORT",
+    "score": 65.1,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (42) menguatkan momentum turun",
+      "ADX (31.3) tren kuat (+11.1 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 34.54,
+    "sl": 35.196924,
+    "tp": 33.357537,
+    "tp1": 33.883076,
+    "scanned_at": "2026-09-13T19:02:35.572009+00:00"
   }
 ]
