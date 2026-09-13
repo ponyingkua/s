@@ -32,7 +32,7 @@
     "symbol": "FLOCKUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T00:05:02.013179+00:00"
+    "timestamp": "2026-09-13T11:03:56.837122+00:00"
   },
   "PUNDIXUSDT|1h": {
     "symbol": "PUNDIXUSDT",
@@ -99,5 +99,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-13T10:12:23.084211+00:00"
+  },
+  "WIFUSDT|15m": {
+    "symbol": "WIFUSDT",
+    "timeframe": "15m",
+    "direction": "SHORT",
+    "timestamp": "2026-09-13T11:03:54.673877+00:00"
+  },
+  "POWERUSDT|1h": {
+    "symbol": "POWERUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T11:03:58.254347+00:00"
+  },
+  "BTWUSDT|1h": {
+    "symbol": "BTWUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T11:03:59.649602+00:00"
   }
 }
