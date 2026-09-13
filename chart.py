@@ -1,8 +1,3 @@
-"""vSynapse chart generator — candlestick + EMA/Supertrend/volume + market
-structure (HH/HL/LH/LL, zona Demand/Supply, BOS, panah target TP).
-
-Contoh: python chart.py --symbol BTCUSDT --timeframe 1h
-"""
 from __future__ import annotations
 
 import argparse
@@ -27,10 +22,6 @@ from scanner import (
     send_telegram_photo,
 )
 
-# ============================================================
-# STYLE
-# ============================================================
-
 BG = "#121417"
 PANEL = "#121417"
 GRID = "#3A3A3A"
@@ -47,8 +38,8 @@ ST_UP = "#66BB6A"
 ST_DOWN = "#EF5350"
 
 ENTRY = "#42A5F5"
-TP1 = "#26A69A"   # TP partial (dekat) -- juga dipakai sebagai warna TP tunggal kalau partial_tp nonaktif
-TP2 = "#00BFA5"   # TP final (jauh) -- hue senada tapi beda saturasi supaya kebeda dari TP1 di chart
+TP1 = "#26A69A"
+TP2 = "#00BFA5"
 SL = "#EF5350"
 
 VOLUME_MA = "#FFB74D"
@@ -59,15 +50,11 @@ DEMAND_EDGE = UP
 SUPPLY_FILL = "#6B1F1F"
 SUPPLY_EDGE = DOWN
 
-# Penanda arah (BOS, panah target) memakai warna candle yang sama supaya
-# konsisten: bull = hijau (UP), bear = merah (DOWN).
 BOS_BULL = UP
 BOS_BEAR = DOWN
 ARROW_BULL = UP
 ARROW_BEAR = DOWN
 
-# Palet garis untuk comparison chart (multi-simbol), berurutan supaya tiap
-# simbol dapat warna beda dan tetap kebaca di background gelap.
 COMPARE_PALETTE = [
     "#42A5F5", "#FFD54F", "#26A69A", "#EF5350",
     "#AB47BC", "#66BB6A", "#FFB74D", "#4FC3F7",
@@ -75,58 +62,24 @@ COMPARE_PALETTE = [
 
 CANDLE_WIDTH = 0.8
 
-# ------------------------------------------------------------
-# Z-ORDER (urutan layer chart, dari paling belakang ke paling depan)
-# ------------------------------------------------------------
-# Grid ada di bawah semuanya lewat ax.set_axisbelow(True) (terpisah, tidak
-# perlu konstanta). Urutan di bawah ini yang menentukan elemen mana yang
-# "menutupi" elemen lain kalau posisinya bertabrakan secara visual:
-#
-#   1. Candle (wick & body)
-#   2. Supertrend
-#   3. EMA 200
-#   4. Mark point struktur (zona Demand/Supply, garis+segitiga+teks BOS,
-#      label HH/HL/LH/LL)
-#   5. Garis + label ENTRY/TP/SL
-#   6. Panah target TP (paling depan)
-#
-# Tiap grup dikasih rentang 1.0 (mis. 4.0-4.9) supaya elemen di dalam grup
-# yang sama masih bisa diatur urutannya sendiri (mis. fill zona di bawah
-# teks "S"/"D"-nya) tanpa tabrakan dengan grup lain.
 Z_CANDLE_WICK = 2.0
 Z_CANDLE_BODY = 2.1
-
 Z_SUPERTREND = 3.0
-
 Z_EMA = 4.0
-
 Z_ZONE_FILL = 5.0
 Z_ZONE_TEXT = 5.1
 Z_BOS_LEVEL_LINE = 5.2
 Z_BOS_MARKER = 5.3
 Z_BOS_TEXT = 5.4
 Z_STRUCT_LABEL = 5.5
-
-Z_LEVEL_LINE = 6.0      # garis putus-putus ENTRY/TP/SL
-Z_LEVEL_LABEL = 6.5     # kotak label ENTRY/TP/SL (di atas garisnya sendiri)
-
+Z_LEVEL_LINE = 6.0
+Z_LEVEL_LABEL = 6.5
 Z_TARGET_ARROW = 7.0
 
-# Dipakai khusus build_analysis_chart (chart khusus analyze.py) di bawah --
-# tidak dipakai build_chart/build_multi_tf_card yang lama.
-EMA20_COLOR = "#4FC3F7"
-EMA50_COLOR = "#FFD54F"
-SUPPORT_FILL = "#1B5E40"
-SUPPORT_EDGE = UP
-RESIST_FILL = "#6B1F1F"
-RESIST_EDGE = DOWN
-Z_SR_BAND = 1.2
-Z_SR_LABEL = 1.4
-
 MAX_CANDLES_BY_TF = {
-    "15m": 50,   # ideal 45-55
-    "1h": 60,    # ideal 55-65
-    "4h": 45,    # ideal 40-50
+    "15m": 50,
+    "1h": 60,
+    "4h": 45,
 }
 
 STRUCTURE_CONTEXT = 30
@@ -139,10 +92,6 @@ def get_candles_shown(timeframe: str, cfg: dict) -> int:
     chart_cfg = cfg.get("chart", {})
     return MAX_CANDLES_BY_TF.get(timeframe, chart_cfg.get("candles_shown", 120))
 
-
-# ============================================================
-# HELPERS
-# ============================================================
 
 def decimals_from_price(price: float) -> int:
     p = abs(float(price))
@@ -168,9 +117,6 @@ def format_price(value: float, decimals: int) -> str:
 
 
 def _calc_24h_change(df: pd.DataFrame) -> float | None:
-    """Persentase perubahan harga 24 jam terakhir, dihitung langsung dari
-    kline yang sudah di-fetch (tanpa request tambahan ke API). None kalau
-    histori yang tersedia belum menutup 24 jam penuh."""
     if "open_time" not in df.columns or len(df) < 2:
         return None
     last_time = df["open_time"].iloc[-1]
@@ -189,8 +135,6 @@ def _calc_24h_change(df: pd.DataFrame) -> float | None:
 
 def _draw_change_badge(fig, x: float, y: float, change_pct: float | None,
                         fontsize: float = 15) -> None:
-    """Badge % perubahan 24 jam, kotak solid warna hijau/merah di pojok
-    header -- menggantikan posisi teks 'Updated ...' yang lama."""
     if change_pct is None:
         return
     color = UP if change_pct >= 0 else DOWN
@@ -205,13 +149,6 @@ def _draw_change_badge(fig, x: float, y: float, change_pct: float | None,
 
 def _place_level_labels(ax, levels: list, label_x: float, min_gap: float,
                          square: bool = False) -> None:
-    # Kotak solid berwarna sesuai level (entry/tp/sl), teks putih tebal di
-    # dalamnya supaya tetap terbaca jelas dan menonjol di layar kecil (HP).
-    # Kalau 2+ level berdekatan (mis. ENTRY & SL cuma beda dikit), kotak
-    # label bisa tumpang tindih kalau ditaruh persis di harga aslinya --
-    # jadi posisi label di-declutter vertikal (dorong-atas lalu dorong-bawah)
-    # supaya tidak saling menimpa. Level asli tetap ditunjukkan oleh garis
-    # putus-putus (axhline) yang warnanya sama dengan kotak labelnya.
     if not levels:
         return
 
@@ -275,10 +212,6 @@ def _draw_volume(ax, df: pd.DataFrame, colors: list, vol_ma_lookback: int = 20) 
 
 
 def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
-    """Hitung level Supertrend versi 'trailing band' (band cuma bergerak
-    searah tren seperti trailing-stop, tidak dihitung ulang dari nol tiap
-    candle) supaya garis yang digambar mulus, bukan zig-zag. Dipakai khusus
-    untuk visual chart -- tidak memengaruhi skor/sinyal di scanner.py."""
     hl2 = (df["high"] + df["low"]) / 2
     atr_val = atr(df, period)
     basic_upper = hl2 + multiplier * atr_val
@@ -290,13 +223,6 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
     final_lower = basic_lower.copy()
     trend = pd.Series(1, index=df.index, dtype=int)
 
-    # ATR butuh `period` candle pertama untuk "pemanasan" dan bernilai NaN
-    # sebelum itu. Rekursi trailing-band di bawah cuma valid begitu ATR
-    # sudah terisi — kalau dipaksa mulai dari index 0 yang NaN, band jadi
-    # macet permanen di NaN (perbandingan apa pun dengan NaN selalu False,
-    # jadi cabang else "bawa nilai lama" yang selalu kepilih selamanya).
-    # Ini penyebab garis Supertrend tidak pernah muncul di chart. Fix-nya:
-    # rekursi baru mulai dari candle pertama yang ATR-nya sudah valid.
     first_valid = atr_val.first_valid_index()
     if first_valid is None:
         return pd.Series(np.nan, index=df.index), trend
@@ -321,7 +247,7 @@ def _supertrend_trailing(df: pd.DataFrame, period: int, multiplier):
             trend.iloc[i] = trend.iloc[i - 1]
 
     level = final_lower.where(trend == 1, final_upper)
-    level.iloc[:start_pos] = np.nan  # belum ada ATR valid, jangan digambar
+    level.iloc[:start_pos] = np.nan
     return level, trend
 
 
@@ -333,10 +259,6 @@ def _gaussian_kernel1d(sigma: float, radius: int) -> np.ndarray:
 
 def _round_step_corners(x_idx: np.ndarray, y_val: np.ndarray,
                          step_res: float = 0.08, sigma: float = 0.15):
-    """1 run step (index candle berurutan naik 1, tanpa celah) diubah jadi
-    polyline rapat lalu di-gaussian-filter tipis -- cuma sudut tikungannya
-    yang membulat, pelat datar yang cukup lebar tetap kebaca flat seperti
-    semula (bukan smoothing penuh sepanjang garis)."""
     if len(x_idx) < 2:
         return x_idx.astype(float), y_val.astype(float)
 
@@ -355,11 +277,6 @@ def _round_step_corners(x_idx: np.ndarray, y_val: np.ndarray,
 
 
 def _rounded_masked_line(level_masked: pd.Series):
-    """Pecah garis step yang sudah di-mask per arah trend (NaN di bagian
-    trend lawan) jadi run-run kontinu, bulatkan tikungan tiap run lewat
-    _round_step_corners, gabung lagi jadi 1 pasang array x/y (dipisah NaN
-    antar-run) supaya tetap 1x panggilan ax.plot dan celah pas trend ganti
-    arah tetap putus seperti semula, bukan malah nyambung."""
     values = level_masked.to_numpy(dtype=float)
     valid = ~np.isnan(values)
     out_x: list = []
@@ -393,10 +310,6 @@ def _draw_supertrend(ax, level: pd.Series, trend: pd.Series,
     ax.plot(down_x, down_y, color=ST_DOWN, linewidth=1.4, alpha=0.90,
              solid_joinstyle="round", solid_capstyle="round", zorder=Z_SUPERTREND)
 
-
-# ============================================================
-# MARKET STRUCTURE
-# ============================================================
 
 def _find_swings(df: pd.DataFrame, left: int = 2, right: int = 2):
     high = df["high"].values
@@ -524,11 +437,6 @@ def _find_zones(df: pd.DataFrame, bos_events: list, swing_high_idxs, swing_low_i
 
 
 def _pad_zone_bounds(z: dict, y_span: float) -> tuple[float, float]:
-    """Perbesar tinggi kotak S/D. Kotak mentah (persis wick candle OB) sering
-    terlalu tipis kalau candle-nya kecil / low volatility. Dikasih tinggi
-    minimum + padding ekstra, searah alami zona -- demand (beli) diperpanjang
-    ke bawah, supply (jual) diperpanjang ke atas -- jadi kotak tetap merujuk
-    ke candle OB yang sama persis, cuma lebih kelihatan jelas di chart."""
     top, bottom = z["top"], z["bottom"]
     is_demand = z["type"] == "demand"
     min_height = y_span * 0.10
@@ -590,7 +498,6 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
             zorder=Z_ZONE_FILL,
         ))
 
-        # Teks S/D — warna hitam (sama dengan background gelap)
         mid_x = (start_px + end_px) / 2
         mid_y = (z["top"] + z["bottom"]) / 2
         ax.text(mid_x, mid_y, label, color="#F2F2F2",
@@ -600,7 +507,6 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
 
 def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.DataFrame,
                                  square: bool = False) -> None:
-    """Penanda BOS sederhana: garis level + segitiga kecil + teks BOS."""
     plot_len = len(plot_df)
     high = plot_df["high"].values
     low = plot_df["low"].values
@@ -616,11 +522,9 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
         is_bull = ev["direction"] == "bull"
         color = BOS_BULL if is_bull else BOS_BEAR
 
-        # Garis level sederhana
         ax.plot([origin_px, idx_px], [ev["level"], ev["level"]], color=color,
                  linestyle=(0, (4, 3)), linewidth=1.1, alpha=0.85, zorder=Z_BOS_LEVEL_LINE)
 
-        # Segitiga kecil
         if is_bull:
             ax.plot(idx_px, high[idx_px] + pad_marker, marker="^", color=color,
                      markersize=6.0, zorder=Z_BOS_MARKER, clip_on=False)
@@ -630,7 +534,6 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
                      markersize=6.0, zorder=Z_BOS_MARKER, clip_on=False)
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
-        # Teks BOS sederhana — warna hitam
         ax.text(idx_px + 0.9, label_y, "BOS", color="#F2F2F2",
                 fontsize=(12.5 if square else 6.0), fontweight="bold",
                 ha="left", va="center",
@@ -639,10 +542,6 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
 
 def _draw_target_arrow(ax, plot_df: pd.DataFrame, tp_price, last_x: int,
                         alpha: float = 0.75, lw: float = 1.3) -> None:
-    """Panah arah target, dari candle terakhir (harga close terkini) menuju
-    level TP aktual sinyal. `alpha`/`lw` dibuat bisa diatur supaya kalau
-    dipanggil dua kali (TP1 + TP2), panah TP2 (final, lebih jauh) bisa
-    digambar lebih samar daripada TP1 (partial, target dekat/utama)."""
     if tp_price is None:
         return
 
@@ -705,38 +604,27 @@ def _calculate_visible_range(
     max_candles: int,
     left_padding: int = 8,
 ) -> tuple[int, int]:
-    """Window selalu tetap `max_candles` lebar (kalau histori cukup) supaya
-    jumlah candle yang tampil konsisten antar chart. Struktur terbaru (BOS +
-    zone terkait) dipastikan tetap terlihat; kalau strukturnya dekat ujung
-    kanan, sisa ruang di kiri diisi candle histori biasa, bukan dipersempit."""
     n = len(work_df)
     end_idx = n - 1
 
     important = []
-
-    # Prioritas utama: BOS terbaru + zone yang terkait
     bos_events = structure.get("bos_events", [])
     zones = structure.get("zones", [])
 
     if bos_events:
-        # Ambil BOS paling kanan (terbaru)
         latest_bos = max(bos_events, key=lambda e: e["idx"])
         important.append(latest_bos["origin"])
         important.append(latest_bos["idx"])
-
-        # Zone yang terkait dengan BOS tersebut
         for z in zones:
             if abs(z["bos_idx"] - latest_bos["idx"]) <= 3:
                 important.append(z["start"])
                 important.append(z["bos_idx"])
 
-    # Cadangan: kalau tidak ada BOS, pakai zone terakhir
     if not important and zones:
         latest_zone = max(zones, key=lambda z: z["bos_idx"])
         important.append(latest_zone["start"])
         important.append(latest_zone["bos_idx"])
 
-    # Tambahkan hanya label yang dekat dengan struktur utama (maks 2 label terakhir)
     labeled = structure.get("labeled_points", [])
     if labeled and important:
         rightmost_important = max(important)
@@ -755,13 +643,9 @@ def _calculate_visible_range(
     leftmost = min(important)
     start_idx = max(0, leftmost - left_padding)
 
-    # Batasi maksimum candle
     if (end_idx - start_idx + 1) > max_candles:
         start_idx = max(0, end_idx - max_candles + 1)
 
-    # Isi penuh sampai max_candles: kalau struktur terbaru dekat ujung kanan,
-    # window jangan sampai lebih sempit dari chart lain — geser start_idx ke
-    # kiri sejauh histori memungkinkan.
     full_window_start = max(0, end_idx - max_candles + 1)
     start_idx = min(start_idx, full_window_start)
 
@@ -779,26 +663,14 @@ def build_chart(
     hide_indicators: bool = False,
     square: bool = False,
 ) -> str:
-    """Candle + EMA/Supertrend + volume + market structure (zona Demand/
-    Supply, BOS, label HH/HL/LH/LL, panah arah target) selalu digambar.
-    preset="clean" (dipakai jalur CLI/manual) menyembunyikan garis+label
-    ENTRY/TP/SL saja -- signature `signal`/`preset` dipertahankan supaya
-    pemanggilan langsung dari scanner.py (jalur otomatis) tidak perlu
-    berubah; default preset="standard" = ENTRY/TP/SL tetap tampil seperti
-    semula. hide_indicators dan square independen, bisa dipakai kapan saja.
-    square=True membuat kanvas rasio 1:1 (cocok untuk post feed Binance
-    Square/IG)."""
     show_levels = preset != "clean"
     n_show_max = get_candles_shown(timeframe, cfg)
 
-    # Ambil window lebih lebar untuk deteksi structure
     work_len = n_show_max + STRUCTURE_CONTEXT + 50
     work_df = df.tail(work_len).reset_index(drop=True)
 
-    # Hitung structure dulu
     structure = _compute_structure(work_df)
 
-    # Hitung range visible yang cerdas berdasarkan structure
     left_pad = 10 if timeframe == "15m" else 7
     start_idx, end_idx = _calculate_visible_range(
         work_df,
@@ -811,10 +683,6 @@ def build_chart(
     plot_df = work_df.iloc[start_idx : end_idx + 1].reset_index(drop=True)
     offset = start_idx
 
-    # Perbesar tinggi kotak S/D memakai rentang harga yang benar-benar
-    # tampil (plot_df), bukan tinggi candle OB itu sendiri, supaya ukuran
-    # kotak konsisten antar chart. Di-mutate langsung di sini (sebelum
-    # dipakai untuk hitung ylim maupun digambar) supaya keduanya konsisten.
     rough_span = float(plot_df["high"].max() - plot_df["low"].min())
     for z in structure["zones"]:
         z["top"], z["bottom"] = _pad_zone_bounds(z, rough_span)
@@ -823,10 +691,6 @@ def build_chart(
     st_period = cfg["indicators"]["supertrend"]["period"]
     st_mult = cfg["indicators"]["supertrend"]["multiplier"]
 
-    # EMA dihitung dari `df` penuh (bukan work_df) supaya warm-up-nya lebih
-    # panjang dan lebih akurat, lalu diambil `len(plot_df)` candle terakhir.
-    # plot_df selalu berakhir di candle paling akhir dari df, jadi .tail()
-    # ini selalu align dengan window yang ditampilkan.
     ema_full = ema(df["close"], ema_period).tail(len(plot_df)).reset_index(drop=True)
 
     st_level_work, st_trend_work = _supertrend_trailing(work_df, st_period, st_mult)
@@ -837,8 +701,7 @@ def build_chart(
     width_px = chart_cfg.get("width_px", 2800)
     height_ratio = 1.0 if square else chart_cfg.get("height_ratio", 9 / 20)
     dpi = 200
-    output_scale = 2  # render 2x lalu disimpan di dpi lebih tinggi supaya
-                       # hasil PNG lebih tajam; proporsi/layout tidak berubah
+    output_scale = 2
     fig_w = width_px / dpi
     fig_h = (width_px * height_ratio) / dpi
 
@@ -908,8 +771,6 @@ def build_chart(
         zone_values.append(z["top"])
         zone_values.append(z["bottom"])
 
-    # Level Supertrend ikut dihitung supaya garisnya tidak ke-clip oleh
-    # set_ylim ketika band-nya melebar keluar dari range harga/level/zone.
     st_values = [] if hide_indicators else [v for v in st_level_full.tolist() if pd.notna(v)]
 
     level_values = [item["level"] for item in levels]
@@ -932,9 +793,6 @@ def build_chart(
     _draw_zones(ax_price, structure["zones"], offset, plot_len, last_x, y_span, square=square)
     _draw_bos_and_confirmation(ax_price, structure["bos_events"], offset, plot_df, square=square)
     if tp1_val is not None and signal.tp is not None:
-        # TP1 (target dekat/utama) ditonjolkan, TP2 (target final) digambar
-        # lebih samar supaya tetap terlihat sebagai target lanjutan tanpa
-        # mendominasi chart.
         _draw_target_arrow(ax_price, plot_df, tp1_val, last_x, alpha=0.85, lw=1.4)
         _draw_target_arrow(ax_price, plot_df, signal.tp, last_x, alpha=0.35, lw=1.0)
     else:
@@ -984,10 +842,6 @@ def build_chart(
         fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
                   fontsize=7, color=AXIS, ha="left", va="bottom")
 
-    # Disclaimer kanan-bawah: satu blok teks 2 baris, font & alignment
-    # seragam supaya rapi (sebelumnya 2 fig.text terpisah dengan ukuran
-    # font berbeda-beda dan emoji yang bisa tampil sebagai kotak kosong
-    # kalau font sistem tidak dukung emoji).
     fig.text(
         0.96, 0.013,
         "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
@@ -1009,13 +863,6 @@ def build_multi_tf_card(
     out_path: str,
     square: bool = False,
 ) -> str:
-    """Kartu multi-timeframe: N panel (candle+EMA+Supertrend+volume mini per
-    timeframe) dalam 1 gambar -- untuk konten "gimana posisi multi-TF" di
-    Binance Square. Tidak menyentuh build_chart/scanner.py sama sekali, cuma
-    memakai ulang helper gambar yang sudah ada. square=False (default) =
-    panel berdampingan dalam kanvas wide (perilaku asli, tidak berubah).
-    square=True = panel ditumpuk vertikal dalam kanvas 1:1, cocok untuk post
-    feed Binance Square/IG."""
     n_panels = len(timeframes)
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
@@ -1129,9 +976,6 @@ def build_comparison_chart(
     out_path: str,
     square: bool = False,
 ) -> str:
-    """Comparison chart: performa % beberapa simbol dinormalisasi dari
-    candle pertama di window yang sama, ditumpuk 1 axes -- untuk konten
-    "mana yang lebih kuat" di Binance Square. square=True -> kanvas 1:1."""
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
     dpi = 200
@@ -1207,175 +1051,6 @@ def build_comparison_chart(
     return out_path
 
 
-# ============================================================
-# INDEPENDENT ANALYSIS CHART -- khusus dipakai analyze.py
-# ============================================================
-# build_analysis_chart() TIDAK dipanggil dari scanner.py atau dari main()
-# CLI chart.py biasa -- satu-satunya pemanggil adalah analyze.py. Fungsi ini
-# menggambar hasil analyze_symbol() (EMA20/EMA50, struktur HH/HL/LH/LL, band
-# Support/Resistance, arah & setup) apa adanya, tanpa memanggil
-# scanner.score_symbol dan tanpa fetch Binance baru (df sudah disediakan
-# analyze.py). Semua helper yang dipakai di bawah (get_candles_shown,
-# _draw_candles, _draw_volume, _find_swings, _label_structure,
-# _declutter_labels, _draw_structure_labels, decimals_from_price,
-# format_price, _draw_change_badge, _calc_24h_change) sudah ada sebelumnya
-# dan tidak diubah -- build_chart, build_multi_tf_card, build_comparison_chart,
-# dan _fetch_and_build* di bawah ini tetap persis seperti semula.
-
-def _draw_sr_band(ax, level, pad: float, last_x: int, fill: str, edge: str,
-                    label: str, dec: int, square: bool = False) -> None:
-    if level is None:
-        return
-    ax.add_patch(Rectangle(
-        (-0.5, level - pad), last_x + 1.0, pad * 2,
-        facecolor=fill, edgecolor=edge, alpha=0.30, linewidth=0.9,
-        zorder=Z_SR_BAND,
-    ))
-    ax.text(0.3, level, f"{label} {format_price(level, dec)}", color=edge,
-             fontsize=(11.0 if square else 6.0), fontweight="bold",
-             ha="left", va="center", zorder=Z_SR_LABEL, clip_on=False)
-
-
-def build_analysis_chart(
-    dfs: dict,
-    symbol: str,
-    timeframes: list,
-    per_tf: dict,
-    cfg: dict,
-    out_path: str,
-    square: bool = False,
-) -> str:
-    """Kartu multi-timeframe untuk independent analysis engine analyze.py:
-    EMA20/EMA50, struktur HH/HL/LH/LL, band Support/Resistance, judul panel
-    dari direction/setup hasil analyze.py sendiri (bukan scanner). Tidak ada
-    ENTRY/SL/TP di chart ini -- levels tetap hanya ada di laporan markdown."""
-    n_panels = len(timeframes)
-    chart_cfg = cfg.get("chart", {})
-    width_px = chart_cfg.get("width_px", 2800)
-    dpi = 200
-    fig_w = width_px / dpi
-    fig_h = fig_w if square else fig_w * 0.40
-    fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
-    fig.patch.set_facecolor(BG)
-
-    if square:
-        outer = GridSpec(n_panels, 1, figure=fig, hspace=0.32,
-                          left=0.09, right=0.93, top=0.90, bottom=0.055)
-    else:
-        outer = GridSpec(1, n_panels, figure=fig, wspace=0.16,
-                          left=0.045, right=0.98, top=0.85, bottom=0.11)
-
-    tick_fs = 9.0 if square else 6.5
-    title_fs = 13.5 if square else 9.5
-    price_fs = 11.0 if square else 8.0
-
-    for idx, tf in enumerate(timeframes):
-        df = dfs.get(tf)
-        info = per_tf.get(tf, {})
-
-        cell = outer[idx, 0] if square else outer[0, idx]
-        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
-        ax_p = fig.add_subplot(inner[0, 0])
-        ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
-
-        for ax in (ax_p, ax_v):
-            ax.set_facecolor(PANEL)
-            ax.grid(True, linestyle="-", alpha=0.7, color=GRID, linewidth=0.4)
-            ax.set_axisbelow(True)
-            ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=tick_fs)
-            for side in ("top", "right"):
-                ax.spines[side].set_visible(False)
-            for side in ("left", "bottom"):
-                ax.spines[side].set_color(SPINE)
-                ax.spines[side].set_linewidth(0.6)
-        ax_p.tick_params(labelbottom=False)
-
-        if df is None or "error" in info:
-            ax_p.set_title(f"{tf}  ·  ERROR", color=AXIS, fontsize=title_fs,
-                             fontweight="bold", loc="left", pad=6)
-            ax_p.text(0.5, 0.5, info.get("error", "no data"), color=AXIS,
-                       fontsize=8, ha="center", va="center", transform=ax_p.transAxes)
-            continue
-
-        n_show = max(30, get_candles_shown(tf, cfg) // 2 + 10)
-        plot_df = df.tail(n_show).reset_index(drop=True)
-        last_x = len(plot_df) - 1
-
-        colors = _draw_candles(ax_p, plot_df)
-
-        ema20 = df["close"].ewm(span=20, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
-        ema50 = df["close"].ewm(span=50, adjust=False).mean().tail(len(plot_df)).reset_index(drop=True)
-        ax_p.plot(range(len(plot_df)), ema20, color=EMA20_COLOR, linewidth=1.1, zorder=Z_EMA)
-        ax_p.plot(range(len(plot_df)), ema50, color=EMA50_COLOR, linewidth=1.1, zorder=Z_EMA)
-
-        swing_high, swing_low = _find_swings(plot_df)
-        labeled_points = _label_structure(plot_df, swing_high, swing_low)
-        min_label_gap = max(3, int(len(plot_df) * 0.15))
-        labeled_points = _declutter_labels(labeled_points, min_label_gap)
-
-        y_low = float(plot_df["low"].min())
-        y_high = float(plot_df["high"].max())
-
-        structure = info.get("structure", {})
-        support = structure.get("support")
-        resistance = structure.get("resistance")
-        atr = (info.get("direction_analysis") or {}).get("atr")
-        dec = decimals_from_price(float(plot_df["close"].iloc[-1]))
-
-        sr_values = [v for v in (support, resistance) if v is not None]
-        y_low = min([y_low] + sr_values)
-        y_high = max([y_high] + sr_values)
-        y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
-        pad_band = atr * 0.18 if atr else y_span * 0.012
-
-        _draw_sr_band(ax_p, support, pad_band, last_x, SUPPORT_FILL, SUPPORT_EDGE,
-                       "SUP", dec, square=square)
-        _draw_sr_band(ax_p, resistance, pad_band, last_x, RESIST_FILL, RESIST_EDGE,
-                       "RES", dec, square=square)
-
-        _draw_structure_labels(ax_p, labeled_points, 0, len(plot_df), y_span, square=square)
-
-        pad_y = y_span * 0.14
-        ax_p.set_ylim(y_low - pad_y, y_high + pad_y)
-        ax_p.set_xlim(-0.6, last_x + 0.6)
-        ax_v.set_xlim(-0.6, last_x + 0.6)
-
-        vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
-        _draw_volume(ax_v, plot_df, colors, vol_lookback)
-
-        direction = info.get("direction", "NONE")
-        setup_type = (info.get("setup") or {}).get("type", "")
-        badge_color = UP if direction == "LONG" else DOWN if direction == "SHORT" else AXIS
-        setup_txt = f"  ·  {setup_type}" if setup_type and setup_type != "NONE" else ""
-        ax_p.set_title(f"{tf}  ·  {direction}{setup_txt}", color=badge_color,
-                        fontsize=title_fs, fontweight="bold", loc="left", pad=6)
-
-        last_price = format_price(plot_df["close"].iloc[-1], dec)
-        ax_p.text(0.99, 0.03, last_price, transform=ax_p.transAxes, color=TEXT,
-                   fontsize=price_fs, fontweight="bold", ha="right", va="bottom", zorder=9)
-
-    header_fs = 20.0 if square else 17.0
-    badge_fs = 17.0 if square else 14.0
-    footer_fs = 10.0 if square else 7.0
-    disclaimer_fs = 9.0 if square else 6.5
-
-    fig.text(0.045, 0.95, f"{symbol}  ·  INDEPENDENT ANALYSIS", fontsize=header_fs,
-              fontweight="bold", color=TEXT, ha="left", va="top")
-    ref_df = dfs.get(timeframes[0])
-    if ref_df is not None:
-        _draw_change_badge(fig, 0.975, 0.95, _calc_24h_change(ref_df), fontsize=badge_fs)
-    fig.text(0.045, 0.02,
-              f"BINANCE FUTURES  ·  {symbol}  ·  EMA20/EMA50  ·  SUP/RES band",
-              fontsize=footer_fs, color=AXIS, ha="left", va="bottom")
-    fig.text(0.98, 0.02,
-              "Chart-based analysis. NOT FINANCIAL ADVICE, DYOR.",
-              fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
-
-    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
-    plt.close(fig)
-    return out_path
-
-
 async def _fetch_and_build(
     symbol: str,
     timeframe: str,
@@ -1396,12 +1071,9 @@ async def _fetch_and_build(
         square=square,
     )
 
-    # Khusus jalur CLI/manual (mis. workflow "Chart Generator (manual)"):
-    # kirim chart tunggal ini ke Telegram sebagai foto. Tidak dipanggil dari
-    # scanner.run_scan, yang mengirim hasil batch lewat 1 file zip.
     try:
         await send_telegram_photo(result_path, format_signal_message(signal), cfg)
-    except Exception as exc:  # jangan sampai gagal kirim Telegram menghentikan workflow
+    except Exception as exc:
         print(f"Gagal kirim chart ke Telegram: {exc}")
 
     return result_path
@@ -1442,11 +1114,6 @@ async def _fetch_and_build_compare(
     symbols: list, timeframe: str, cfg: dict, out_path: str, lookback: int,
     square: bool = False,
 ) -> str:
-    # Setiap simbol di-fetch terpisah dan dibungkus try/except sendiri --
-    # kalau satu simbol invalid/gagal (mis. tidak listing di Binance
-    # Futures), simbol lain tetap lanjut diproses alih-alih seluruh mode
-    # compare langsung crash. Simbol yang gagal dicatat lalu dilaporkan
-    # jelas (satu per satu, bukan digabung jadi satu string membingungkan).
     series = {}
     failed = []
     async with BinanceFuturesClient() as client:
@@ -1496,24 +1163,12 @@ def main():
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--out", default=None)
     parser.add_argument("--mode", choices=["clean", "multi", "compare"],
-                          default="clean",
-                          help="clean = chart lengkap (candle+EMA/Supertrend+volume+zona Demand/"
-                               "Supply+BOS+label struktur+panah target) tanpa garis ENTRY/TP/SL "
-                               "(default -- mode 'standard' lama sudah digabung ke sini). "
-                               "multi = kartu multi-timeframe 1 simbol. "
-                               "compare = perbandingan % beberapa simbol.")
-    parser.add_argument("--timeframes", default="15m,1h,4h",
-                          help="Dipisah koma, dipakai untuk --mode multi")
-    parser.add_argument("--symbols", default="",
-                          help="Dipisah koma, min. 2 simbol, dipakai untuk --mode compare")
-    parser.add_argument("--compare-lookback", type=int, default=100,
-                          help="Jumlah candle untuk --mode compare")
-    parser.add_argument("--hide-indicators", action="store_true",
-                          help="Sembunyikan EMA & Supertrend (biasa dipakai bareng --mode clean)")
-    parser.add_argument("--ratio", choices=["wide", "square"], default="wide",
-                          help="wide = rasio asli chart (default). "
-                               "square = kanvas 1:1 untuk post feed Binance Square/IG. "
-                               "Berlaku untuk mode standard/clean/compare/multi.")
+                          default="clean")
+    parser.add_argument("--timeframes", default="15m,1h,4h")
+    parser.add_argument("--symbols", default="")
+    parser.add_argument("--compare-lookback", type=int, default=100)
+    parser.add_argument("--hide-indicators", action="store_true")
+    parser.add_argument("--ratio", choices=["wide", "square"], default="wide")
     args = parser.parse_args()
 
     with open(args.config) as f:
