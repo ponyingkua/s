@@ -191,22 +191,41 @@ def _draw_analyze_indicators(
 
 
 def _place_level_labels_muted(ax, levels: list, label_x: float, min_gap: float) -> None:
-    """Versi mtfk.py dari chart._place_level_labels: logika anti-tabrakan
-    (declutter posisi) sama persis, tapi warna box dibuat muted (alpha lebih
-    rendah, teks pakai warna aslinya bukan putih solid) dan fontsize sedikit
-    lebih besar -- permintaan khusus untuk chart drill-down single_mtfk."""
+    """Versi mtfk.py dari chart._place_level_labels: warna box dibuat muted
+    (alpha lebih rendah, teks pakai warna aslinya bukan putih solid) dan
+    fontsize sedikit lebih besar -- permintaan khusus untuk single_mtfk.
+
+    Algoritma declutter beda dari chart._place_level_labels: versi asli pakai
+    2-pass (dorong-atas lalu dorong-bawah) yang TIDAK menjamin gap minimum
+    saat banyak level rapat (dorong-bawah bisa menimpa ulang hasil
+    dorong-atas). Di sini dipakai iterasi berulang sampai konvergen (max 50x)
+    supaya level padat (ENTRY/SL/TP1/TP2 saling berdekatan) tetap terpisah
+    jelas, baru kalau tetap gagal split merata di sekitar titik tengahnya."""
     if not levels:
         return
 
     ordered = sorted(levels, key=lambda item: item["level"])
     positions = [item["level"] for item in ordered]
+    n = len(positions)
 
-    for i in range(1, len(positions)):
-        if positions[i] - positions[i - 1] < min_gap:
-            positions[i] = positions[i - 1] + min_gap
-    for i in range(len(positions) - 2, -1, -1):
-        if positions[i + 1] - positions[i] < min_gap:
-            positions[i] = positions[i + 1] - min_gap
+    for _ in range(50):
+        moved = False
+        for i in range(1, n):
+            if positions[i] - positions[i - 1] < min_gap:
+                positions[i] = positions[i - 1] + min_gap
+                moved = True
+        for i in range(n - 2, -1, -1):
+            if positions[i + 1] - positions[i] < min_gap:
+                positions[i] = positions[i + 1] - min_gap
+                moved = True
+        if not moved:
+            break
+    else:
+        # Tidak konvergen (level terlalu banyak utk gap ini) -- split merata
+        # di sekitar titik tengah rentang aslinya supaya tetap simetris & terbaca.
+        center = (positions[0] + positions[-1]) / 2
+        start = center - min_gap * (n - 1) / 2
+        positions = [start + i * min_gap for i in range(n)]
 
     level_fontsize = 10.5
     for item, label_y in zip(ordered, positions):
@@ -583,7 +602,7 @@ def single_mtfk(
     if not has_error:
         chart._draw_structure_labels(ax_p, structure["labeled_points"], offset, n_show, y_span)
 
-    label_min_gap = (ax_p.get_ylim()[1] - ax_p.get_ylim()[0]) * 0.07
+    label_min_gap = (ax_p.get_ylim()[1] - ax_p.get_ylim()[0]) * 0.085
     _place_level_labels_muted(ax_p, levels, label_x, label_min_gap)
 
     vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
