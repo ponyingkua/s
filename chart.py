@@ -7,6 +7,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
 import yaml
@@ -114,6 +115,17 @@ def decimals_from_price(price: float) -> int:
 
 def format_price(value: float, decimals: int) -> str:
     return f"{float(value):.{int(decimals)}f}"
+
+
+def _format_volume_axis(value: float, _pos) -> str:
+    abs_value = abs(value)
+    if abs_value >= 1_000_000_000:
+        return f"{value / 1_000_000_000:.1f}B"
+    if abs_value >= 1_000_000:
+        return f"{value / 1_000_000:.1f}M"
+    if abs_value >= 1_000:
+        return f"{value / 1_000:.1f}K"
+    return f"{value:.0f}"
 
 
 def _calc_24h_change(df: pd.DataFrame) -> float | None:
@@ -804,6 +816,7 @@ def build_chart(
 
     vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
+    ax_vol.yaxis.set_major_formatter(mticker.FuncFormatter(_format_volume_axis))
     ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
     ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
 
@@ -844,7 +857,7 @@ def build_chart(
 
     fig.text(
         0.96, 0.013,
-        "Chart-based analysis for educational purposes only.\nNOT FINANCIAL ADVICE, DYOR.",
+        "Chart-based analysis.\nNOT FINANCIAL ADVICE, DYOR.",
         fontsize=(13.0 if square else 7.5), fontweight="bold", color=TEXT, ha="right", va="bottom",
         linespacing=1.7,
     )
@@ -937,6 +950,7 @@ def build_multi_tf_card(
 
         vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
         _draw_volume(ax_v, plot_df, colors, vol_lookback)
+        ax_v.yaxis.set_major_formatter(mticker.FuncFormatter(_format_volume_axis))
 
         badge_color = UP if str(signal.direction).upper().startswith("LONG") else DOWN
         setup_txt = f"  ·  {signal.setup_type}" if getattr(signal, "setup_type", None) else ""
@@ -960,7 +974,7 @@ def build_multi_tf_card(
     fig.text(0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}", fontsize=footer_fs,
               color=AXIS, ha="left", va="bottom")
     fig.text(0.98, 0.02,
-              "Chart-based analysis for educational purposes only. NOT FINANCIAL ADVICE, DYOR.",
+              "Chart-based analysis. NOT FINANCIAL ADVICE, DYOR.",
               fontsize=disclaimer_fs, fontweight="bold", color=TEXT, ha="right", va="bottom")
 
     fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
