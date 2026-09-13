@@ -38,6 +38,44 @@ def _fmt_volume(value: float, _pos=None) -> str:
     return f"{value:.0f}"
 
 
+def _time_axis_labels(df: pd.DataFrame, n_show: int, tf: str):
+    """Dipakai khusus oleh build_mtfk_chart (chart MTF lama) -- single_mtfk
+    pakai pola np.linspace+open_time ala chart.py, bukan fungsi ini."""
+    tail = df.tail(n_show)
+    m = len(tail)
+    if m == 0:
+        return None
+    ts = None
+    if isinstance(tail.index, pd.DatetimeIndex):
+        ts = list(tail.index)
+    else:
+        for col in ("timestamp", "open_time", "time", "date", "datetime"):
+            if col in tail.columns:
+                parsed = pd.to_datetime(tail[col], unit="ms", errors="coerce")
+                if parsed.isna().all():
+                    parsed = pd.to_datetime(tail[col], errors="coerce")
+                if not parsed.isna().all():
+                    ts = list(parsed)
+                break
+    if ts is None or len(ts) != m:
+        return None
+
+    fmt = "%d %b" if tf in ("4h", "1d") else "%H:%M"
+    step = max(m // 6, 1)
+    positions = list(range(0, m, step))
+    if positions[-1] != m - 1:
+        positions.append(m - 1)
+    labels = [pd.Timestamp(ts[p]).strftime(fmt) for p in positions]
+
+    dedup_pos, dedup_lab = [], []
+    for i, (pos, lab) in enumerate(zip(positions, labels)):
+        if dedup_lab and lab == dedup_lab[-1] and i != len(positions) - 1:
+            continue
+        dedup_pos.append(pos)
+        dedup_lab.append(lab)
+    return dedup_pos, dedup_lab
+
+
 def _rsi_series(series: pd.Series, period: int = 14) -> pd.Series:
     """RSI dihitung lokal di mtfk.py (bukan import dari analyze.py) khusus untuk
     kebutuhan visual garis time-series di single_mtfk -- menghindari circular
