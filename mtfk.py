@@ -152,11 +152,47 @@ def _draw_analyze_indicators(
         )
 
 
+def _place_level_labels_muted(ax, levels: list, label_x: float, min_gap: float) -> None:
+    """Versi mtfk.py dari chart._place_level_labels: logika anti-tabrakan
+    (declutter posisi) sama persis, tapi warna box dibuat muted (alpha lebih
+    rendah, teks pakai warna aslinya bukan putih solid) dan fontsize sedikit
+    lebih besar -- permintaan khusus untuk chart drill-down single_mtfk."""
+    if not levels:
+        return
+
+    ordered = sorted(levels, key=lambda item: item["level"])
+    positions = [item["level"] for item in ordered]
+
+    for i in range(1, len(positions)):
+        if positions[i] - positions[i - 1] < min_gap:
+            positions[i] = positions[i - 1] + min_gap
+    for i in range(len(positions) - 2, -1, -1):
+        if positions[i + 1] - positions[i] < min_gap:
+            positions[i] = positions[i + 1] - min_gap
+
+    level_fontsize = 10.5
+    for item, label_y in zip(ordered, positions):
+        ax.text(
+            label_x, label_y, item["text"],
+            color=item["color"],
+            va="center", ha="left", fontweight="bold", fontsize=level_fontsize,
+            zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+            bbox=dict(
+                boxstyle="square,pad=0.35",
+                facecolor=chart.PANEL,
+                edgecolor=item["color"],
+                linewidth=1.0,
+                alpha=0.72,
+            ),
+        )
+
+
 def _draw_sr_zones(ax, support, resistance, atr: float) -> None:
     """Gambar support/resistance sebagai zone box (band tipis di sekitar level)
     -- fitur tambahan di luar chart.py, lebar zone proporsional ke ATR.
-    Label teksnya digabung ke sistem chart._place_level_labels supaya
-    konsisten & anti-tabrakan dengan label ENTRY/SL/TP1/TP2."""
+    S/R sendiri tidak diberi label teks (cuma garis+zone) -- label teks di
+    chart ini dikhususkan untuk level trading ENTRY/SL/TP1/TP2 lewat
+    _place_level_labels_muted."""
     zone_half = max(atr * 0.15, 1e-9)
     if support is not None:
         s_val = float(support)
@@ -397,7 +433,7 @@ def single_mtfk(
     ax_r = fig.add_subplot(inner[2, 0], sharex=ax_p)
 
     tick_fs = 7.5
-    title_fs = 15.0
+    title_fs = 19.0
     price_fs = 10.5
 
     for ax in (ax_p, ax_v, ax_r):
@@ -429,10 +465,6 @@ def single_mtfk(
     n_show = len(plot_df)
 
     direction = "NONE" if has_error else tf_info.get("direction", "NONE")
-    tint = TINT_LONG if direction == "LONG" else TINT_SHORT if direction == "SHORT" else TINT_NONE
-    ax_p.add_patch(
-        Rectangle((0, 0), 1, 1, transform=ax_p.transAxes, facecolor=tint, edgecolor="none", zorder=0)
-    )
 
     colors = chart._draw_candles(ax_p, plot_df)
 
@@ -501,7 +533,7 @@ def single_mtfk(
     ax_p.set_ylim(y_low - y_padding, y_high + y_padding)
 
     gap_from_candle = 4.0
-    label_width_est = 12.0
+    label_width_est = 13.0
     gap_from_edge = 0.4
     extra_margin = gap_from_candle + label_width_est + gap_from_edge
     label_x = last_x + gap_from_candle
@@ -514,7 +546,7 @@ def single_mtfk(
         chart._draw_structure_labels(ax_p, structure["labeled_points"], offset, n_show, y_span)
 
     label_min_gap = (ax_p.get_ylim()[1] - ax_p.get_ylim()[0]) * 0.07
-    chart._place_level_labels(ax_p, levels, label_x, label_min_gap)
+    _place_level_labels_muted(ax_p, levels, label_x, label_min_gap)
 
     vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     chart._draw_volume(ax_v, plot_df, colors, vol_lookback)
@@ -560,7 +592,7 @@ def single_mtfk(
         0.06, 0.965, f"{symbol}  ·  {timeframe}  ·  {direction}{setup_txt}",
         color=badge_color, fontsize=title_fs, fontweight="bold", ha="left", va="top",
     )
-    chart._draw_change_badge(fig, 0.95, 0.965, chart._calc_24h_change(df), fontsize=13.0)
+    chart._draw_change_badge(fig, 0.95, 0.965, chart._calc_24h_change(df), fontsize=17.0)
 
     last_px = float(plot_df["close"].iloc[-1])
     dec = chart.decimals_from_price(last_px)
