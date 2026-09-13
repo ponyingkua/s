@@ -23,6 +23,14 @@ def normalize_symbol(raw: str, quote_asset: str) -> str:
     return s if s.endswith(quote_asset) else f"{s}{quote_asset}"
 
 
+def parse_symbols(raw: str) -> list[str]:
+    cleaned = raw.replace(" ", ",")
+    while ",," in cleaned:
+        cleaned = cleaned.replace(",,", ",")
+    cleaned = cleaned.strip(",")
+    return [s.strip() for s in cleaned.split(",") if s.strip()]
+
+
 def _fmt_price(value: float) -> str:
     import chart
     return chart.format_price(value, chart.decimals_from_price(value))
@@ -612,7 +620,6 @@ def compose_analysis_text(result: dict) -> str:
 
 def compose_console_summary(result: dict) -> str:
     symbol = result["symbol"]
-    per_tf = result["per_tf"]
     lines = [f"[analyze] {symbol} summary:"]
 
     best_tf, best_info = result.get("best_tf"), result.get("best")
@@ -628,18 +635,23 @@ def compose_console_summary(result: dict) -> str:
     return "\n".join(lines)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="vSynapse — independent single-token MTF analyzer")
-    parser.add_argument("--symbol", required=True, help="Coin code, e.g. RIVER or RIVERUSDT")
-    parser.add_argument("--config", default="config.yaml")
-    args = parser.parse_args()
+def run_one(symbol_raw: str, cfg: dict) -> bool:
+    quote = cfg["exchange"]["quote_asset"]
+    try:
+        symbol = normalize_symbol(symbol_raw, quote)
+    except ValueError as exc:
+        print(f"[analyze] ERROR: {exc}")
+        return False
 
-    cfg = load_config(args.config)
-    symbol = normalize_symbol(args.symbol, cfg["exchange"]["quote_asset"])
     timeframes = cfg.get("timeframes", ["1h"])
-
     print(f"[analyze] Independent analysis started for {symbol}")
-    result = asyncio.run(analyze_symbol(symbol, cfg))
+
+    try:
+        result = asyncio.run(analyze_symbol(symbol, cfg))
+    except Exception as exc:
+        print(f"[analyze] ✗ Gagal: {symbol} ({exc})")
+        return False
+
     text = compose_analysis_text(result)
     print(compose_console_summary(result))
 
@@ -650,7 +662,6 @@ def main():
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    # import lazy: chart.py impor analyze di level modul, kalau ditaruh di atas jadi circular import
     from mtfk import build_mtfk_chart
     chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
     try:
@@ -669,7 +680,58 @@ def main():
     per_tf = result["per_tf"]
     if per_tf and all("error" in info for info in per_tf.values()):
         print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
+        return False
+
+    print(f"[analyze] ✓ Selesai: {symbol}")
+    return True
+
+
+def main():
+    parser = argparse.ArgumentParser(description="vSynapse — independent multi-token MTF analyzer")
+    parser.add_argument("--symbol", default=None, help="Single coin code, e.g. RIVER or RIVERUSDT")
+    parser.add_argument("--symbols", default=None, help="Comma/space separated symbols, e.g. ZEC,SOL,BTC")
+    parser.add_argument("--config", default="config.yaml")
+    args = parser.parse_args()
+
+    if not args.symbol and not args.symbols:
+        parser.error("Berikan --symbol atau --symbols")
+
+    raw = args.symbols if args.symbols else args.symbol
+    symbols = parse_symbols(raw)
+    if not symbols:
+        print("ERROR: Tidak ada symbol yang diberikan")
         sys.exit(1)
+
+    cfg = load_config(args.config)
+
+    print(f"Symbols yang akan dianalisa: {','.join(symbols)}")
+    print("----------------------------------------")
+
+    failed = 0
+    for sym in symbols:
+        print("")
+        print(f">>> Analyzing: {sym}")
+        print("----------------------------------------")
+        ok = run_one(sym, cfg)
+        if not ok:
+            failed += 1
+
+    print("")
+    print("========================================")
+    print("")
+    print("Isi analysis_output/ (markdown + chart MTF per token):")
+    if os.path.isdir(OUT_DIR):
+        for root, _, files in os.walk(OUT_DIR):
+            for name in sorted(files):
+                print(os.path.join(root, name))
+    else:
+        print("(folder analysis_output belum ada)")
+
+    print("")
+    if failed > 0:
+        print(f"Selesai dengan {failed} kegagalan.")
+        sys.exit(1)
+    print("Semua analisa berhasil.")
 
 
 if __name__ == "__main__":
