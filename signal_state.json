@@ -4,71 +4,17 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "CAKEUSDT|1h": {
-    "symbol": "CAKEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T10:03:50.295657+00:00"
-  },
   "OPUSDT|4h": {
     "symbol": "OPUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-12T17:03:52.659164+00:00"
   },
-  "COINUSDT|4h": {
-    "symbol": "COINUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T11:03:32.053772+00:00"
-  },
-  "ASTERUSDT|4h": {
-    "symbol": "ASTERUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-12T12:04:39.593052+00:00"
-  },
   "KOMAUSDT|1h": {
     "symbol": "KOMAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T15:03:35.322644+00:00"
-  },
-  "GIGGLEUSDT|1h": {
-    "symbol": "GIGGLEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T08:04:06.354464+00:00"
-  },
-  "ETHFIUSDT|4h": {
-    "symbol": "ETHFIUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T08:04:07.698496+00:00"
-  },
-  "MITOUSDT|1h": {
-    "symbol": "MITOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T09:04:22.451818+00:00"
-  },
-  "ANTHROPICUSDT|1h": {
-    "symbol": "ANTHROPICUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T09:04:24.745792+00:00"
-  },
-  "GRVTUSDT|1h": {
-    "symbol": "GRVTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T10:03:48.234417+00:00"
-  },
-  "KNCUSDT|1h": {
-    "symbol": "KNCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T10:03:51.562011+00:00"
   },
   "RAVEUSDT|1h": {
     "symbol": "RAVEUSDT",
@@ -104,7 +50,7 @@
     "symbol": "DOGSUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-12T14:03:57.469613+00:00"
+    "timestamp": "2026-09-13T00:05:03.447601+00:00"
   },
   "VTHOUSDT|1h": {
     "symbol": "VTHOUSDT",
@@ -147,5 +93,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-12T19:03:27.216232+00:00"
+  },
+  "GOOGLUSDT|4h": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T00:04:58.485431+00:00"
+  },
+  "THEUSDT|4h": {
+    "symbol": "THEUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T00:05:00.634414+00:00"
+  },
+  "FLOCKUSDT|1h": {
+    "symbol": "FLOCKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T00:05:02.013179+00:00"
   }
 }
