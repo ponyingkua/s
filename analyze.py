@@ -190,18 +190,39 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     trend += 1.5 if e20 > e50 else -1.5 if e20 < e50 else 0
     s20, s50 = _ema_slope(ema20), _ema_slope(ema50)
     trend += 1.0 if s20 > 0 and s50 > 0 else -1.0 if s20 < 0 and s50 < 0 else 0
+
+    atr_now = float(atr.iloc[-1]) if pd.notna(atr.iloc[-1]) else p * 0.01
+    atr_pct = (atr_now / p * 100) if p else 0.0
+
     if ema200 is not None and pd.notna(ema200.iloc[-1]):
-        trend += 1.3 if p > float(ema200.iloc[-1]) else -1.3
+        e200 = float(ema200.iloc[-1])
+        # Base side of EMA200
+        trend += 1.3 if p > e200 else -1.3
+        # Extra weight when price is meaningfully away from EMA200 (in ATR units)
+        dist_atr = abs(p - e200) / atr_now if atr_now > 0 else 0.0
+        if dist_atr >= 1.0:
+            trend += 0.4 if p > e200 else -0.4
+            notes.append(
+                f"Price is {dist_atr:.1f}x ATR {'above' if p > e200 else 'below'} EMA200."
+            )
     else:
         notes.append(
             f"EMA200 not available (only {len(df)} candles of history); "
             f"trend score uses EMA20/EMA50 alignment only."
         )
+
+    # Soft ATR regime: very quiet markets weaken pure trend conviction slightly
+    if atr_pct < 0.35:
+        trend *= 0.85
+        notes.append(f"ATR {atr_pct:.2f}% is compressed; trend weight reduced.")
+    elif atr_pct > 3.5:
+        notes.append(f"ATR {atr_pct:.2f}% is elevated; expect wider swings.")
+
     if trend > 0:
-        bull += min(trend, 3.0)
+        bull += min(trend, 3.5)
         notes.append("Trend structure favors buyers.")
     elif trend < 0:
-        bear += min(abs(trend), 3.0)
+        bear += min(abs(trend), 3.5)
         notes.append("Trend structure favors sellers.")
 
     r = float(rsi.iloc[-1]) if pd.notna(rsi.iloc[-1]) else None
@@ -337,12 +358,42 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             notes.append("Lower-wick rejection is visible at structural support.")
 
     if setup == "NONE":
+        # CONTINUATION requires aligned structure + non-fading momentum
+        ema20 = df["close"].ewm(span=20, adjust=False).mean()
+        slope20 = _ema_slope(ema20)
+        _, _, hist = _macd(df["close"])
+        h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else 0.0
+        hp = float(hist.iloc[-2]) if len(hist) > 1 and pd.notna(hist.iloc[-2]) else 0.0
+        rsi = _rsi(df["close"])
+        r = float(rsi.iloc[-1]) if pd.notna(rsi.iloc[-1]) else 50.0
+
+        cont_ok = False
         if bull_bias and structure["label"] == "BULLISH":
-            setup, score = "CONTINUATION", 2.0
-            notes.append("Trend and structure remain aligned for continuation.")
+            momentum_ok = slope20 > 0 and h >= 0 and not (h < hp and h < 0.0)
+            rsi_ok = r < 75  # avoid chasing extreme extension
+            atr_ok = True
+            if direction.get("atr_pct") is not None and direction["atr_pct"] < 0.30:
+                atr_ok = False
+                notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
+            if momentum_ok and rsi_ok and atr_ok:
+                cont_ok = True
+                setup, score = "CONTINUATION", 2.2
+                notes.append("Trend, structure, and momentum remain aligned for continuation.")
+            elif bull_bias and structure["label"] == "BULLISH":
+                notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
         elif bear_bias and structure["label"] == "BEARISH":
-            setup, score = "CONTINUATION", 2.0
-            notes.append("Trend and structure remain aligned for continuation.")
+            momentum_ok = slope20 < 0 and h <= 0 and not (h > hp and h > 0.0)
+            rsi_ok = r > 25
+            atr_ok = True
+            if direction.get("atr_pct") is not None and direction["atr_pct"] < 0.30:
+                atr_ok = False
+                notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
+            if momentum_ok and rsi_ok and atr_ok:
+                cont_ok = True
+                setup, score = "CONTINUATION", 2.2
+                notes.append("Trend, structure, and momentum remain aligned for continuation.")
+            elif bear_bias and structure["label"] == "BEARISH":
+                notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
@@ -448,18 +499,27 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
 
 def _select_best_setup(per_tf: dict):
     candidates = []
+    weak = []
     for tf, info in per_tf.items():
         if "error" in info or info.get("direction") == "NONE":
             continue
         da, su = info["direction_analysis"], info["setup"]
+        if su.get("type", "NONE") == "NONE":
+            continue
         strength = abs(da["bull"] - da["bear"])
         agree = len(info.get("mtf_agree_tfs", []))
-        candidates.append(((su["score"], strength, agree), tf, info))
+        row = ((su["score"], strength, agree), tf, info)
+        # Prefer MEDIUM/HIGH; keep LOW only as fallback
+        if su.get("quality") == "LOW" or su.get("score", 0) < 2.0:
+            weak.append(row)
+        else:
+            candidates.append(row)
 
-    if not candidates:
+    pool = candidates if candidates else weak
+    if not pool:
         return None
-    candidates.sort(key=lambda c: c[0], reverse=True)
-    _, best_tf, best_info = candidates[0]
+    pool.sort(key=lambda c: c[0], reverse=True)
+    _, best_tf, best_info = pool[0]
     return best_tf, best_info
 
 
