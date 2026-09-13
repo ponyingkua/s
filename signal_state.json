@@ -80,7 +80,7 @@
     "symbol": "PORTALUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T08:03:41.527408+00:00"
+    "timestamp": "2026-09-13T12:04:29.410156+00:00"
   },
   "THETAUSDT|1h": {
     "symbol": "THETAUSDT",
@@ -117,5 +117,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T11:03:59.649602+00:00"
+  },
+  "NEOUSDT|1h": {
+    "symbol": "NEOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T12:04:26.092696+00:00"
+  },
+  "ASTERUSDT|4h": {
+    "symbol": "ASTERUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T12:04:30.674201+00:00"
   }
 }

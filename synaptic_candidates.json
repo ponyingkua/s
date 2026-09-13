@@ -19043,5 +19043,72 @@
     "tp": 0.654563,
     "tp1": 0.621126,
     "scanned_at": "2026-09-13T11:03:03.780418+00:00"
+  },
+  {
+    "symbol": "NEOUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (41.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 2.263,
+    "sl": 2.208809,
+    "tp": 2.360544,
+    "tp1": 2.317191,
+    "scanned_at": "2026-09-13T12:03:46.948639+00:00"
+  },
+  {
+    "symbol": "PORTALUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (55) menguatkan momentum naik",
+      "ADX (48.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.01859,
+    "sl": 0.01776,
+    "tp": 0.020085,
+    "tp1": 0.01942,
+    "scanned_at": "2026-09-13T12:03:46.948639+00:00"
+  },
+  {
+    "symbol": "ASTERUSDT",
+    "direction": "LONG",
+    "score": 68.9,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (42), tidak menambah skor",
+      "ADX (26.5) tren kuat (+5.9 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 6.38",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 6.38 (sisa posisi)"
+    ],
+    "entry": 0.6939,
+    "sl": 0.666745,
+    "tp": 0.8672,
+    "tp1": 0.721055,
+    "scanned_at": "2026-09-13T12:03:46.948639+00:00"
   }
 ]
