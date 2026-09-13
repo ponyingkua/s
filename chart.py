@@ -33,19 +33,31 @@ SPINE = "#4A4A4A"
 
 # Variasi warna background acak -- HANYA dipakai untuk chart yang dikirim ke
 # Telegram sebagai file zip (lihat build_chart(..., random_bg=True) yang
-# dipanggil dari scanner.run_scan). Semua tetap gelap netral/sedikit ber-hue
-# supaya TEXT, AXIS, GRID, SPINE, dan semua warna sinyal (UP/DOWN/EMA/dst)
-# tidak perlu ikut berubah -- kontrasnya sengaja dijaga setara dengan BG asli.
+# dipanggil dari scanner.run_scan). Rentangnya sengaja lebar (dari hitam
+# sampai abu terang), sehingga TEXT/AXIS/GRID/SPINE tidak bisa dipakai apa
+# adanya di semua kasus -- lihat _contrast_colors_for_bg() di bawah, yang
+# otomatis memilih set warna teks/grid gelap saat bg-nya terang, dan set
+# warna terang (sama seperti default) saat bg-nya gelap.
 RANDOM_BG_PALETTE = [
-    "#121417",  # netral gelap (default asli)
-    "#14181C",  # abu kebiruan gelap
-    "#16181A",  # abu netral gelap
-    "#12151A",  # navy sangat gelap
-    "#151318",  # ungu gelap redup
-    "#131917",  # hijau gelap redup
-    "#1A1517",  # coklat/merah gelap redup
-    "#111417",  # slate gelap
+    "#636363",
+    "#3b3b3b",
+    "#222222",
+    "#141414",
+    "#000000",
+    "#bdbdbd",
+    "#32393d",
+    "#373737",
+    "#2d2d2d",
+    "#464646",
 ]
+
+# Warna teks/grid/axis/spine dipakai saat bg acak tergolong TERANG (mis.
+# #bdbdbd, #636363) -- supaya tetap kontras & terbaca, tanpa menyentuh
+# palet warna sinyal (UP/DOWN/EMA/dst) yang sudah dipilih dengan hati-hati.
+TEXT_ON_LIGHT_BG = "#1A1A1A"
+AXIS_ON_LIGHT_BG = "#3D3D3D"
+GRID_ON_LIGHT_BG = "#8A8A8A"
+SPINE_ON_LIGHT_BG = "#5C5C5C"
 
 UP = "#26A69A"
 DOWN = "#EF5350"
@@ -109,6 +121,27 @@ MIN_LABEL_GAP_FRACTION = 0.18
 def _pick_random_bg() -> str:
     """Pilih warna background acak dari RANDOM_BG_PALETTE."""
     return random.choice(RANDOM_BG_PALETTE)
+
+
+def _relative_luminance(hex_color: str) -> float:
+    """Hitung relative luminance (0=hitam, 1=putih) dari warna hex #RRGGBB."""
+    hex_color = hex_color.lstrip("#")
+    r, g, b = (int(hex_color[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast_colors_for_bg(bg_color: str) -> tuple[str, str, str, str]:
+    """Tentukan (text, axis, grid, spine) yang kontras terhadap bg_color.
+
+    Dipakai HANYA saat random_bg=True, karena RANDOM_BG_PALETTE mencakup
+    warna terang (mis. #bdbdbd) yang membuat TEXT/AXIS/GRID/SPINE default
+    (didesain untuk bg gelap) jadi nyaris tidak terbaca. Threshold 0.4 dipilih
+    supaya warna abu medium seperti #464646 (luminance ~0.08) masih dianggap
+    "gelap" dan tetap pakai warna terang default.
+    """
+    if _relative_luminance(bg_color) > 0.4:
+        return TEXT_ON_LIGHT_BG, AXIS_ON_LIGHT_BG, GRID_ON_LIGHT_BG, SPINE_ON_LIGHT_BG
+    return TEXT, AXIS, GRID, SPINE
 
 
 def get_candles_shown(timeframe: str, cfg: dict) -> int:
@@ -701,10 +734,18 @@ def build_chart(
     # random_bg HANYA dipakai untuk chart yang dikirim ke Telegram sebagai
     # file zip (dipanggil dari scanner.run_scan, yang juga mengacak `square`
     # sendiri sebelum memanggil fungsi ini). Saat True, warna background
-    # dipilih acak per-chart dari RANDOM_BG_PALETTE. Semua pemanggil lain
-    # (generate manual, workflow manual lewat CLI chart.py, _fetch_and_build*)
-    # tidak mengirim random_bg sehingga perilakunya tetap persis seperti semula.
-    bg_color = _pick_random_bg() if random_bg else BG
+    # dipilih acak per-chart dari RANDOM_BG_PALETTE, dan warna teks/axis/
+    # grid/spine ikut menyesuaikan otomatis (_contrast_colors_for_bg) supaya
+    # tetap kontras & terbaca di atas bg terang maupun gelap. Semua pemanggil
+    # lain (generate manual, workflow manual lewat CLI chart.py,
+    # _fetch_and_build*) tidak mengirim random_bg sehingga perilakunya tetap
+    # persis seperti semula (selalu pakai BG/TEXT/AXIS/GRID/SPINE asli).
+    if random_bg:
+        bg_color = _pick_random_bg()
+        text_color, axis_color, grid_color, spine_color = _contrast_colors_for_bg(bg_color)
+    else:
+        bg_color = BG
+        text_color, axis_color, grid_color, spine_color = TEXT, AXIS, GRID, SPINE
 
     show_levels = preset != "clean"
     n_show_max = get_candles_shown(timeframe, cfg)
@@ -762,13 +803,13 @@ def build_chart(
 
     for ax in (ax_price, ax_vol):
         ax.set_facecolor(bg_color)
-        ax.grid(True, linestyle="-", alpha=0.8, color=GRID, linewidth=0.5)
+        ax.grid(True, linestyle="-", alpha=0.8, color=grid_color, linewidth=0.5)
         ax.set_axisbelow(True)
-        ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
+        ax.tick_params(colors=axis_color, labelcolor=axis_color, labelsize=7.5)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
         for side in ("left", "bottom"):
-            ax.spines[side].set_color(SPINE)
+            ax.spines[side].set_color(spine_color)
             ax.spines[side].set_linewidth(0.8)
 
     ax_price.tick_params(labelbottom=False)
@@ -848,8 +889,8 @@ def build_chart(
     vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
     ax_vol.yaxis.set_major_formatter(mticker.FuncFormatter(_format_volume_axis))
-    ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
-    ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
+    ax_vol.set_ylabel("Vol", color=axis_color, fontsize=8, labelpad=5)
+    ax_price.set_ylabel("Price", color=axis_color, fontsize=8.5, labelpad=5)
 
     if "open_time" in plot_df.columns and len(plot_df):
         tick_count = min(6, len(plot_df))
@@ -861,12 +902,12 @@ def build_chart(
         for t in ticks_idx:
             ts = plot_df["open_time"].iloc[int(t)]
             tick_labels.append(ts.strftime("%d %b  %H:%M") if pd.notna(ts) else str(t))
-        ax_vol.set_xticklabels(tick_labels, fontsize=7.5, color=AXIS)
+        ax_vol.set_xticklabels(tick_labels, fontsize=7.5, color=axis_color)
 
     if not hide_indicators:
         legend = ax_price.legend(
             loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
-            facecolor=bg_color, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
+            facecolor=bg_color, edgecolor=spine_color, labelcolor=text_color, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
 
@@ -875,21 +916,21 @@ def build_chart(
     header_title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}"
 
     fig.text(0.07, 0.965, header_title,
-              fontsize=(22.0 if square else 18), fontweight="bold", color=TEXT, ha="left", va="top")
+              fontsize=(22.0 if square else 18), fontweight="bold", color=text_color, ha="left", va="top")
     _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df), fontsize=(19.0 if square else 15))
 
     if square:
         footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
         fig.text(0.07, 0.028, footer_left,
-                  fontsize=12.5, color=AXIS, ha="left", va="bottom", linespacing=1.6)
+                  fontsize=12.5, color=axis_color, ha="left", va="bottom", linespacing=1.6)
     else:
         fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
-                  fontsize=7, color=AXIS, ha="left", va="bottom")
+                  fontsize=7, color=axis_color, ha="left", va="bottom")
 
     fig.text(
         0.96, 0.013,
         "Chart-based analysis.\nNOT FINANCIAL ADVICE, DYOR.",
-        fontsize=(13.0 if square else 7.5), fontweight="bold", color=TEXT, ha="right", va="bottom",
+        fontsize=(13.0 if square else 7.5), fontweight="bold", color=text_color, ha="right", va="bottom",
         linespacing=1.7,
     )
 
