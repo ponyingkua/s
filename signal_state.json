@@ -10,35 +10,17 @@
     "direction": "LONG",
     "timestamp": "2026-09-12T17:03:52.659164+00:00"
   },
-  "KOMAUSDT|1h": {
-    "symbol": "KOMAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T15:03:35.322644+00:00"
-  },
   "MTLUSDT|1h": {
     "symbol": "MTLUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T02:03:51.524524+00:00"
   },
-  "MUBARAKUSDT|1h": {
-    "symbol": "MUBARAKUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T14:03:56.068432+00:00"
-  },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T00:05:03.447601+00:00"
-  },
-  "VTHOUSDT|1h": {
-    "symbol": "VTHOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-12T15:03:37.606813+00:00"
   },
   "ETHFIUSDT|1h": {
     "symbol": "ETHFIUSDT",
@@ -117,5 +99,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T02:03:54.341595+00:00"
+  },
+  "TSLAUSDT|1h": {
+    "symbol": "TSLAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-13T03:03:44.618093+00:00"
   }
 }

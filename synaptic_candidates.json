@@ -18719,5 +18719,28 @@
     "tp": 4.063501,
     "tp1": 3.872167,
     "scanned_at": "2026-09-13T02:03:03.565887+00:00"
+  },
+  {
+    "symbol": "TSLAUSDT",
+    "direction": "LONG",
+    "score": 66.2,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (57) menguatkan momentum naik",
+      "ADX (27.7) tren kuat (+7.2 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 367.59,
+    "sl": 365.849406,
+    "tp": 370.723069,
+    "tp1": 369.330594,
+    "scanned_at": "2026-09-13T03:03:10.516809+00:00"
   }
 ]
