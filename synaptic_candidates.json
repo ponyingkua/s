@@ -21328,5 +21328,119 @@
     "tp": 25.76,
     "tp1": 22.767874,
     "scanned_at": "2026-09-14T18:03:43.598293+00:00"
+  },
+  {
+    "symbol": "BCHUSDT",
+    "direction": "LONG",
+    "score": 83.5,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (27.0) tren kuat (+6.5 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 227.06,
+    "sl": 220.235472,
+    "tp": 239.34415,
+    "tp1": 233.884528,
+    "scanned_at": "2026-09-14T19:04:53.118429+00:00"
+  },
+  {
+    "symbol": "\u9f99\u867eUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (37.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.164585,
+    "sl": 0.132859,
+    "tp": 0.221692,
+    "tp1": 0.196311,
+    "scanned_at": "2026-09-14T19:04:53.118429+00:00"
+  },
+  {
+    "symbol": "AAPLUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (39.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 334.22,
+    "sl": 330.996147,
+    "tp": 340.022936,
+    "tp1": 337.443853,
+    "scanned_at": "2026-09-14T19:04:53.118429+00:00"
+  },
+  {
+    "symbol": "POWERUSDT",
+    "direction": "LONG",
+    "score": 70.1,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (31.4) tren kuat (+11.1 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.13087,
+    "sl": 0.109407,
+    "tp": 0.169504,
+    "tp1": 0.152333,
+    "scanned_at": "2026-09-14T19:04:53.118429+00:00"
+  },
+  {
+    "symbol": "CXMTUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (40) menguatkan momentum turun",
+      "ADX (49.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 8.022,
+    "sl": 8.132576,
+    "tp": 7.822963,
+    "tp1": 7.911424,
+    "scanned_at": "2026-09-14T19:04:53.118429+00:00"
   }
 ]

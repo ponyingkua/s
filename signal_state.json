@@ -4,23 +4,11 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "ASTERUSDT|4h": {
-    "symbol": "ASTERUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T06:04:51.662185+00:00"
-  },
   "CTSIUSDT|4h": {
     "symbol": "CTSIUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T13:06:57.874600+00:00"
-  },
-  "TIAUSDT|4h": {
-    "symbol": "TIAUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T06:04:50.059497+00:00"
   },
   "CVCUSDT|1h": {
     "symbol": "CVCUSDT",
@@ -45,12 +33,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T09:05:44.345810+00:00"
-  },
-  "PUNDIXUSDT|4h": {
-    "symbol": "PUNDIXUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T06:04:48.412700+00:00"
   },
   "BZUSDT|1h": {
     "symbol": "BZUSDT",
@@ -128,7 +110,7 @@
     "symbol": "\u9f99\u867eUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T14:04:12.812959+00:00"
+    "timestamp": "2026-09-14T19:05:58.933978+00:00"
   },
   "BEUSDT|1h": {
     "symbol": "BEUSDT",
@@ -237,5 +219,29 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T18:04:29.306742+00:00"
+  },
+  "BCHUSDT|1h": {
+    "symbol": "BCHUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T19:05:56.728751+00:00"
+  },
+  "AAPLUSDT|1h": {
+    "symbol": "AAPLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T19:05:59.826840+00:00"
+  },
+  "POWERUSDT|1h": {
+    "symbol": "POWERUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T19:06:01.249916+00:00"
+  },
+  "CXMTUSDT|1h": {
+    "symbol": "CXMTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T19:06:02.657582+00:00"
   }
 }
