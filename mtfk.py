@@ -275,6 +275,7 @@ def _draw_analyze_indicators(
     n_show: int,
     tf: str,
     tf_info: dict,
+    right_pad: float,
     label_fs: float = 6.5,
     show_legend: bool = False,
 ) -> list:
@@ -313,6 +314,17 @@ def _draw_analyze_indicators(
     # candle yang tampil, garis+labelnya ikut ter-render di luar axes (label
     # teks defaultnya tidak clip) - itu penyebab "R ..." kadang menimpa judul
     # TF di panel yang lain.
+    # Label S/R dipindah ke zona kosong sebelah kanan (right_pad, lihat
+    # build_mtfk_chart) - sebelumnya nempel di x=0.012 dekat sumbu-y kiri
+    # sehingga menimpa candle-candle paling awal yang ditampilkan, dan kalau
+    # posisinya kebetulan tinggi bisa juga bentrok dengan legend EMA
+    # (upper-left, panel pertama). Dipindah ke kanan menyelesaikan dua
+    # masalah itu sekaligus tanpa perlu memindah legend.
+    # va JUGA dibalik: S sekarang "va=top" (teks turun MENJAUHI tengah,
+    # bukan naik mendekati R spt sebelumnya) dan R "va=bottom" (naik
+    # MENJAUHI tengah) - supaya kalau S & R berdekatan, labelnya saling
+    # menjauh, bukan malah saling mendekat dan bertabrakan di tengah.
+    label_x = n_show - 1 + right_pad * 0.30
     level_values = []
     if support:
         s_val = float(support)
@@ -322,10 +334,10 @@ def _draw_analyze_indicators(
             linewidth=0.9, alpha=0.50, zorder=3,
         )
         ax.text(
-            0.012, s_val,
+            label_x, s_val,
             f"S {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
-            transform=ax.get_yaxis_transform(), color=chart.UP,
-            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            color=chart.UP,
+            fontsize=label_fs, fontweight="bold", ha="left", va="top",
             zorder=5,
             bbox=dict(boxstyle="round,pad=0.15", facecolor=chart.BG, edgecolor="none", alpha=0.7),
         )
@@ -337,10 +349,10 @@ def _draw_analyze_indicators(
             linewidth=0.9, alpha=0.50, zorder=3,
         )
         ax.text(
-            0.012, r_val,
+            label_x, r_val,
             f"R {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
-            transform=ax.get_yaxis_transform(), color=chart.DOWN,
-            fontsize=label_fs, fontweight="bold", ha="left", va="top",
+            color=chart.DOWN,
+            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
             zorder=5,
             bbox=dict(boxstyle="round,pad=0.15", facecolor=chart.BG, edgecolor="none", alpha=0.7),
         )
@@ -868,15 +880,23 @@ def build_mtfk_chart(
         )
 
         colors = chart._draw_candles(ax_p, plot_df)
+        last_x = len(plot_df) - 1
+        # right_pad: ruang kosong di kanan candle terakhir, dipakai utk
+        # menaruh label harga terakhir & label S/R (lihat di bawah) supaya
+        # keduanya tidak mepet/tumpuk dgn candle atau dgn sumbu kanan -
+        # sebelumnya xlim mepet (last_x+0.6) sehingga candle & label selalu
+        # nempel tepi. Trade-off: candle jadi sedikit lebih ramping krn
+        # berbagi lebar axes yg sama dgn zona label ini.
+        right_pad = max(chart.CANDLE_WIDTH * 5, n_show * 0.07)
+
         level_values = []
         if not has_error:
             # Legend EMA cuma ditaruh SEKALI di panel pertama (warnanya sama
             # di semua panel) - drpd diulang di tiap panel & bikin sesak.
             level_values = _draw_analyze_indicators(
-                ax_p, df, n_show, tf, tf_info, tick_fs, show_legend=(idx == 0),
+                ax_p, df, n_show, tf, tf_info, right_pad, tick_fs, show_legend=(idx == 0),
             ) or []
 
-        last_x = len(plot_df) - 1
         # level_values (support/resistance) ikut disertakan di perhitungan
         # batas y - sebelumnya y-range cuma dari high/low candle yg tampil,
         # jadi kalau S/R ada di luar rentang itu, garis+labelnya ter-render
@@ -890,8 +910,8 @@ def build_mtfk_chart(
         y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
         pad = y_span * 0.12
         ax_p.set_ylim(y_low - pad, y_high + pad)
-        ax_p.set_xlim(-0.6, last_x + 0.6)
-        ax_v.set_xlim(-0.6, last_x + 0.6)
+        ax_p.set_xlim(-0.6, last_x + right_pad)
+        ax_v.set_xlim(-0.6, last_x + right_pad)
 
         vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
         chart._draw_volume(ax_v, plot_df, colors, vol_lookback)
@@ -929,11 +949,21 @@ def build_mtfk_chart(
             dist_txt = _nearest_level_text(
                 last_px, structure.get("support"), structure.get("resistance"),
             )
+        # Sebelumnya label ini fixed di pojok kanan-bawah axes (0.99, 0.03)
+        # terlepas dari harga aktualnya - kalau harga terakhir kebetulan ada
+        # di bagian bawah range (umum saat SHORT), label ini numpuk dgn dot
+        # penanda arah yg posisinya persis di harga terakhir. Sekarang
+        # ditaruh nempel harga terakhir sendiri (data coords, dekat candle
+        # terakhir di dalam right_pad) - jadi otomatis selalu di sebelah
+        # dot itu, bukan berpotensi menimpanya. Offset (0.06) dibuat lebih
+        # kecil drpd offset label S/R (0.30) supaya keduanya tidak
+        # bertumpuk di x yang sama walau kebetulan y-nya berdekatan.
         ax_p.text(
-            0.99, 0.03, f"{last_price}{dist_txt}",
-            transform=ax_p.transAxes, color=chart.TEXT,
+            last_x + right_pad * 0.06, last_px, f"{last_price}{dist_txt}",
+            color=chart.TEXT,
             fontsize=price_fs, fontweight="bold",
-            ha="right", va="bottom", zorder=9,
+            ha="left", va="center", zorder=9,
+            bbox=dict(boxstyle="round,pad=0.15", facecolor=chart.BG, edgecolor=chart.SPINE, linewidth=0.5, alpha=0.9),
         )
 
         if has_error:
