@@ -37,6 +37,13 @@ MIN_CANDLES_BY_TF = {
     "4h": 22,
 }
 
+# Ambang ekspansi volatilitas dipakai _dynamic_candle_window: candle dianggap
+# bagian dari leg impulsif kalau true range-nya >= EXPANSION_MULT x baseline.
+EXPANSION_MULT = 2.0
+# Toleransi jeda (dlm jumlah candle) supaya 1-2 candle koreksi/pause di tengah
+# leg impulsif tidak dianggap memutus blok ekspansi.
+EXPANSION_GAP_TOLERANCE = 2
+
 
 def _fmt_volume(value: float, _pos=None) -> str:
     v = abs(value)
@@ -100,6 +107,18 @@ def _atr_last(df: pd.DataFrame, period: int = 14) -> float:
     return val
 
 
+def _true_range(df: pd.DataFrame) -> pd.Series:
+    prev_close = df["close"].shift(1)
+    return pd.concat(
+        [
+            df["high"] - df["low"],
+            (df["high"] - prev_close).abs(),
+            (df["low"] - prev_close).abs(),
+        ],
+        axis=1,
+    ).max(axis=1)
+
+
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
     gain = delta.clip(lower=0.0)
@@ -112,6 +131,29 @@ def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     rsi = rsi.where(avg_loss != 0, 100.0)
     rsi = rsi.fillna(50.0)
     return rsi
+
+
+def _compute_ema_set(df: pd.DataFrame, n_show: int, tf: str) -> dict:
+    """Hitung EMA20/EMA50/EMA200(kondisional) satu kali di sini, dipakai
+    bersama oleh _draw_analyze_indicators (multi-panel) dan
+    _draw_indicators_single (single) - supaya logika "kapan EMA200 layak
+    ditampilkan" konsisten di kedua jenis chart (sebelumnya logic ATR/near
+    ini terduplikasi & bisa drift kalau salah satu diubah)."""
+    close = df["close"]
+    p = float(close.iloc[-1])
+    ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
+    ema50 = close.ewm(span=50, adjust=False).mean().tail(n_show).to_numpy()
+
+    ema200 = None
+    if len(df) >= 200:
+        ema200_s = close.ewm(span=200, adjust=False).mean()
+        ema200_val = float(ema200_s.iloc[-1])
+        atr = _atr_last(df)
+        near = atr > 0 and abs(p - ema200_val) <= 2.0 * atr
+        if tf in ("1h", "4h", "1d") or near:
+            ema200 = ema200_s.tail(n_show).to_numpy()
+
+    return {"ema20": ema20, "ema50": ema50, "ema200": ema200}
 
 
 def _draw_candles_single(ax, df: pd.DataFrame) -> list:
@@ -154,7 +196,19 @@ def _dynamic_candle_window(df: pd.DataFrame, tf: str, tf_info: dict, cfg: dict) 
     fokus ke leg pergerakan penting menuju harga terakhir, supaya fase
     sideways/flat panjang sebelum breakout tidak memenuhi chart dengan
     ruang kosong (kasus seperti POWERUSDT). Dibatasi [MIN, MAX] per tf;
-    MAX tetap dari chart.get_candles_shown (baca MAX_CANDLES_BY_TF)."""
+    MAX tetap dari chart.get_candles_shown (baca MAX_CANDLES_BY_TF di chart.py).
+
+    Deteksi berbasis EKSPANSI VOLATILITAS (true range vs baseline), bukan
+    swing high/low paling ekstrem. Sebelumnya versi ini memakai swing low/high
+    ekstrem sbg jangkar, tapi itu bermasalah persis di kasus konsolidasi
+    panjang lalu breakout tajam: titik ekstrem (harga terendah/tertinggi)
+    justru sering ada JAUH di awal data, sebelum konsolidasi itu sendiri -
+    hasilnya window tetap menyeret seluruh fase flat ke dalam chart (lihat
+    contoh POWERUSDT 1h: window lama menampilkan ~2/3 chart berupa candle
+    datar sebelum breakout). Titik yang relevan adalah AWAL LEG IMPULSIF
+    terakhir menuju harga sekarang, dicirikan oleh true range candle yang
+    melonjak jauh di atas baseline volatilitas sebelumnya.
+    """
     max_candles = chart.get_candles_shown(tf, cfg)
     min_candles = min(MIN_CANDLES_BY_TF.get(tf, max(20, max_candles // 2)), max_candles)
     n = len(df)
@@ -165,30 +219,50 @@ def _dynamic_candle_window(df: pd.DataFrame, tf: str, tf_info: dict, cfg: dict) 
     window = df.tail(search_span).reset_index(drop=True)
     m = len(window)
 
-    swing_high, swing_low = chart._find_swings(window, 2, 2)
-    sh = [(i, float(window["high"].iloc[i])) for i in range(m) if swing_high[i]]
-    sl = [(i, float(window["low"].iloc[i])) for i in range(m) if swing_low[i]]
+    true_range = _true_range(window)
+    baseline_tr = float(true_range.median()) if true_range.notna().any() else 0.0
 
-    direction = tf_info.get("direction", "NONE") if isinstance(tf_info, dict) else "NONE"
-    candidate_idx = None
-    if direction == "LONG" and sl:
-        candidate_idx = min(sl, key=lambda t: t[1])[0]
-    elif direction == "SHORT" and sh:
-        candidate_idx = max(sh, key=lambda t: t[1])[0]
-    else:
-        extremes = []
-        if sh:
-            extremes.append(max(sh, key=lambda t: t[1])[0])
-        if sl:
-            extremes.append(min(sl, key=lambda t: t[1])[0])
-        if extremes:
-            candidate_idx = min(extremes)
+    leg_start = None
+    if baseline_tr > 0:
+        threshold = baseline_tr * EXPANSION_MULT
+        gap = 0
+        for i in range(m - 1, -1, -1):
+            tr_i = true_range.iloc[i]
+            expanded = pd.notna(tr_i) and tr_i >= threshold
+            if expanded:
+                leg_start = i
+                gap = 0
+            elif leg_start is not None:
+                gap += 1
+                if gap > EXPANSION_GAP_TOLERANCE:
+                    break
 
-    if candidate_idx is None:
+    if leg_start is None:
+        # Tidak ada ekspansi volatilitas yang jelas (trend landai / choppy) -
+        # fallback ke swing ekstrem seperti versi sebelumnya.
+        swing_high, swing_low = chart._find_swings(window, 2, 2)
+        sh = [(i, float(window["high"].iloc[i])) for i in range(m) if swing_high[i]]
+        sl = [(i, float(window["low"].iloc[i])) for i in range(m) if swing_low[i]]
+
+        direction = tf_info.get("direction", "NONE") if isinstance(tf_info, dict) else "NONE"
+        if direction == "LONG" and sl:
+            leg_start = min(sl, key=lambda t: t[1])[0]
+        elif direction == "SHORT" and sh:
+            leg_start = max(sh, key=lambda t: t[1])[0]
+        else:
+            extremes = []
+            if sh:
+                extremes.append(max(sh, key=lambda t: t[1])[0])
+            if sl:
+                extremes.append(min(sl, key=lambda t: t[1])[0])
+            if extremes:
+                leg_start = min(extremes)
+
+    if leg_start is None:
         return min(max_candles, n)
 
     pad = max(4, min_candles // 6)
-    start_in_window = max(0, candidate_idx - pad)
+    start_in_window = max(0, leg_start - pad)
     n_show = m - start_in_window
     n_show = max(min_candles, min(max_candles, n_show))
     return min(n_show, n)
@@ -218,33 +292,32 @@ def _draw_analyze_indicators(
     tf: str,
     tf_info: dict,
     label_fs: float = 6.5,
+    show_legend: bool = False,
 ) -> None:
-    close = df["close"]
-    p = float(close.iloc[-1])
-    ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
-    ema50 = close.ewm(span=50, adjust=False).mean().tail(n_show).to_numpy()
+    p = float(df["close"].iloc[-1])
+    emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
 
+    # Urutan gambar: EMA200 (paling lambat) dulu di paling bawah, EMA20
+    # (paling cepat/paling relevan) digambar PALING TERAKHIR supaya selalu
+    # terlihat di atas - sebelumnya EMA200 digambar terakhir dan malah
+    # menutupi persilangan EMA20/50 saat ketiganya berdekatan.
+    if emas["ema200"] is not None:
+        ax.plot(
+            x, emas["ema200"], color=EMA200_COLOR, linewidth=1.1, alpha=0.85,
+            zorder=chart.Z_EMA, solid_capstyle="round",
+            label="EMA 200" if show_legend else None,
+        )
     ax.plot(
-        x, ema20, color=EMA20_COLOR, linewidth=0.9, alpha=0.92,
-        zorder=4, solid_capstyle="round",
+        x, emas["ema50"], color=EMA50_COLOR, linewidth=1.1, alpha=0.92,
+        zorder=chart.Z_EMA + 1, solid_capstyle="round",
+        label="EMA 50" if show_legend else None,
     )
     ax.plot(
-        x, ema50, color=EMA50_COLOR, linewidth=0.9, alpha=0.92,
-        zorder=4, solid_capstyle="round",
+        x, emas["ema20"], color=EMA20_COLOR, linewidth=1.15, alpha=0.95,
+        zorder=chart.Z_EMA + 2, solid_capstyle="round",
+        label="EMA 20" if show_legend else None,
     )
-
-    if len(df) >= 200:
-        ema200_s = close.ewm(span=200, adjust=False).mean()
-        ema200_val = float(ema200_s.iloc[-1])
-        atr = _atr_last(df)
-        near = atr > 0 and abs(p - ema200_val) <= 2.0 * atr
-        if tf in ("1h", "4h", "1d") or near:
-            ax.plot(
-                x, ema200_s.tail(n_show).to_numpy(),
-                color=EMA200_COLOR, linewidth=0.9, alpha=0.88,
-                zorder=4, solid_capstyle="round",
-            )
 
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
@@ -293,6 +366,14 @@ def _draw_analyze_indicators(
             zorder=6, alpha=0.95,
         )
 
+    if show_legend:
+        legend = ax.legend(
+            loc="upper left", fontsize=label_fs + 1.5, framealpha=0.85,
+            facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT,
+            borderpad=0.35, handlelength=1.4,
+        )
+        legend.get_frame().set_linewidth(0.6)
+
 
 def _nearest_level_text(price: float, support, resistance) -> str:
     candidates = []
@@ -320,34 +401,26 @@ def _draw_indicators_single(
     disesuaikan skala chart penuh. S/R digambar inline di kiri (dekat sumbu-y),
     BUKAN di margin kanan - slot itu direservasi untuk label ENTRY/TP/SL.
     Tidak dipakai oleh build_mtfk_chart (multi-panel)."""
-    close = df["close"]
-    p = float(close.iloc[-1])
-    ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
-    ema50 = close.ewm(span=50, adjust=False).mean().tail(n_show).to_numpy()
+    emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
+    ema_values = list(emas["ema20"]) + list(emas["ema50"])
 
+    # Sama seperti _draw_analyze_indicators: EMA200 (lambat) di bawah, EMA20
+    # (cepat) digambar terakhir supaya selalu di atas EMA50/EMA200.
+    if emas["ema200"] is not None:
+        ax.plot(
+            x, emas["ema200"], color=EMA200_COLOR, linewidth=1.4, alpha=0.92,
+            zorder=chart.Z_EMA, solid_capstyle="round", label="EMA 200",
+        )
+        ema_values.extend(list(emas["ema200"]))
     ax.plot(
-        x, ema20, color=EMA20_COLOR, linewidth=1.4, alpha=0.95,
-        zorder=chart.Z_EMA, solid_capstyle="round", label="EMA 20",
+        x, emas["ema50"], color=EMA50_COLOR, linewidth=1.4, alpha=0.95,
+        zorder=chart.Z_EMA + 1, solid_capstyle="round", label="EMA 50",
     )
     ax.plot(
-        x, ema50, color=EMA50_COLOR, linewidth=1.4, alpha=0.95,
-        zorder=chart.Z_EMA, solid_capstyle="round", label="EMA 50",
+        x, emas["ema20"], color=EMA20_COLOR, linewidth=1.4, alpha=0.95,
+        zorder=chart.Z_EMA + 2, solid_capstyle="round", label="EMA 20",
     )
-    ema_values = list(ema20) + list(ema50)
-
-    if len(df) >= 200:
-        ema200_s = close.ewm(span=200, adjust=False).mean()
-        ema200_val = float(ema200_s.iloc[-1])
-        atr_v = _atr_last(df)
-        near = atr_v > 0 and abs(p - ema200_val) <= 2.0 * atr_v
-        if tf in ("1h", "4h", "1d") or near:
-            ema200_tail = ema200_s.tail(n_show).to_numpy()
-            ax.plot(
-                x, ema200_tail, color=EMA200_COLOR, linewidth=1.4, alpha=0.92,
-                zorder=chart.Z_EMA, solid_capstyle="round", label="EMA 200",
-            )
-            ema_values.extend(list(ema200_tail))
 
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
@@ -662,7 +735,11 @@ def build_mtfk_chart(
 
         colors = chart._draw_candles(ax_p, plot_df)
         if not has_error:
-            _draw_analyze_indicators(ax_p, df, n_show, tf, tf_info, tick_fs)
+            # Legend EMA cuma ditaruh SEKALI di panel pertama (warnanya sama
+            # di semua panel) - drpd diulang di tiap panel & bikin sesak.
+            _draw_analyze_indicators(
+                ax_p, df, n_show, tf, tf_info, tick_fs, show_legend=(idx == 0),
+            )
 
         last_x = len(plot_df) - 1
         y_low = float(plot_df["low"].min())
