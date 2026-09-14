@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "NEOUSDT|1h": {
-    "symbol": "NEOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T19:03:31.081722+00:00"
-  },
   "ASTERUSDT|4h": {
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
@@ -27,18 +21,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T03:04:36.581185+00:00"
-  },
-  "BABYUSDT|1h": {
-    "symbol": "BABYUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T19:03:33.981397+00:00"
-  },
-  "GIGGLEUSDT|1h": {
-    "symbol": "GIGGLEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-13T19:03:35.467849+00:00"
   },
   "CTSIUSDT|4h": {
     "symbol": "CTSIUSDT",
