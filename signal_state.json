@@ -195,5 +195,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T15:06:48.387291+00:00"
+  },
+  "PAXGUSDT|1h": {
+    "symbol": "PAXGUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T16:03:50.635671+00:00"
+  },
+  "XAUUSDT|1h": {
+    "symbol": "XAUUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T16:03:52.344506+00:00"
+  },
+  "XAGUSDT|1h": {
+    "symbol": "XAGUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T16:03:52.916176+00:00"
+  },
+  "CBRSUSDT|1h": {
+    "symbol": "CBRSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T16:03:53.602384+00:00"
+  },
+  "SLXUSDT|1h": {
+    "symbol": "SLXUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T16:03:54.173946+00:00"
   }
 }
