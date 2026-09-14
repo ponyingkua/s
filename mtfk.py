@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FuncFormatter
+from matplotlib.transforms import offset_copy
 
 import chart
 
@@ -411,7 +412,7 @@ def _draw_indicators_single(
     # right_pad berubah-ubah mengikuti jumlah candle.
     edge_margin = max(right_pad * 0.08, 0.35)
     label_x = last_x + right_pad - edge_margin
-    marker_x = last_x + SINGLE_CANDLE_WIDTH / 2 + max(right_pad * 0.10, 0.3)
+    marker_x = last_x + SINGLE_CANDLE_WIDTH / 2 + max(right_pad * 0.20, 0.5)
 
     emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
@@ -461,13 +462,18 @@ def _draw_indicators_single(
     if support:
         s_val = float(support)
         level_values.append(s_val)
+        marker_size = 7.5 if square else 6.0
         ax.axhline(
             s_val, color=chart.UP, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
+        support_trans = offset_copy(
+            ax.transData, fig=ax.figure, x=0, y=marker_size / 2 + 0.6, units="points",
+        )
         ax.plot(
-            [marker_x], [s_val], marker="^", markersize=(7.5 if square else 6.0),
+            [marker_x], [s_val], marker="^", markersize=marker_size,
             color=chart.UP, zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+            transform=support_trans,
         )
         ax.text(
             label_x, s_val,
@@ -480,19 +486,24 @@ def _draw_indicators_single(
     if resistance:
         r_val = float(resistance)
         level_values.append(r_val)
+        marker_size = 7.5 if square else 6.0
         ax.axhline(
             r_val, color=chart.DOWN, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
+        resistance_trans = offset_copy(
+            ax.transData, fig=ax.figure, x=0, y=-(marker_size / 2 + 0.6), units="points",
+        )
         ax.plot(
-            [marker_x], [r_val], marker="v", markersize=(7.5 if square else 6.0),
+            [marker_x], [r_val], marker="v", markersize=marker_size,
             color=chart.DOWN, zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+            transform=resistance_trans,
         )
         ax.text(
             label_x, r_val,
             f"RESISTANCE  {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
             color=chart.DOWN,
-            fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
+            fontsize=label_fs, fontweight="bold", ha="right", va="top",
             zorder=chart.Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
         )
@@ -623,9 +634,9 @@ def build_single_mtfk_chart(
     # cukup lega dari candle manapun n_show-nya - konsekuensinya candle jadi
     # lebih ramping/pipih drpd sebelumnya, itu memang trade-off yg diambil
     # supaya labelnya tidak lagi ketiban candle terakhir.
-    label_zone_frac = 0.17 if square else 0.14
+    label_zone_frac = 0.22 if square else 0.19
     right_pad = label_zone_frac * (last_x + 0.6) / (1 - label_zone_frac)
-    right_pad = max(right_pad, SINGLE_CANDLE_WIDTH * 6)
+    right_pad = max(right_pad, SINGLE_CANDLE_WIDTH * 8)
     ax_price.set_xlim(-0.6, last_x + right_pad)
     ax_vol.set_xlim(-0.6, last_x + right_pad)
     ax_rsi.set_xlim(-0.6, last_x + right_pad)
@@ -746,13 +757,13 @@ def build_single_mtfk_chart(
     if square:
         footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
         fig.text(
-            0.07, 0.028, footer_left, fontsize=12.5, color=chart.AXIS,
+            0.07, 0.028, footer_left, fontsize=14.0, color=chart.AXIS,
             ha="left", va="bottom", linespacing=1.6,
         )
     else:
         fig.text(
             0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
-            fontsize=7, color=chart.AXIS, ha="left", va="bottom",
+            fontsize=8.5, color=chart.AXIS, ha="left", va="bottom",
         )
 
     fig.text(
