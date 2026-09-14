@@ -217,8 +217,8 @@
   "INTWUSDT|4h": {
     "symbol": "INTWUSDT",
     "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T18:04:29.306742+00:00"
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T20:05:08.292240+00:00"
   },
   "BCHUSDT|1h": {
     "symbol": "BCHUSDT",
@@ -243,5 +243,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T19:06:02.657582+00:00"
+  },
+  "LAUSDT|1h": {
+    "symbol": "LAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T20:05:01.940014+00:00"
+  },
+  "XPTUSDT|1h": {
+    "symbol": "XPTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T20:05:03.996118+00:00"
+  },
+  "ORCLUSDT|1h": {
+    "symbol": "ORCLUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T20:05:05.456989+00:00"
+  },
+  "TIAUSDT|4h": {
+    "symbol": "TIAUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T20:05:06.881074+00:00"
   }
 }
