@@ -23,6 +23,7 @@ TINT_SHORT = (0.85, 0.25, 0.25, 0.05)
 TINT_NONE = (0.5, 0.5, 0.5, 0.03)
 
 RSI_COLOR = "#4DD0E1"
+BB_COLOR = "#90A4AE"
 
 # Khusus single_mtfk: candle dibuat lebih besar drpd grid multi-panel
 # (chart.CANDLE_WIDTH=0.8 tidak diubah krn dipakai bareng oleh chart.py & multi-panel).
@@ -103,6 +104,43 @@ def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     rsi = rsi.where(avg_loss != 0, 100.0)
     rsi = rsi.fillna(50.0)
     return rsi
+
+
+def _compute_bollinger(df: pd.DataFrame, n_show: int, period: int = 20, std_mult: float = 2.0) -> dict:
+    """Bollinger Bands (formula sama dengan analyze.py::_bollinger) - dihitung
+    ulang di sini (bukan lewat tf_info) supaya mtfk.py tetap tidak bergantung
+    pada field baru di hasil analyze.py; input cuma df OHLC yang sudah ada."""
+    close = df["close"]
+    mid = close.rolling(period).mean()
+    std = close.rolling(period).std()
+    upper = mid + std_mult * std
+    lower = mid - std_mult * std
+    return {
+        "upper": upper.tail(n_show).to_numpy(),
+        "lower": lower.tail(n_show).to_numpy(),
+    }
+
+
+def _macd_histogram_last(df: pd.DataFrame, fast: int = 12, slow: int = 26, signal: int = 9):
+    """Nilai histogram MACD candle terakhir & candle sebelumnya (formula sama
+    dengan analyze.py::_macd) - dipakai untuk badge arah+expanding/contracting."""
+    close = df["close"]
+    line = close.ewm(span=fast, adjust=False).mean() - close.ewm(span=slow, adjust=False).mean()
+    hist = line - line.ewm(span=signal, adjust=False).mean()
+    h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
+    hp = float(hist.iloc[-2]) if len(hist) > 1 and pd.notna(hist.iloc[-2]) else None
+    return h, hp
+
+
+def _volume_ratio_last(df: pd.DataFrame, lookback: int = 20):
+    """Rasio volume candle terakhir vs rata-rata `lookback` candle - dipakai
+    untuk badge volume spike."""
+    if len(df) < lookback:
+        return None
+    vma = float(df["volume"].tail(lookback).mean())
+    if vma <= 0:
+        return None
+    return float(df["volume"].iloc[-1]) / vma
 
 
 def _compute_ema_set(df: pd.DataFrame, n_show: int, tf: str) -> dict:
@@ -338,6 +376,24 @@ def _draw_indicators_single(
         zorder=chart.Z_EMA + 2, solid_capstyle="round", label="EMA 20",
     )
 
+    bb = _compute_bollinger(df, n_show)
+    bb_upper, bb_lower = bb["upper"], bb["lower"]
+    if not (np.all(pd.isna(bb_upper)) or np.all(pd.isna(bb_lower))):
+        ax.plot(
+            x, bb_upper, color=BB_COLOR, linewidth=1.0, alpha=0.55,
+            zorder=chart.Z_EMA - 1, solid_capstyle="round", label="BB(20,2)",
+        )
+        ax.plot(
+            x, bb_lower, color=BB_COLOR, linewidth=1.0, alpha=0.55,
+            zorder=chart.Z_EMA - 1, solid_capstyle="round",
+        )
+        ax.fill_between(
+            x, bb_lower, bb_upper, color=BB_COLOR, alpha=0.05,
+            zorder=chart.Z_EMA - 2, linewidth=0,
+        )
+        ema_values.extend([float(v) for v in bb_upper if pd.notna(v)])
+        ema_values.extend([float(v) for v in bb_lower if pd.notna(v)])
+
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
     resistance = structure.get("resistance")
@@ -348,7 +404,7 @@ def _draw_indicators_single(
         s_val = float(support)
         level_values.append(s_val)
         ax.axhline(
-            s_val, color=chart.UP, linestyle="-",
+            s_val, color=chart.UP, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
@@ -368,7 +424,7 @@ def _draw_indicators_single(
         r_val = float(resistance)
         level_values.append(r_val)
         ax.axhline(
-            r_val, color=chart.DOWN, linestyle="-",
+            r_val, color=chart.DOWN, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
@@ -401,6 +457,38 @@ def _draw_indicators_single(
         )
 
     return level_values + ema_values
+
+
+def _draw_trigger_highlight(ax, plot_df: pd.DataFrame, tf_info: dict, y_span: float) -> None:
+    """Highlight candle pemicu setup. Di analyze.py::_detect_setup, hanya
+    BREAKOUT/BREAKDOWN/REJECTION yang murni ditentukan dari body/wick candle
+    TERAKHIR - PULLBACK/RETEST & CONTINUATION dipicu oleh posisi harga
+    terhadap level/trend, bukan 1 candle spesifik, jadi tidak dihighlight."""
+    setup = tf_info.get("setup") or {}
+    setup_type = setup.get("type", "NONE")
+    if setup_type not in ("BREAKOUT", "BREAKDOWN", "REJECTION"):
+        return
+    if len(plot_df) == 0:
+        return
+
+    direction = tf_info.get("direction", "NONE")
+    color = chart.UP if direction == "LONG" else chart.DOWN if direction == "SHORT" else chart.AXIS
+
+    idx = len(plot_df) - 1
+    last = plot_df.iloc[-1]
+    high, low = float(last["high"]), float(last["low"])
+
+    # Cuma kotak putus-putus di sekeliling candle - tanpa label teks
+    # mengambang, supaya tidak berpotensi tabrakan dengan legend EMA/BB di
+    # sudut chart manapun. Jenis setup (BREAKOUT/BREAKDOWN/REJECTION) sudah
+    # tertulis di header, kotak ini cukup menunjuk candle mana pemicunya.
+    half_w = SINGLE_CANDLE_WIDTH / 2 + 0.55
+    pad_y = max(y_span * 0.012, (high - low) * 0.10)
+    ax.add_patch(Rectangle(
+        (idx - half_w, low - pad_y), half_w * 2, (high - low) + pad_y * 2,
+        facecolor="none", edgecolor=color, linewidth=1.6, linestyle="--",
+        alpha=0.9, zorder=chart.Z_LEVEL_LABEL + 1,
+    ))
 
 
 def build_single_mtfk_chart(
@@ -502,6 +590,9 @@ def build_single_mtfk_chart(
                 y_span=y_span, square=square,
             )
 
+    if not has_error:
+        _draw_trigger_highlight(ax_price, plot_df, tf_info, y_span)
+
     _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
     ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
     ax_vol.yaxis.get_offset_text().set_visible(False)
@@ -541,6 +632,36 @@ def build_single_mtfk_chart(
         ha="left", va="top",
     )
     chart._draw_change_badge(fig, 0.96, 0.965, chart._calc_24h_change(df), fontsize=(19.0 if square else 15))
+
+    if not has_error:
+        atr_pct = (tf_info.get("direction_analysis") or {}).get("atr_pct")
+        hist, hist_prev = _macd_histogram_last(df)
+        vol_ratio = _volume_ratio_last(df)
+        mtf_agree = tf_info.get("mtf_agree_tfs") or []
+
+        segments = []
+        if atr_pct is not None:
+            segments.append(f"ATR {atr_pct:.2f}%")
+        if hist is not None:
+            arrow = "▲" if hist > 0 else "▼" if hist < 0 else "→"
+            state = ""
+            if hist_prev is not None:
+                if abs(hist) > abs(hist_prev):
+                    state = "Expanding"
+                elif abs(hist) < abs(hist_prev):
+                    state = "Contracting"
+            segments.append(f"MACD {arrow}" + (f" {state}" if state else ""))
+        if vol_ratio is not None:
+            segments.append(f"Vol {vol_ratio:.1f}x avg")
+        if mtf_agree:
+            segments.append(f"MTF agree: {', '.join(mtf_agree)}")
+
+        if segments:
+            fig.text(
+                0.07, 0.925, "   ·   ".join(segments),
+                fontsize=(12.5 if square else 9.5), fontweight="bold",
+                color=chart.AXIS, ha="left", va="top",
+            )
 
     if square:
         footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
