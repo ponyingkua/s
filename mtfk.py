@@ -276,7 +276,7 @@ def _draw_analyze_indicators(
     tf_info: dict,
     label_fs: float = 6.5,
     show_legend: bool = False,
-) -> None:
+) -> list:
     p = float(df["close"].iloc[-1])
     emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
@@ -305,8 +305,17 @@ def _draw_analyze_indicators(
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
     resistance = structure.get("resistance")
+    # Nilai S/R dikumpulkan & dikembalikan supaya build_mtfk_chart bisa
+    # mengikutsertakannya saat menghitung batas atas/bawah sumbu-y panel ini
+    # (persis seperti di _draw_indicators_single). Sebelumnya y-range cuma
+    # dihitung dari high/low candle, jadi kalau S/R terletak di luar rentang
+    # candle yang tampil, garis+labelnya ikut ter-render di luar axes (label
+    # teks defaultnya tidak clip) - itu penyebab "R ..." kadang menimpa judul
+    # TF di panel yang lain.
+    level_values = []
     if support:
         s_val = float(support)
+        level_values.append(s_val)
         ax.axhline(
             s_val, color=chart.UP, linestyle="--",
             linewidth=0.9, alpha=0.50, zorder=3,
@@ -321,6 +330,7 @@ def _draw_analyze_indicators(
         )
     if resistance:
         r_val = float(resistance)
+        level_values.append(r_val)
         ax.axhline(
             r_val, color=chart.DOWN, linestyle="--",
             linewidth=0.9, alpha=0.50, zorder=3,
@@ -358,6 +368,8 @@ def _draw_analyze_indicators(
             borderpad=0.35, handlelength=1.4,
         )
         legend.get_frame().set_linewidth(0.6)
+
+    return level_values
 
 
 def _nearest_level_text(price: float, support, resistance) -> str:
@@ -845,16 +857,25 @@ def build_mtfk_chart(
         )
 
         colors = chart._draw_candles(ax_p, plot_df)
+        level_values = []
         if not has_error:
             # Legend EMA cuma ditaruh SEKALI di panel pertama (warnanya sama
             # di semua panel) - drpd diulang di tiap panel & bikin sesak.
-            _draw_analyze_indicators(
+            level_values = _draw_analyze_indicators(
                 ax_p, df, n_show, tf, tf_info, tick_fs, show_legend=(idx == 0),
-            )
+            ) or []
 
         last_x = len(plot_df) - 1
-        y_low = float(plot_df["low"].min())
-        y_high = float(plot_df["high"].max())
+        # level_values (support/resistance) ikut disertakan di perhitungan
+        # batas y - sebelumnya y-range cuma dari high/low candle yg tampil,
+        # jadi kalau S/R ada di luar rentang itu, garis+labelnya ter-render
+        # di luar axes & bisa menimpa judul TF panel (bug yg dilaporkan).
+        # Dgn level_values ikut masuk, S/R (dan labelnya) dijamin selalu
+        # berada di dalam area chart, walau efeknya candle bisa tampak
+        # sedikit lebih kecil/rapat kalau S/R jauh dari harga saat ini.
+        all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + level_values
+        y_low = min(all_vals)
+        y_high = max(all_vals)
         y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
         pad = y_span * 0.12
         ax_p.set_ylim(y_low - pad, y_high + pad)
