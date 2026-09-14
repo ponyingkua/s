@@ -267,5 +267,17 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T20:05:06.881074+00:00"
+  },
+  "AEROUSDT|1h": {
+    "symbol": "AEROUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T21:04:32.669707+00:00"
+  },
+  "RONINUSDT|1h": {
+    "symbol": "RONINUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T21:04:35.139329+00:00"
   }
 }

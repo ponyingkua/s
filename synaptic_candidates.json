@@ -21556,5 +21556,52 @@
     "tp": 18.623315,
     "tp1": 19.759619,
     "scanned_at": "2026-09-14T20:03:56.388170+00:00"
+  },
+  {
+    "symbol": "AEROUSDT",
+    "direction": "LONG",
+    "score": 86.4,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (31.7) tren kuat (+11.4 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.5781,
+    "sl": 0.563151,
+    "tp": 0.605009,
+    "tp1": 0.593049,
+    "scanned_at": "2026-09-14T21:03:26.999182+00:00"
+  },
+  {
+    "symbol": "RONINUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (58.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.05761,
+    "sl": 0.05454,
+    "tp": 0.063136,
+    "tp1": 0.06068,
+    "scanned_at": "2026-09-14T21:03:26.999182+00:00"
   }
 ]
