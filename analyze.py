@@ -635,7 +635,7 @@ def compose_console_summary(result: dict) -> str:
     return "\n".join(lines)
 
 
-def run_one(symbol_raw: str, cfg: dict) -> bool:
+def run_one(symbol_raw: str, cfg: dict, chart_format: str = "wide", chart_type: str = "both") -> bool:
     quote = cfg["exchange"]["quote_asset"]
     try:
         symbol = normalize_symbol(symbol_raw, quote)
@@ -663,23 +663,28 @@ def run_one(symbol_raw: str, cfg: dict) -> bool:
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
     from mtfk import build_mtfk_chart, single_mtfk
-    chart_path = os.path.join(OUT_DIR, f"{symbol}_multi.png")
-    try:
-        build_mtfk_chart(
-            dfs=result["dfs"],
-            symbol=result["symbol"],
-            timeframes=timeframes,
-            per_tf=result["per_tf"],
-            out_path=chart_path,
-            cfg=cfg,
-        )
-        print(f"[analyze] Chart MTF saved to {chart_path}")
-    except Exception as exc:
-        print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
+    square = chart_format == "square"
+    suffix = "_square" if square else ""
+
+    if chart_type == "both":
+        chart_path = os.path.join(OUT_DIR, f"{symbol}_multi{suffix}.png")
+        try:
+            build_mtfk_chart(
+                dfs=result["dfs"],
+                symbol=result["symbol"],
+                timeframes=timeframes,
+                per_tf=result["per_tf"],
+                out_path=chart_path,
+                cfg=cfg,
+                square=square,
+            )
+            print(f"[analyze] Chart MTF saved to {chart_path}")
+        except Exception as exc:
+            print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
 
     best_tf = result.get("best_tf")
     if best_tf is not None:
-        single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}.png")
+        single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}{suffix}.png")
         try:
             single_mtfk(
                 df=result["dfs"][best_tf],
@@ -688,6 +693,7 @@ def run_one(symbol_raw: str, cfg: dict) -> bool:
                 tf_info=result["per_tf"][best_tf],
                 out_path=single_path,
                 cfg=cfg,
+                square=square,
             )
             print(f"[analyze] Chart drill-down ({best_tf}) saved to {single_path}")
         except Exception as exc:
@@ -707,6 +713,8 @@ def main():
     parser.add_argument("--symbol", default=None, help="Single coin code, e.g. RIVER or RIVERUSDT")
     parser.add_argument("--symbols", default=None, help="Comma/space separated symbols, e.g. ZEC,SOL,BTC")
     parser.add_argument("--config", default="config.yaml")
+    parser.add_argument("--chart-format", choices=["wide", "square"], default="wide")
+    parser.add_argument("--chart-type", choices=["both", "single"], default="both")
     args = parser.parse_args()
 
     if not args.symbol and not args.symbols:
@@ -728,7 +736,7 @@ def main():
         print("")
         print(f">>> Analyzing: {sym}")
         print("----------------------------------------")
-        ok = run_one(sym, cfg)
+        ok = run_one(sym, cfg, args.chart_format, args.chart_type)
         if not ok:
             failed += 1
 
