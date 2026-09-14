@@ -224,6 +224,33 @@ def _ordered_legend_handles(ax):
     return zip(*pairs)
 
 
+def _draw_colored_segments(
+    fig,
+    x0: float,
+    y: float,
+    parts: list[tuple[str, str]],
+    fontsize: float,
+    sep: str = "   ·   ",
+) -> None:
+    """Gambar satu baris teks (figure-fraction) yang tiap bagiannya punya
+    warna sendiri sesuai makna informasinya, dipisah `sep` berwarna netral -
+    dipakai utk baris ringkas ATR/MACD/Vol/MTF di bawah header supaya tiap
+    info langsung kebaca artinya dari warnanya, bukan cuma dari teksnya.
+    Posisi x tiap bagian dihitung dari lebar render bagian sebelumnya (perlu
+    beberapa kali fig.canvas.draw() - baris ini pendek & cuma digambar
+    sekali per chart jadi overhead-nya kecil)."""
+    inv = fig.transFigure.inverted()
+    x = x0
+    for i, (text, color) in enumerate(parts):
+        if i > 0:
+            t = fig.text(x, y, sep, fontsize=fontsize, fontweight="bold", color=chart.AXIS, ha="left", va="top")
+            fig.canvas.draw()
+            x = inv.transform((t.get_window_extent(renderer=fig.canvas.get_renderer()).x1, 0))[0]
+        t = fig.text(x, y, text, fontsize=fontsize, fontweight="bold", color=color, ha="left", va="top")
+        fig.canvas.draw()
+        x = inv.transform((t.get_window_extent(renderer=fig.canvas.get_renderer()).x1, 0))[0]
+
+
 def _draw_rsi_panel(ax, rsi_values, tick_fs: float = 7.5) -> None:
     x = list(range(len(rsi_values)))
     ax.axhspan(70, 100, color=chart.DOWN, alpha=0.06, zorder=1)
@@ -353,14 +380,27 @@ def _draw_indicators_single(
     n_show: int,
     tf: str,
     tf_info: dict,
+    right_pad: float,
     square: bool = False,
 ) -> list:
     """Varian _draw_analyze_indicators khusus single_mtfk: linewidth & style
-    disesuaikan skala chart penuh. S/R digambar inline di kanan (dekat tepi
-    kanan chart, area harga terbaru) supaya jaraknya ke harga sekarang mudah
-    dibaca; legend EMA/BB dipindah ke kiri (lihat build_single_mtfk_chart)
-    supaya kedua elemen tidak saling menumpuk di satu sudut. Tidak dipakai
-    oleh build_mtfk_chart (multi-panel)."""
+    disesuaikan skala chart penuh. S/R digambar di ruang kosong sebelah kanan
+    (antara candle terakhir & tepi chart, lihat `right_pad` di
+    build_single_mtfk_chart) - bukan lagi menumpuk di atas candle - supaya
+    labelnya selalu bersih terbaca terpisah dari data harga; legend EMA/BB
+    dipindah ke kiri (lihat build_single_mtfk_chart) supaya kedua elemen
+    tidak saling menumpuk di satu sudut. Tidak dipakai oleh build_mtfk_chart
+    (multi-panel)."""
+    last_x = n_show - 1
+    # marker (segitiga) nempel tepat di ujung ruang kosong (dekat candle
+    # terakhir), teks nilai S/R nempel ke tepi kanan chart - keduanya pakai
+    # koordinat data (bukan fraksi axes) krn xlim final sudah diset sebelum
+    # fungsi ini dipanggil, jadi posisinya presisi & konsisten walau
+    # right_pad berubah-ubah mengikuti jumlah candle.
+    edge_margin = max(right_pad * 0.08, 0.35)
+    label_x = last_x + right_pad - edge_margin
+    marker_x = last_x + SINGLE_CANDLE_WIDTH / 2 + max(right_pad * 0.10, 0.3)
+
     emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
     ema_values = list(emas["ema20"]) + list(emas["ema50"])
@@ -414,14 +454,13 @@ def _draw_indicators_single(
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
-            [0.984], [s_val], marker="^", markersize=(7.5 if square else 6.0),
-            color=chart.UP, transform=ax.get_yaxis_transform(),
-            zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+            [marker_x], [s_val], marker="^", markersize=(7.5 if square else 6.0),
+            color=chart.UP, zorder=chart.Z_LEVEL_LABEL, clip_on=False,
         )
         ax.text(
-            0.968, s_val,
+            label_x, s_val,
             f"SUPPORT  {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
-            transform=ax.get_yaxis_transform(), color=chart.UP,
+            color=chart.UP,
             fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
             zorder=chart.Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
@@ -434,14 +473,13 @@ def _draw_indicators_single(
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
-            [0.984], [r_val], marker="v", markersize=(7.5 if square else 6.0),
-            color=chart.DOWN, transform=ax.get_yaxis_transform(),
-            zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+            [marker_x], [r_val], marker="v", markersize=(7.5 if square else 6.0),
+            color=chart.DOWN, zorder=chart.Z_LEVEL_LABEL, clip_on=False,
         )
         ax.text(
-            0.968, r_val,
+            label_x, r_val,
             f"RESISTANCE  {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
-            transform=ax.get_yaxis_transform(), color=chart.DOWN,
+            color=chart.DOWN,
             fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
             zorder=chart.Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
@@ -562,27 +600,36 @@ def build_single_mtfk_chart(
     direction = "NONE" if has_error else tf_info.get("direction", "NONE")
 
     colors = _draw_candles_single(ax_price, plot_df)
+    last_x = len(plot_df) - 1
+
+    # Sisi kiri tetap mepet (histori lama tidak penting dilihat penuh), tapi
+    # sisi kanan dilebarkan jadi zona kosong khusus label SUPPORT/RESISTANCE
+    # - dihitung sbg fraksi TETAP dari lebar axes (label_zone_frac), bukan
+    # cuma kelipatan lebar candle, krn lebar axes dlm pixel itu konstan
+    # (width_px sama berapa pun n_show-nya) sedangkan lebar candle relatif
+    # thd n_show berubah-ubah. Dgn fraksi tetap ini, zona label selalu
+    # cukup lega dari candle manapun n_show-nya - konsekuensinya candle jadi
+    # lebih ramping/pipih drpd sebelumnya, itu memang trade-off yg diambil
+    # supaya labelnya tidak lagi ketiban candle terakhir.
+    label_zone_frac = 0.17 if square else 0.14
+    right_pad = label_zone_frac * (last_x + 0.6) / (1 - label_zone_frac)
+    right_pad = max(right_pad, SINGLE_CANDLE_WIDTH * 6)
+    ax_price.set_xlim(-0.6, last_x + right_pad)
+    ax_vol.set_xlim(-0.6, last_x + right_pad)
+    ax_rsi.set_xlim(-0.6, last_x + right_pad)
 
     range_values = []
     if not has_error:
         range_values = _draw_indicators_single(
-            ax_price, df, n_show, timeframe, tf_info, square=square,
+            ax_price, df, n_show, timeframe, tf_info, right_pad, square=square,
         )
 
-    last_x = len(plot_df) - 1
     all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + range_values
     y_low = min(all_vals)
     y_high = max(all_vals)
     y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
     y_padding = y_span * 0.18
     ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
-
-    # Chart selalu penuh dari batas kiri sampai batas kanan - tidak ada lagi
-    # margin kanan yang direservasi untuk label ENTRY/TP/SL (fitur itu sudah
-    # tidak dipakai di chart analisa).
-    ax_price.set_xlim(-0.6, last_x + 0.6)
-    ax_vol.set_xlim(-0.6, last_x + 0.6)
-    ax_rsi.set_xlim(-0.6, last_x + 0.6)
 
     if not has_error and len(plot_df) >= 6:
         swing_high, swing_low = chart._find_swings(plot_df, 2, 2)
@@ -634,12 +681,21 @@ def build_single_mtfk_chart(
     header_extra = pd.Timestamp.now(tz="UTC").strftime("Updated %d %b %H:%M UTC")
     header_title = f"{symbol}  ·  {timeframe}  ·  {direction}{setup_txt}"
 
+    # Header sedikit dikecilkan lagi drpd sebelumnya (18/22 -> 16/20) supaya
+    # tidak dominan, dan jarak ke baris indikator di bawahnya dirapikan jadi
+    # gap yang konsisten & lega (bukan mepet) - badge ikut diskalakan turun
+    # supaya proporsinya tetap seimbang dgn teks header.
+    header_fs = 20.0 if square else 16.0
+    badge_fs = 17.5 if square else 13.5
+    segment_fs = 12.0 if square else 9.0
+    segment_y = 0.913 if square else 0.917
+
     fig.text(
         0.07, 0.965, header_title,
-        fontsize=(22.0 if square else 18), fontweight="bold", color=chart.TEXT,
+        fontsize=header_fs, fontweight="bold", color=chart.TEXT,
         ha="left", va="top",
     )
-    chart._draw_change_badge(fig, 0.96, 0.965, chart._calc_24h_change(df), fontsize=(19.0 if square else 15))
+    chart._draw_change_badge(fig, 0.96, 0.965, chart._calc_24h_change(df), fontsize=badge_fs)
 
     if not has_error:
         atr_pct = (tf_info.get("direction_analysis") or {}).get("atr_pct")
@@ -647,9 +703,14 @@ def build_single_mtfk_chart(
         vol_ratio = _volume_ratio_last(df)
         mtf_agree = tf_info.get("mtf_agree_tfs") or []
 
-        segments = []
+        # Tiap segmen diwarnai sesuai fungsinya sendiri (dulu semua satu
+        # warna netral) - ATR murni info volatilitas jadi netral, MACD & MTF
+        # agree ikut warna arah (UP/DOWN) krn keduanya sinyal condong ke satu
+        # sisi, Vol disorot kuning cuma kalau lonjakannya signifikan (>=1.5x
+        # rata-rata), selain itu tetap netral.
+        segments: list[tuple[str, str]] = []
         if atr_pct is not None:
-            segments.append(f"ATR {atr_pct:.2f}%")
+            segments.append((f"ATR {atr_pct:.2f}%", chart.AXIS))
         if hist is not None:
             arrow = "▲" if hist > 0 else "▼" if hist < 0 else "→"
             state = ""
@@ -658,18 +719,17 @@ def build_single_mtfk_chart(
                     state = "Expanding"
                 elif abs(hist) < abs(hist_prev):
                     state = "Contracting"
-            segments.append(f"MACD {arrow}" + (f" {state}" if state else ""))
+            macd_color = chart.UP if hist > 0 else chart.DOWN if hist < 0 else chart.AXIS
+            segments.append((f"MACD {arrow}" + (f" {state}" if state else ""), macd_color))
         if vol_ratio is not None:
-            segments.append(f"Vol {vol_ratio:.1f}x avg")
+            vol_color = EMA20_COLOR if vol_ratio >= 1.5 else chart.AXIS
+            segments.append((f"Vol {vol_ratio:.1f}x avg", vol_color))
         if mtf_agree:
-            segments.append(f"MTF agree: {', '.join(mtf_agree)}")
+            agree_color = chart.UP if direction == "LONG" else chart.DOWN if direction == "SHORT" else chart.AXIS
+            segments.append((f"MTF agree: {', '.join(mtf_agree)}", agree_color))
 
         if segments:
-            fig.text(
-                0.07, 0.925, "   ·   ".join(segments),
-                fontsize=(12.5 if square else 9.5), fontweight="bold",
-                color=chart.AXIS, ha="left", va="top",
-            )
+            _draw_colored_segments(fig, 0.07, segment_y, segments, fontsize=segment_fs)
 
     if square:
         footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
