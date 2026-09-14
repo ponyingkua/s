@@ -4,47 +4,17 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "FLOCKUSDT|1h": {
-    "symbol": "FLOCKUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T11:03:56.837122+00:00"
-  },
   "BLURUSDT|1h": {
     "symbol": "BLURUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T13:03:35.754256+00:00"
   },
-  "PORTALUSDT|1h": {
-    "symbol": "PORTALUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T12:04:29.410156+00:00"
-  },
   "THETAUSDT|1h": {
     "symbol": "THETAUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T15:03:53.873208+00:00"
-  },
-  "WIFUSDT|15m": {
-    "symbol": "WIFUSDT",
-    "timeframe": "15m",
-    "direction": "SHORT",
-    "timestamp": "2026-09-13T11:03:54.673877+00:00"
-  },
-  "POWERUSDT|1h": {
-    "symbol": "POWERUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T11:03:58.254347+00:00"
-  },
-  "BTWUSDT|1h": {
-    "symbol": "BTWUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T11:03:59.649602+00:00"
   },
   "NEOUSDT|1h": {
     "symbol": "NEOUSDT",
@@ -225,5 +195,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-13T23:03:46.552500+00:00"
+  },
+  "BIRBUSDT|1h": {
+    "symbol": "BIRBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T00:05:08.338256+00:00"
+  },
+  "XPLUSDT|4h": {
+    "symbol": "XPLUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T00:05:09.739517+00:00"
+  },
+  "MSFTUSDT|1h": {
+    "symbol": "MSFTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T00:05:10.144329+00:00"
   }
 }
