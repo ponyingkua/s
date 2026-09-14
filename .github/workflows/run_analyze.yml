@@ -4,19 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       symbols:
-        description: "Nama Symbol (pisahkan dengan koma)"
+        description: "Symbol (pisah dengan koma)"
         required: true
         type: string
       chart_format:
-        description: "Rasio chart"
+        description: "Rasio"
         required: false
         type: choice
         options:
           - wide
           - square
+          - both
         default: wide
       chart_type:
-        description: "Jenis Chart"
+        description: "MTF/SINGLE"
         required: false
         type: choice
         options:
