@@ -28,22 +28,6 @@ RSI_COLOR = "#4DD0E1"
 # (chart.CANDLE_WIDTH=0.8 tidak diubah krn dipakai bareng oleh chart.py & multi-panel).
 SINGLE_CANDLE_WIDTH = 0.86
 
-# Batas BAWAH jumlah candle single_mtfk (batas ATAS pakai chart.get_candles_shown,
-# yg sudah baca MAX_CANDLES_BY_TF di chart.py). Jumlah aktual ditentukan dinamis
-# per simbol oleh _dynamic_candle_window() supaya fokus ke pergerakan penting.
-MIN_CANDLES_BY_TF = {
-    "15m": 25,
-    "1h": 30,
-    "4h": 22,
-}
-
-# Ambang ekspansi volatilitas dipakai _dynamic_candle_window: candle dianggap
-# bagian dari leg impulsif kalau true range-nya >= EXPANSION_MULT x baseline.
-EXPANSION_MULT = 2.0
-# Toleransi jeda (dlm jumlah candle) supaya 1-2 candle koreksi/pause di tengah
-# leg impulsif tidak dianggap memutus blok ekspansi.
-EXPANSION_GAP_TOLERANCE = 2
-
 
 def _fmt_volume(value: float, _pos=None) -> str:
     v = abs(value)
@@ -105,18 +89,6 @@ def _atr_last(df: pd.DataFrame, period: int = 14) -> float:
     atr = tr.ewm(alpha=1 / period, min_periods=period).mean()
     val = float(atr.iloc[-1]) if pd.notna(atr.iloc[-1]) else 0.0
     return val
-
-
-def _true_range(df: pd.DataFrame) -> pd.Series:
-    prev_close = df["close"].shift(1)
-    return pd.concat(
-        [
-            df["high"] - df["low"],
-            (df["high"] - prev_close).abs(),
-            (df["low"] - prev_close).abs(),
-        ],
-        axis=1,
-    ).max(axis=1)
 
 
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -189,83 +161,6 @@ def _draw_volume_bars_no_ma(ax, df: pd.DataFrame, colors: list) -> None:
             i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
             width=SINGLE_CANDLE_WIDTH, linewidth=0, zorder=2,
         )
-
-
-def _dynamic_candle_window(df: pd.DataFrame, tf: str, tf_info: dict, cfg: dict) -> int:
-    """Tentukan jumlah candle yang ditampilkan secara dinamis per simbol -
-    fokus ke leg pergerakan penting menuju harga terakhir, supaya fase
-    sideways/flat panjang sebelum breakout tidak memenuhi chart dengan
-    ruang kosong (kasus seperti POWERUSDT). Dibatasi [MIN, MAX] per tf;
-    MAX tetap dari chart.get_candles_shown (baca MAX_CANDLES_BY_TF di chart.py).
-
-    Deteksi berbasis EKSPANSI VOLATILITAS (true range vs baseline), bukan
-    swing high/low paling ekstrem. Sebelumnya versi ini memakai swing low/high
-    ekstrem sbg jangkar, tapi itu bermasalah persis di kasus konsolidasi
-    panjang lalu breakout tajam: titik ekstrem (harga terendah/tertinggi)
-    justru sering ada JAUH di awal data, sebelum konsolidasi itu sendiri -
-    hasilnya window tetap menyeret seluruh fase flat ke dalam chart (lihat
-    contoh POWERUSDT 1h: window lama menampilkan ~2/3 chart berupa candle
-    datar sebelum breakout). Titik yang relevan adalah AWAL LEG IMPULSIF
-    terakhir menuju harga sekarang, dicirikan oleh true range candle yang
-    melonjak jauh di atas baseline volatilitas sebelumnya.
-    """
-    max_candles = chart.get_candles_shown(tf, cfg)
-    min_candles = min(MIN_CANDLES_BY_TF.get(tf, max(20, max_candles // 2)), max_candles)
-    n = len(df)
-    if n <= min_candles:
-        return n
-
-    search_span = min(n, max_candles * 3)
-    window = df.tail(search_span).reset_index(drop=True)
-    m = len(window)
-
-    true_range = _true_range(window)
-    baseline_tr = float(true_range.median()) if true_range.notna().any() else 0.0
-
-    leg_start = None
-    if baseline_tr > 0:
-        threshold = baseline_tr * EXPANSION_MULT
-        gap = 0
-        for i in range(m - 1, -1, -1):
-            tr_i = true_range.iloc[i]
-            expanded = pd.notna(tr_i) and tr_i >= threshold
-            if expanded:
-                leg_start = i
-                gap = 0
-            elif leg_start is not None:
-                gap += 1
-                if gap > EXPANSION_GAP_TOLERANCE:
-                    break
-
-    if leg_start is None:
-        # Tidak ada ekspansi volatilitas yang jelas (trend landai / choppy) -
-        # fallback ke swing ekstrem seperti versi sebelumnya.
-        swing_high, swing_low = chart._find_swings(window, 2, 2)
-        sh = [(i, float(window["high"].iloc[i])) for i in range(m) if swing_high[i]]
-        sl = [(i, float(window["low"].iloc[i])) for i in range(m) if swing_low[i]]
-
-        direction = tf_info.get("direction", "NONE") if isinstance(tf_info, dict) else "NONE"
-        if direction == "LONG" and sl:
-            leg_start = min(sl, key=lambda t: t[1])[0]
-        elif direction == "SHORT" and sh:
-            leg_start = max(sh, key=lambda t: t[1])[0]
-        else:
-            extremes = []
-            if sh:
-                extremes.append(max(sh, key=lambda t: t[1])[0])
-            if sl:
-                extremes.append(min(sl, key=lambda t: t[1])[0])
-            if extremes:
-                leg_start = min(extremes)
-
-    if leg_start is None:
-        return min(max_candles, n)
-
-    pad = max(4, min_candles // 6)
-    start_in_window = max(0, leg_start - pad)
-    n_show = m - start_in_window
-    n_show = max(min_candles, min(max_candles, n_show))
-    return min(n_show, n)
 
 
 _LEGEND_ORDER = ("EMA 20", "EMA 50", "EMA 200")
@@ -519,14 +414,14 @@ def build_single_mtfk_chart(
 ) -> str:
     """Chart single-timeframe versi mtfk (dipakai analyze.py saat cuma 1 tf).
     Layout/rasio/jumlah candle/warna dibuat persis dengan chart.build_chart,
-    hanya menambahkan panel RSI di bawah volume (volume tanpa garis MA20)."""
+    hanya menambahkan panel RSI di bawah volume (volume tanpa garis MA20).
+    Jumlah candle selalu memakai batas maksimum dari chart.get_candles_shown
+    (tidak dipotong dinamis) supaya candle memenuhi chart dari batas kiri
+    sampai batas kanan."""
     cfg = cfg or {}
     has_error = "error" in tf_info
 
-    if has_error:
-        n_show = chart.get_candles_shown(timeframe, cfg)
-    else:
-        n_show = _dynamic_candle_window(df, timeframe, tf_info, cfg)
+    n_show = chart.get_candles_shown(timeframe, cfg)
     plot_df = df.tail(n_show).reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
@@ -588,14 +483,12 @@ def build_single_mtfk_chart(
     y_padding = y_span * 0.18
     ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
 
-    gap_from_candle = 4.0
-    label_width_est = 13.0
-    gap_from_edge = 0.4
-    extra_margin = gap_from_candle + label_width_est + gap_from_edge
-
-    ax_price.set_xlim(-0.6, last_x + extra_margin)
-    ax_vol.set_xlim(-0.6, last_x + extra_margin)
-    ax_rsi.set_xlim(-0.6, last_x + extra_margin)
+    # Chart selalu penuh dari batas kiri sampai batas kanan - tidak ada lagi
+    # margin kanan yang direservasi untuk label ENTRY/TP/SL (fitur itu sudah
+    # tidak dipakai di chart analisa).
+    ax_price.set_xlim(-0.6, last_x + 0.6)
+    ax_vol.set_xlim(-0.6, last_x + 0.6)
+    ax_rsi.set_xlim(-0.6, last_x + 0.6)
 
     if not has_error and len(plot_df) >= 6:
         swing_high, swing_low = chart._find_swings(plot_df, 2, 2)
