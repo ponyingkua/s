@@ -21603,5 +21603,28 @@
     "tp": 0.063136,
     "tp1": 0.06068,
     "scanned_at": "2026-09-14T21:03:26.999182+00:00"
+  },
+  {
+    "symbol": "CAPUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (53.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.06105,
+    "sl": 0.054211,
+    "tp": 0.073361,
+    "tp1": 0.067889,
+    "scanned_at": "2026-09-14T22:03:24.241815+00:00"
   }
 ]

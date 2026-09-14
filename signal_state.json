@@ -28,23 +28,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T12:05:15.808819+00:00"
   },
-  "IOTXUSDT|1h": {
-    "symbol": "IOTXUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T09:05:44.345810+00:00"
-  },
   "BZUSDT|1h": {
     "symbol": "BZUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T13:06:59.330926+00:00"
-  },
-  "STEEMUSDT|1h": {
-    "symbol": "STEEMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T09:05:45.768720+00:00"
   },
   "XPLUSDT|15m": {
     "symbol": "XPLUSDT",
@@ -279,5 +267,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T21:04:35.139329+00:00"
+  },
+  "CAPUSDT|1h": {
+    "symbol": "CAPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T22:04:10.688195+00:00"
   }
 }
