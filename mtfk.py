@@ -24,6 +24,19 @@ TINT_NONE = (0.5, 0.5, 0.5, 0.03)
 
 RSI_COLOR = "#4DD0E1"
 
+# Khusus single_mtfk: candle dibuat lebih besar drpd grid multi-panel
+# (chart.CANDLE_WIDTH=0.8 tidak diubah krn dipakai bareng oleh chart.py & multi-panel).
+SINGLE_CANDLE_WIDTH = 0.86
+
+# Batas BAWAH jumlah candle single_mtfk (batas ATAS pakai chart.get_candles_shown,
+# yg sudah baca MAX_CANDLES_BY_TF di chart.py). Jumlah aktual ditentukan dinamis
+# per simbol oleh _dynamic_candle_window() supaya fokus ke pergerakan penting.
+MIN_CANDLES_BY_TF = {
+    "15m": 25,
+    "1h": 30,
+    "4h": 22,
+}
+
 
 def _fmt_volume(value: float, _pos=None) -> str:
     v = abs(value)
@@ -101,14 +114,84 @@ def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return rsi
 
 
+def _draw_candles_single(ax, df: pd.DataFrame) -> list:
+    """Sama seperti chart._draw_candles tapi body candle dibuat lebih lebar
+    (SINGLE_CANDLE_WIDTH) - khusus dipakai single_mtfk. Tidak mengubah
+    chart.CANDLE_WIDTH itu sendiri (dipakai bareng oleh chart.py & multi-panel)."""
+    colors = []
+    for i in range(len(df)):
+        row = df.iloc[i]
+        open_p, close_p = float(row["open"]), float(row["close"])
+        high_p, low_p = float(row["high"]), float(row["low"])
+        color = chart.UP if close_p >= open_p else chart.DOWN
+        colors.append(color)
+
+        ax.plot(
+            [i, i], [low_p, high_p], color=color, linewidth=1.5,
+            solid_capstyle="round", zorder=chart.Z_CANDLE_WICK,
+        )
+        body_bottom = min(open_p, close_p)
+        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.012)
+        ax.add_patch(Rectangle(
+            (i - SINGLE_CANDLE_WIDTH / 2, body_bottom), SINGLE_CANDLE_WIDTH, body_height,
+            facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=chart.Z_CANDLE_BODY,
+        ))
+    return colors
+
+
 def _draw_volume_bars_no_ma(ax, df: pd.DataFrame, colors: list) -> None:
     """Sama seperti chart._draw_volume tapi tanpa garis moving-average -
     dipakai khusus di single_mtfk karena baris itu diganti panel RSI."""
     for i in range(len(df)):
         ax.bar(
             i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
-            width=chart.CANDLE_WIDTH, linewidth=0, zorder=2,
+            width=SINGLE_CANDLE_WIDTH, linewidth=0, zorder=2,
         )
+
+
+def _dynamic_candle_window(df: pd.DataFrame, tf: str, tf_info: dict, cfg: dict) -> int:
+    """Tentukan jumlah candle yang ditampilkan secara dinamis per simbol -
+    fokus ke leg pergerakan penting menuju harga terakhir, supaya fase
+    sideways/flat panjang sebelum breakout tidak memenuhi chart dengan
+    ruang kosong (kasus seperti POWERUSDT). Dibatasi [MIN, MAX] per tf;
+    MAX tetap dari chart.get_candles_shown (baca MAX_CANDLES_BY_TF)."""
+    max_candles = chart.get_candles_shown(tf, cfg)
+    min_candles = min(MIN_CANDLES_BY_TF.get(tf, max(20, max_candles // 2)), max_candles)
+    n = len(df)
+    if n <= min_candles:
+        return n
+
+    search_span = min(n, max_candles * 3)
+    window = df.tail(search_span).reset_index(drop=True)
+    m = len(window)
+
+    swing_high, swing_low = chart._find_swings(window, 2, 2)
+    sh = [(i, float(window["high"].iloc[i])) for i in range(m) if swing_high[i]]
+    sl = [(i, float(window["low"].iloc[i])) for i in range(m) if swing_low[i]]
+
+    direction = tf_info.get("direction", "NONE") if isinstance(tf_info, dict) else "NONE"
+    candidate_idx = None
+    if direction == "LONG" and sl:
+        candidate_idx = min(sl, key=lambda t: t[1])[0]
+    elif direction == "SHORT" and sh:
+        candidate_idx = max(sh, key=lambda t: t[1])[0]
+    else:
+        extremes = []
+        if sh:
+            extremes.append(max(sh, key=lambda t: t[1])[0])
+        if sl:
+            extremes.append(min(sl, key=lambda t: t[1])[0])
+        if extremes:
+            candidate_idx = min(extremes)
+
+    if candidate_idx is None:
+        return min(max_candles, n)
+
+    pad = max(4, min_candles // 6)
+    start_in_window = max(0, candidate_idx - pad)
+    n_show = m - start_in_window
+    n_show = max(min_candles, min(max_candles, n_show))
+    return min(n_show, n)
 
 
 def _draw_rsi_panel(ax, rsi_values, tick_fs: float = 7.5) -> None:
@@ -346,7 +429,10 @@ def build_single_mtfk_chart(
     cfg = cfg or {}
     has_error = "error" in tf_info
 
-    n_show = chart.get_candles_shown(timeframe, cfg)
+    if has_error:
+        n_show = chart.get_candles_shown(timeframe, cfg)
+    else:
+        n_show = _dynamic_candle_window(df, timeframe, tf_info, cfg)
     plot_df = df.tail(n_show).reset_index(drop=True)
 
     chart_cfg = cfg.get("chart", {})
@@ -386,7 +472,7 @@ def build_single_mtfk_chart(
 
     direction = "NONE" if has_error else tf_info.get("direction", "NONE")
 
-    colors = chart._draw_candles(ax_price, plot_df)
+    colors = _draw_candles_single(ax_price, plot_df)
 
     range_values = []
     if not has_error:
@@ -410,6 +496,18 @@ def build_single_mtfk_chart(
     ax_price.set_xlim(-0.6, last_x + extra_margin)
     ax_vol.set_xlim(-0.6, last_x + extra_margin)
     ax_rsi.set_xlim(-0.6, last_x + extra_margin)
+
+    if not has_error and len(plot_df) >= 6:
+        swing_high, swing_low = chart._find_swings(plot_df, 2, 2)
+        labeled_points = chart._label_structure(plot_df, swing_high, swing_low)
+        if labeled_points:
+            # seperlunya saja - hanya beberapa titik swing paling relevan
+            # (terbaru) supaya tidak menuh-menuhin chart.
+            labeled_points = labeled_points[-6:]
+            chart._draw_structure_labels(
+                ax_price, labeled_points, offset=0, plot_len=len(plot_df),
+                y_span=y_span, square=square,
+            )
 
     _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
     ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
