@@ -635,6 +635,54 @@ def compose_console_summary(result: dict) -> str:
     return "\n".join(lines)
 
 
+def _render_charts_for_format(
+    result: dict,
+    symbol: str,
+    cfg: dict,
+    timeframes: list[str],
+    chart_type: str,
+    chart_format: str,
+) -> None:
+    """Render chart MTF dan/atau drill-down untuk satu rasio (wide/square)."""
+    from mtfk import build_mtfk_chart, single_mtfk
+
+    square = chart_format == "square"
+    suffix = "_square" if square else ""
+
+    if chart_type == "both":
+        chart_path = os.path.join(OUT_DIR, f"{symbol}_multi{suffix}.png")
+        try:
+            build_mtfk_chart(
+                dfs=result["dfs"],
+                symbol=result["symbol"],
+                timeframes=timeframes,
+                per_tf=result["per_tf"],
+                out_path=chart_path,
+                cfg=cfg,
+                square=square,
+            )
+            print(f"[analyze] Chart MTF saved to {chart_path}")
+        except Exception as exc:
+            print(f"[warn] Gagal membuat chart MTF untuk {symbol} ({chart_format}): {exc}")
+
+    best_tf = result.get("best_tf")
+    if best_tf is not None:
+        single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}{suffix}.png")
+        try:
+            single_mtfk(
+                df=result["dfs"][best_tf],
+                symbol=result["symbol"],
+                timeframe=best_tf,
+                tf_info=result["per_tf"][best_tf],
+                out_path=single_path,
+                cfg=cfg,
+                square=square,
+            )
+            print(f"[analyze] Chart drill-down ({best_tf}) saved to {single_path}")
+        except Exception as exc:
+            print(f"[warn] Gagal membuat chart drill-down untuk {symbol} ({best_tf}, {chart_format}): {exc}")
+
+
 def run_one(symbol_raw: str, cfg: dict, chart_format: str = "wide", chart_type: str = "both") -> bool:
     quote = cfg["exchange"]["quote_asset"]
     try:
@@ -662,42 +710,9 @@ def run_one(symbol_raw: str, cfg: dict, chart_format: str = "wide", chart_type: 
         f.write(text)
     print(f"[analyze] Finished. Markdown saved to {md_path}")
 
-    from mtfk import build_mtfk_chart, single_mtfk
-    square = chart_format == "square"
-    suffix = "_square" if square else ""
-
-    if chart_type == "both":
-        chart_path = os.path.join(OUT_DIR, f"{symbol}_multi{suffix}.png")
-        try:
-            build_mtfk_chart(
-                dfs=result["dfs"],
-                symbol=result["symbol"],
-                timeframes=timeframes,
-                per_tf=result["per_tf"],
-                out_path=chart_path,
-                cfg=cfg,
-                square=square,
-            )
-            print(f"[analyze] Chart MTF saved to {chart_path}")
-        except Exception as exc:
-            print(f"[warn] Gagal membuat chart MTF untuk {symbol}: {exc}")
-
-    best_tf = result.get("best_tf")
-    if best_tf is not None:
-        single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}{suffix}.png")
-        try:
-            single_mtfk(
-                df=result["dfs"][best_tf],
-                symbol=result["symbol"],
-                timeframe=best_tf,
-                tf_info=result["per_tf"][best_tf],
-                out_path=single_path,
-                cfg=cfg,
-                square=square,
-            )
-            print(f"[analyze] Chart drill-down ({best_tf}) saved to {single_path}")
-        except Exception as exc:
-            print(f"[warn] Gagal membuat chart drill-down untuk {symbol} ({best_tf}): {exc}")
+    chart_formats = ["wide", "square"] if chart_format == "both" else [chart_format]
+    for fmt in chart_formats:
+        _render_charts_for_format(result, symbol, cfg, timeframes, chart_type, fmt)
 
     per_tf = result["per_tf"]
     if per_tf and all("error" in info for info in per_tf.values()):
@@ -713,7 +728,7 @@ def main():
     parser.add_argument("--symbol", default=None, help="Single coin code, e.g. RIVER or RIVERUSDT")
     parser.add_argument("--symbols", default=None, help="Comma/space separated symbols, e.g. ZEC,SOL,BTC")
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--chart-format", choices=["wide", "square"], default="wide")
+    parser.add_argument("--chart-format", choices=["wide", "square", "both"], default="wide")
     parser.add_argument("--chart-type", choices=["both", "single"], default="both")
     args = parser.parse_args()
 
