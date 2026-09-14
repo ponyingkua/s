@@ -112,12 +112,13 @@ def _draw_volume_bars_no_ma(ax, df: pd.DataFrame, colors: list) -> None:
 
 
 def _draw_rsi_panel(ax, rsi_values, tick_fs: float = 7.5) -> None:
-    x = range(len(rsi_values))
+    x = list(range(len(rsi_values)))
     ax.axhspan(70, 100, color=chart.DOWN, alpha=0.06, zorder=1)
     ax.axhspan(0, 30, color=chart.UP, alpha=0.06, zorder=1)
     ax.axhline(70, color=chart.AXIS, linestyle="--", linewidth=0.6, alpha=0.55, zorder=2)
     ax.axhline(30, color=chart.AXIS, linestyle="--", linewidth=0.6, alpha=0.55, zorder=2)
     ax.axhline(50, color=chart.AXIS, linestyle="-", linewidth=0.4, alpha=0.30, zorder=2)
+    ax.fill_between(x, rsi_values, 50, color=RSI_COLOR, alpha=0.10, zorder=3, linewidth=0)
     ax.plot(
         x, rsi_values, color=RSI_COLOR, linewidth=1.3, alpha=0.95,
         zorder=4, solid_capstyle="round",
@@ -231,10 +232,11 @@ def _draw_indicators_single(
     tf: str,
     tf_info: dict,
     square: bool = False,
-) -> tuple[list, list]:
+) -> list:
     """Varian _draw_analyze_indicators khusus single_mtfk: linewidth & style
-    disesuaikan skala chart penuh, S/R pakai gaya level-box chart._place_level_labels
-    (persis ENTRY/TP/SL di chart.py). Tidak dipakai oleh build_mtfk_chart (multi-panel)."""
+    disesuaikan skala chart penuh. S/R digambar inline di kiri (dekat sumbu-y),
+    BUKAN di margin kanan - slot itu direservasi untuk label ENTRY/TP/SL.
+    Tidak dipakai oleh build_mtfk_chart (multi-panel)."""
     close = df["close"]
     p = float(close.iloc[-1])
     ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
@@ -267,25 +269,48 @@ def _draw_indicators_single(
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
     resistance = structure.get("resistance")
+    label_fs = 10.5 if square else 8.5
 
-    levels = []
+    level_values = []
     if support:
         s_val = float(support)
-        levels.append({
-            "level": s_val, "color": chart.UP,
-            "text": f"S  {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
-        })
+        level_values.append(s_val)
+        ax.axhline(
+            s_val, color=chart.UP, linestyle="-",
+            linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
+        )
+        ax.plot(
+            [0.016], [s_val], marker="^", markersize=(7.5 if square else 6.0),
+            color=chart.UP, transform=ax.get_yaxis_transform(),
+            zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+        )
+        ax.text(
+            0.032, s_val,
+            f"SUPPORT  {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
+            transform=ax.get_yaxis_transform(), color=chart.UP,
+            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            zorder=chart.Z_LEVEL_LABEL,
+            bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
+        )
     if resistance:
         r_val = float(resistance)
-        levels.append({
-            "level": r_val, "color": chart.DOWN,
-            "text": f"R  {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
-        })
-
-    for item in levels:
+        level_values.append(r_val)
         ax.axhline(
-            y=item["level"], color=item["color"], linestyle="--",
-            linewidth=1.0, alpha=0.70, zorder=chart.Z_LEVEL_LINE,
+            r_val, color=chart.DOWN, linestyle="-",
+            linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
+        )
+        ax.plot(
+            [0.016], [r_val], marker="v", markersize=(7.5 if square else 6.0),
+            color=chart.DOWN, transform=ax.get_yaxis_transform(),
+            zorder=chart.Z_LEVEL_LABEL, clip_on=False,
+        )
+        ax.text(
+            0.032, r_val,
+            f"RESISTANCE  {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
+            transform=ax.get_yaxis_transform(), color=chart.DOWN,
+            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            zorder=chart.Z_LEVEL_LABEL,
+            bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
         )
 
     direction = tf_info.get("direction", "NONE")
@@ -303,7 +328,7 @@ def _draw_indicators_single(
             zorder=6, alpha=0.95,
         )
 
-    return levels, ema_values
+    return level_values + ema_values
 
 
 def build_single_mtfk_chart(
@@ -360,30 +385,17 @@ def build_single_mtfk_chart(
     ax_vol.tick_params(labelbottom=False)
 
     direction = "NONE" if has_error else tf_info.get("direction", "NONE")
-    if direction == "LONG":
-        tint = TINT_LONG
-    elif direction == "SHORT":
-        tint = TINT_SHORT
-    else:
-        tint = TINT_NONE
-    ax_price.add_patch(
-        Rectangle(
-            (0, 0), 1, 1, transform=ax_price.transAxes,
-            facecolor=tint, edgecolor="none", zorder=0,
-        )
-    )
 
     colors = chart._draw_candles(ax_price, plot_df)
 
-    levels, ema_values = ([], [])
+    range_values = []
     if not has_error:
-        levels, ema_values = _draw_indicators_single(
+        range_values = _draw_indicators_single(
             ax_price, df, n_show, timeframe, tf_info, square=square,
         )
 
     last_x = len(plot_df) - 1
-    level_values = [item["level"] for item in levels]
-    all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + level_values + ema_values
+    all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + range_values
     y_low = min(all_vals)
     y_high = max(all_vals)
     y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
@@ -394,14 +406,10 @@ def build_single_mtfk_chart(
     label_width_est = 13.0
     gap_from_edge = 0.4
     extra_margin = gap_from_candle + label_width_est + gap_from_edge
-    label_x = last_x + gap_from_candle
 
     ax_price.set_xlim(-0.6, last_x + extra_margin)
     ax_vol.set_xlim(-0.6, last_x + extra_margin)
     ax_rsi.set_xlim(-0.6, last_x + extra_margin)
-
-    label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
-    chart._place_level_labels(ax_price, levels, label_x, label_min_gap, square=square)
 
     _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
     ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
@@ -422,7 +430,7 @@ def build_single_mtfk_chart(
 
     if not has_error:
         legend = ax_price.legend(
-            loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
+            loc="upper right", fontsize=(13.5 if square else 7.5), framealpha=0.95,
             facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
