@@ -32,25 +32,13 @@
     "symbol": "MAVIAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T12:05:12.591473+00:00"
-  },
-  "PYTHUSDT|1h": {
-    "symbol": "PYTHUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T04:04:18.552899+00:00"
+    "timestamp": "2026-09-14T17:03:25.619416+00:00"
   },
   "PENDLEUSDT|4h": {
     "symbol": "PENDLEUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T12:05:15.808819+00:00"
-  },
-  "POLYXUSDT|4h": {
-    "symbol": "POLYXUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T04:04:22.192709+00:00"
   },
   "IOTXUSDT|1h": {
     "symbol": "IOTXUSDT",
@@ -225,5 +213,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T16:03:54.173946+00:00"
+  },
+  "QCOMUSDT|15m": {
+    "symbol": "QCOMUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T17:03:27.615215+00:00"
+  },
+  "WAXPUSDT|1h": {
+    "symbol": "WAXPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T17:03:28.316358+00:00"
+  },
+  "BTCUSDT|1h": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T17:03:29.576872+00:00"
+  },
+  "AAOIUSDT|1h": {
+    "symbol": "AAOIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T17:03:30.952902+00:00"
   }
 }
