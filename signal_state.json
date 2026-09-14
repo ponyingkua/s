@@ -46,30 +46,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T09:05:44.345810+00:00"
   },
-  "PORTALUSDT|1h": {
-    "symbol": "PORTALUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T05:03:46.681169+00:00"
-  },
-  "POWRUSDT|4h": {
-    "symbol": "POWRUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T05:03:47.403493+00:00"
-  },
-  "STEEMUSDT|4h": {
-    "symbol": "STEEMUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T05:03:48.637380+00:00"
-  },
-  "HIVEUSDT|4h": {
-    "symbol": "HIVEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T05:03:50.040266+00:00"
-  },
   "PUNDIXUSDT|4h": {
     "symbol": "PUNDIXUSDT",
     "timeframe": "4h",
@@ -237,5 +213,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T17:03:30.952902+00:00"
+  },
+  "HYPEUSDT|1h": {
+    "symbol": "HYPEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T18:04:21.125633+00:00"
+  },
+  "REDUSDT|1h": {
+    "symbol": "REDUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T18:04:27.533823+00:00"
+  },
+  "EWYUSDT|1h": {
+    "symbol": "EWYUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T18:04:28.387225+00:00"
+  },
+  "INTWUSDT|4h": {
+    "symbol": "INTWUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T18:04:29.306742+00:00"
   }
 }

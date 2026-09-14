@@ -21236,5 +21236,97 @@
     "tp": 92.172151,
     "tp1": 94.855639,
     "scanned_at": "2026-09-14T17:02:40.068854+00:00"
+  },
+  {
+    "symbol": "HYPEUSDT",
+    "direction": "LONG",
+    "score": 77.2,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (21.2) tren kuat (+0.2 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 81.29,
+    "sl": 78.780102,
+    "tp": 85.807816,
+    "tp1": 83.799898,
+    "scanned_at": "2026-09-14T18:03:43.598293+00:00"
+  },
+  {
+    "symbol": "REDUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (57) menguatkan momentum naik",
+      "ADX (38.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.139,
+    "sl": 0.132799,
+    "tp": 0.150162,
+    "tp1": 0.145201,
+    "scanned_at": "2026-09-14T18:03:43.598293+00:00"
+  },
+  {
+    "symbol": "EWYUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (60.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 179.04,
+    "sl": 181.535731,
+    "tp": 174.547684,
+    "tp1": 176.544269,
+    "scanned_at": "2026-09-14T18:03:43.598293+00:00"
+  },
+  {
+    "symbol": "INTWUSDT",
+    "direction": "LONG",
+    "score": 65.3,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (38), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (28.7) tren kuat (+8.3 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 3.32",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.32 (sisa posisi)"
+    ],
+    "entry": 21.48,
+    "sl": 20.192126,
+    "tp": 25.76,
+    "tp1": 22.767874,
+    "scanned_at": "2026-09-14T18:03:43.598293+00:00"
   }
 ]
