@@ -799,6 +799,19 @@ def build_mtfk_chart(
     cfg: dict | None = None,
     square: bool = False,
 ) -> str:
+    """Chart multi-timeframe. Tiap TF digambar sbg satu blok yang gaya &
+    proporsinya PERSIS mengikuti build_single_mtfk_chart (lebar candle,
+    panel RSI, zona label SUPPORT/RESISTANCE di kanan, Bollinger Band, EMA,
+    label struktur swing, trigger highlight, legend) - blok-blok itu ditumpuk
+    vertikal, dibungkus satu judul+badge di paling atas
+    ("{symbol} · MULTI-TIMEFRAME") dan satu footer di paling bawah (mirip
+    footer single, tapi menyebut semua TF).
+
+    Sengaja pakai ULANG fungsi-fungsi gambar yang sama dgn single_mtfk
+    (_draw_candles_single, _draw_indicators_single, _draw_rsi_panel, dst)
+    dan bukan menulis versi baru, supaya kedua jenis chart ini tidak bisa
+    drift satu sama lain - dan supaya perubahan di sini TIDAK menyentuh
+    build_single_mtfk_chart sama sekali (fungsi itu tetap apa adanya)."""
     cfg = cfg or {}
     valid_tfs = [tf for tf in timeframes if tf in dfs and tf in per_tf]
     n_panels = len(valid_tfs)
@@ -807,167 +820,228 @@ def build_mtfk_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
+    # Proporsi "badan" (price+vol+rsi) tiap blok TF SELALU pakai height_ratio
+    # non-square (default 0.54) walau square=True - kalau ikut jadi 1.0 spt
+    # di single, tinggi total gambar utk >1 TF bisa meledak (mis. 3 TF
+    # square = puluhan inci tinggi, tidak praktis dilihat di HP). Di sini
+    # `square` cuma memperbesar font/label (lihat header_fs, segment_fs,
+    # dst di bawah, serta diteruskan ke _draw_indicators_single dkk persis
+    # spt cara single memakainya).
+    height_ratio = chart_cfg.get("height_ratio", 0.54)
     dpi = 200
+    output_scale = 2
     fig_w = width_px / dpi
-    fig_h = fig_w if square else fig_w * 0.40
+
+    # Rasio header:badan tiap blok TF disamakan dgn rasio top/bottom di
+    # build_single_mtfk_chart (top=0.87 -> badan 0.76 dari total, header
+    # 0.13 dari total) - supaya ukuran font & lebar candle blok ini identik
+    # dgn chart single, hanya tanpa footernya sendiri (footer dipakai satu
+    # kali saja di paling bawah gambar gabungan ini, bukan per-blok).
+    single_fig_h = (width_px * height_ratio) / dpi
+    header_frac, body_frac = 0.13, 0.76
+    block_h_in = (header_frac + body_frac) * single_fig_h
+
+    top_margin_in = 0.55    # ruang judul "{symbol} · MULTI-TIMEFRAME" + badge
+    # 0.85in supaya label sumbu-waktu blok TERAKHIR (yg nempel di bawah
+    # panel RSI paling bawah) tidak numpuk sama teks footer di bawahnya -
+    # nilai ini menyamai proporsi ruang footer di build_single_mtfk_chart
+    # (bottom=0.11 dari fig_h single ≈ 0.83in), krn di sana ruang yg sama
+    # juga menampung tick label + footer + disclaimer.
+    bottom_margin_in = 0.85
+    gap_in = 0.20            # jarak antar blok TF
+
+    fig_h = (
+        top_margin_in
+        + n_panels * block_h_in
+        + max(n_panels - 1, 0) * gap_in
+        + bottom_margin_in
+    )
+
     fig = plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor(chart.BG)
 
-    if square:
-        outer = GridSpec(
-            n_panels, 1, figure=fig, hspace=0.32,
-            left=0.09, right=0.93, top=0.90, bottom=0.055,
-        )
-    else:
-        outer = GridSpec(
-            1, n_panels, figure=fig, wspace=0.16,
-            left=0.045, right=0.98, top=0.85, bottom=0.11,
-        )
+    top_frac = 1 - top_margin_in / fig_h
+    bottom_frac = bottom_margin_in / fig_h
+    outer = GridSpec(
+        n_panels, 1, figure=fig,
+        height_ratios=[1] * n_panels,
+        hspace=gap_in / block_h_in,
+        left=0.07, right=0.96, top=top_frac, bottom=bottom_frac,
+    )
 
-    tick_fs = 9.0 if square else 6.5
-    title_fs = 13.5 if square else 9.5
-    price_fs = 11.0 if square else 7.5
+    header_fs = 20.0 if square else 16.0
+    segment_fs = 12.0 if square else 9.0
+    tick_fs = 7.5
+    legend_fs = 13.5 if square else 7.5
 
     for idx, tf in enumerate(valid_tfs):
         df = dfs[tf]
         tf_info = per_tf[tf]
         has_error = "error" in tf_info
 
-        n_show = max(30, chart.get_candles_shown(tf, cfg) // 2 + 10)
+        n_show = chart.get_candles_shown(tf, cfg)
         plot_df = df.tail(n_show).reset_index(drop=True)
 
-        cell = outer[idx, 0] if square else outer[0, idx]
-        inner = cell.subgridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
-        ax_p = fig.add_subplot(inner[0, 0])
-        ax_v = fig.add_subplot(inner[1, 0], sharex=ax_p)
+        block = outer[idx, 0].subgridspec(2, 1, height_ratios=[header_frac, body_frac], hspace=0.0)
+        header_ax = fig.add_subplot(block[0, 0])
+        header_ax.axis("off")
+        body = block[1, 0].subgridspec(3, 1, height_ratios=[4.4, 0.9, 1.3], hspace=0.10)
+        ax_price = fig.add_subplot(body[0, 0])
+        ax_vol = fig.add_subplot(body[1, 0], sharex=ax_price)
+        ax_rsi = fig.add_subplot(body[2, 0], sharex=ax_price)
 
-        for ax in (ax_p, ax_v):
+        for ax in (ax_price, ax_vol, ax_rsi):
             ax.set_facecolor(chart.PANEL)
-            ax.grid(True, linestyle="-", alpha=0.7, color=chart.GRID, linewidth=0.4)
+            ax.grid(True, linestyle="-", alpha=0.55, color=chart.GRID, linewidth=0.5)
             ax.set_axisbelow(True)
             ax.tick_params(colors=chart.AXIS, labelcolor=chart.AXIS, labelsize=tick_fs)
             for side in ("top", "right"):
                 ax.spines[side].set_visible(False)
             for side in ("left", "bottom"):
                 ax.spines[side].set_color(chart.SPINE)
-                ax.spines[side].set_linewidth(0.6)
-        ax_p.tick_params(labelbottom=False)
+                ax.spines[side].set_linewidth(0.8)
+        ax_price.tick_params(labelbottom=False)
+        ax_vol.tick_params(labelbottom=False)
 
         direction = "NONE" if has_error else tf_info.get("direction", "NONE")
-        if direction == "LONG":
-            tint = TINT_LONG
-        elif direction == "SHORT":
-            tint = TINT_SHORT
-        else:
-            tint = TINT_NONE
-        ax_p.add_patch(
-            Rectangle(
-                (0, 0), 1, 1, transform=ax_p.transAxes,
-                facecolor=tint, edgecolor="none", zorder=0,
-            )
-        )
 
-        colors = chart._draw_candles(ax_p, plot_df)
-        level_values = []
-        if not has_error:
-            # Legend EMA cuma ditaruh SEKALI di panel pertama (warnanya sama
-            # di semua panel) - drpd diulang di tiap panel & bikin sesak.
-            level_values = _draw_analyze_indicators(
-                ax_p, df, n_show, tf, tf_info, tick_fs, show_legend=(idx == 0),
-            ) or []
-
+        colors = _draw_candles_single(ax_price, plot_df)
         last_x = len(plot_df) - 1
-        # level_values (support/resistance) ikut disertakan di perhitungan
-        # batas y - sebelumnya y-range cuma dari high/low candle yg tampil,
-        # jadi kalau S/R ada di luar rentang itu, garis+labelnya ter-render
-        # di luar axes & bisa menimpa judul TF panel (bug yg dilaporkan).
-        # Dgn level_values ikut masuk, S/R (dan labelnya) dijamin selalu
-        # berada di dalam area chart, walau efeknya candle bisa tampak
-        # sedikit lebih kecil/rapat kalau S/R jauh dari harga saat ini.
-        all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + level_values
+
+        label_zone_frac = 0.22 if square else 0.19
+        right_pad = label_zone_frac * (last_x + 0.6) / (1 - label_zone_frac)
+        right_pad = max(right_pad, SINGLE_CANDLE_WIDTH * 8)
+        ax_price.set_xlim(-0.6, last_x + right_pad)
+        ax_vol.set_xlim(-0.6, last_x + right_pad)
+        ax_rsi.set_xlim(-0.6, last_x + right_pad)
+
+        range_values = []
+        if not has_error:
+            range_values = _draw_indicators_single(
+                ax_price, df, n_show, tf, tf_info, right_pad, square=square,
+            )
+
+        all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + range_values
         y_low = min(all_vals)
         y_high = max(all_vals)
         y_span = max(y_high - y_low, abs(y_low) * 0.01 if y_low != 0 else 0.01)
-        pad = y_span * 0.12
-        ax_p.set_ylim(y_low - pad, y_high + pad)
-        ax_p.set_xlim(-0.6, last_x + 0.6)
-        ax_v.set_xlim(-0.6, last_x + 0.6)
+        y_padding = y_span * 0.18
+        ax_price.set_ylim(y_low - y_padding, y_high + y_padding)
 
-        vol_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
-        chart._draw_volume(ax_v, plot_df, colors, vol_lookback)
+        if not has_error and len(plot_df) >= 6:
+            swing_high, swing_low = chart._find_swings(plot_df, 2, 2)
+            labeled_points = chart._label_structure(plot_df, swing_high, swing_low)
+            if labeled_points:
+                labeled_points = labeled_points[-6:]
+                chart._draw_structure_labels(
+                    ax_price, labeled_points, offset=0, plot_len=len(plot_df),
+                    y_span=y_span, square=square,
+                )
 
-        ax_v.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
-        ax_v.yaxis.get_offset_text().set_visible(False)
+        if not has_error:
+            _draw_trigger_highlight(ax_price, plot_df, tf_info, y_span)
+
+        _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
+        ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
+        ax_vol.yaxis.get_offset_text().set_visible(False)
+        ax_vol.set_ylabel("Vol", color=chart.AXIS, fontsize=8, labelpad=5)
+        ax_price.set_ylabel("Price", color=chart.AXIS, fontsize=8.5, labelpad=5)
+
+        rsi_period = cfg.get("indicators", {}).get("rsi", {}).get("period", 14)
+        rsi_tail = _compute_rsi(df["close"], rsi_period).tail(n_show).to_numpy()
+        _draw_rsi_panel(ax_rsi, rsi_tail)
+        ax_rsi.set_ylabel("RSI", color=chart.AXIS, fontsize=8, labelpad=5)
 
         time_ticks = _time_axis_labels(df, n_show, tf)
         if time_ticks:
             positions, labels = time_ticks
-            ax_v.set_xticks(positions)
-            ax_v.set_xticklabels(labels, fontsize=tick_fs, color=chart.AXIS)
+            ax_rsi.set_xticks(positions)
+            ax_rsi.set_xticklabels(labels, fontsize=7.5, color=chart.AXIS)
+
+        if not has_error:
+            handles, labels = _ordered_legend_handles(ax_price)
+            legend = ax_price.legend(
+                handles, labels,
+                loc="upper left", fontsize=legend_fs, framealpha=0.95,
+                facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT, borderpad=0.4,
+            )
+            legend.get_frame().set_linewidth(0.7)
 
         setup_info = tf_info.get("setup")
         setup_info = setup_info if isinstance(setup_info, dict) else {}
         setup_type = "NONE" if has_error else setup_info.get("type", "NONE")
-        badge_color = (
-            chart.UP if direction == "LONG"
-            else chart.DOWN if direction == "SHORT"
-            else chart.AXIS
-        )
         setup_txt = f"  ·  {setup_type}" if setup_type and setup_type != "NONE" else ""
-        ax_p.set_title(
-            f"{tf}  ·  {direction}{setup_txt}",
-            color=badge_color, fontsize=title_fs, fontweight="bold",
-            loc="left", pad=6,
+        header_title = f"{symbol}  ·  {tf}  ·  {direction}{setup_txt}"
+        header_ax.text(
+            0.0, 0.92, header_title, transform=header_ax.transAxes,
+            fontsize=header_fs, fontweight="bold", color=chart.TEXT,
+            ha="left", va="top",
         )
 
-        last_px = float(plot_df["close"].iloc[-1])
-        dec = chart.decimals_from_price(last_px)
-        last_price = chart.format_price(last_px, dec)
-        structure = (tf_info.get("structure") or {}) if not has_error else {}
-        dist_txt = ""
         if not has_error:
-            dist_txt = _nearest_level_text(
-                last_px, structure.get("support"), structure.get("resistance"),
-            )
-        ax_p.text(
-            0.99, 0.03, f"{last_price}{dist_txt}",
-            transform=ax_p.transAxes, color=chart.TEXT,
-            fontsize=price_fs, fontweight="bold",
-            ha="right", va="bottom", zorder=9,
-        )
+            atr_pct = (tf_info.get("direction_analysis") or {}).get("atr_pct")
+            hist, hist_prev = _macd_histogram_last(df)
+            vol_ratio = _volume_ratio_last(df)
+            mtf_agree = tf_info.get("mtf_agree_tfs") or []
+
+            segments: list[tuple[str, str]] = []
+            if atr_pct is not None:
+                segments.append((f"ATR {atr_pct:.2f}%", chart.AXIS))
+            if hist is not None:
+                arrow = "▲" if hist > 0 else "▼" if hist < 0 else "→"
+                state = ""
+                if hist_prev is not None:
+                    if abs(hist) > abs(hist_prev):
+                        state = "Expanding"
+                    elif abs(hist) < abs(hist_prev):
+                        state = "Contracting"
+                macd_color = chart.UP if hist > 0 else chart.DOWN if hist < 0 else chart.AXIS
+                segments.append((f"MACD {arrow}" + (f" {state}" if state else ""), macd_color))
+            if vol_ratio is not None:
+                vol_color = EMA20_COLOR if vol_ratio >= 1.5 else chart.AXIS
+                segments.append((f"Vol {vol_ratio:.1f}x avg", vol_color))
+            if mtf_agree:
+                agree_color = chart.UP if direction == "LONG" else chart.DOWN if direction == "SHORT" else chart.AXIS
+                segments.append((f"MTF agree: {', '.join(mtf_agree)}", agree_color))
+
+            if segments:
+                header_pos = header_ax.get_position()
+                seg_y = header_pos.y0 + 0.42 * (header_pos.y1 - header_pos.y0)
+                _draw_colored_segments(fig, header_pos.x0, seg_y, segments, fontsize=segment_fs)
 
         if has_error:
-            ax_p.text(
-                0.5, 0.5, "NO DATA", transform=ax_p.transAxes, color=chart.DOWN,
-                fontsize=title_fs, fontweight="bold", ha="center", va="center",
+            ax_price.text(
+                0.5, 0.5, "NO DATA", transform=ax_price.transAxes, color=chart.DOWN,
+                fontsize=(22.0 if square else 16), fontweight="bold", ha="center", va="center",
             )
 
-    header_fs = 20.0 if square else 17.0
-    badge_fs = 17.0 if square else 14.0
-    footer_fs = 10.0 if square else 7.0
-    disclaimer_fs = 9.0 if square else 6.5
-
+    ref_df = dfs[valid_tfs[0]]
+    top_title_y = (fig_h - 0.16) / fig_h
     fig.text(
-        0.045, 0.95, f"{symbol}  ·  MULTI-TIMEFRAME",
+        0.07, top_title_y, f"{symbol}  ·  MULTI-TIMEFRAME",
         fontsize=header_fs, fontweight="bold", color=chart.TEXT,
         ha="left", va="top",
     )
-    ref_df = dfs[valid_tfs[0]]
-    chart._draw_change_badge(
-        fig, 0.975, 0.95, chart._calc_24h_change(ref_df), fontsize=badge_fs,
-    )
+    badge_fs = 17.5 if square else 13.5
+    chart._draw_change_badge(fig, 0.96, top_title_y, chart._calc_24h_change(ref_df), fontsize=badge_fs)
+
+    footer_fs = 14.0 if square else 8.5
+    disclaimer_fs = 13.0 if square else 7.5
+    header_extra = pd.Timestamp.now(tz="UTC").strftime("Updated %d %b %H:%M UTC")
+    footer_y = 0.16 / fig_h
     fig.text(
-        0.045, 0.02, f"BINANCE FUTURES  ·  {symbol}",
+        0.07, footer_y,
+        f"BINANCE FUTURES  ·  {symbol}  ·  {'/'.join(valid_tfs)}  ·  {header_extra}",
         fontsize=footer_fs, color=chart.AXIS, ha="left", va="bottom",
     )
     fig.text(
-        0.98, 0.02,
-        "Chart-based analysis. NOT FINANCIAL ADVICE, DYOR.",
+        0.96, footer_y,
+        "Chart-based analysis.\nNOT FINANCIAL ADVICE, DYOR.",
         fontsize=disclaimer_fs, fontweight="bold", color=chart.TEXT,
-        ha="right", va="bottom",
+        ha="right", va="bottom", linespacing=1.7,
     )
 
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * 2)
+    fig.savefig(out_path, facecolor=fig.get_facecolor(), dpi=dpi * output_scale)
     plt.close(fig)
     return out_path
