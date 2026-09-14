@@ -268,6 +268,25 @@ def _dynamic_candle_window(df: pd.DataFrame, tf: str, tf_info: dict, cfg: dict) 
     return min(n_show, n)
 
 
+_LEGEND_ORDER = ("EMA 20", "EMA 50", "EMA 200")
+
+
+def _ordered_legend_handles(ax):
+    """Ambil handles/labels legend dari ax lalu urutkan cepat->lambat
+    (EMA 20, 50, 200) tanpa peduli urutan gambar aslinya. Dipisah dari
+    urutan gambar krn urutan gambar sengaja dibalik (200 dulu, 20 terakhir)
+    supaya EMA20 selalu di atas secara visual - urutan legend tetap harus
+    konvensional (cepat ke lambat) biar tidak membingungkan."""
+    handles, labels = ax.get_legend_handles_labels()
+    pairs = sorted(
+        zip(handles, labels),
+        key=lambda hl: _LEGEND_ORDER.index(hl[1]) if hl[1] in _LEGEND_ORDER else 99,
+    )
+    if not pairs:
+        return [], []
+    return zip(*pairs)
+
+
 def _draw_rsi_panel(ax, rsi_values, tick_fs: float = 7.5) -> None:
     x = list(range(len(rsi_values)))
     ax.axhspan(70, 100, color=chart.DOWN, alpha=0.06, zorder=1)
@@ -367,7 +386,9 @@ def _draw_analyze_indicators(
         )
 
     if show_legend:
+        handles, labels = _ordered_legend_handles(ax)
         legend = ax.legend(
+            handles, labels,
             loc="upper left", fontsize=label_fs + 1.5, framealpha=0.85,
             facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT,
             borderpad=0.35, handlelength=1.4,
@@ -510,7 +531,13 @@ def build_single_mtfk_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
-    height_ratio = 1.0 if square else chart_cfg.get("height_ratio", 9 / 20)
+    # Default 9/20 (0.45) semula dipakai utk chart 2-panel (price+volume) di
+    # chart.py. single_mtfk punya panel ke-3 (RSI), jadi kalau cfg tidak
+    # menimpa height_ratio secara eksplisit, dipakai default sedikit lebih
+    # tinggi (0.54) supaya 3 panel + header/footer tidak terlalu gepeng saat
+    # ditampilkan kecil di preview chat HP. Kalau di config yaml kalian sudah
+    # ada key chart.height_ratio eksplisit, itu tetap yang dipakai.
+    height_ratio = 1.0 if square else chart_cfg.get("height_ratio", 0.54)
     dpi = 200
     output_scale = 2
     fig_w = width_px / dpi
@@ -600,7 +627,9 @@ def build_single_mtfk_chart(
         ax_rsi.set_xticklabels(labels, fontsize=7.5, color=chart.AXIS)
 
     if not has_error:
+        handles, labels = _ordered_legend_handles(ax_price)
         legend = ax_price.legend(
+            handles, labels,
             loc="upper right", fontsize=(13.5 if square else 7.5), framealpha=0.95,
             facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT, borderpad=0.4,
         )
