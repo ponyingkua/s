@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T13:06:57.874600+00:00"
   },
-  "CVCUSDT|1h": {
-    "symbol": "CVCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T10:04:16.223484+00:00"
-  },
   "MAVIAUSDT|4h": {
     "symbol": "MAVIAUSDT",
     "timeframe": "4h",
@@ -33,12 +27,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T13:06:59.330926+00:00"
-  },
-  "XPLUSDT|15m": {
-    "symbol": "XPLUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T10:04:15.166742+00:00"
   },
   "CLUSDT|1h": {
     "symbol": "CLUSDT",
@@ -273,5 +261,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T22:04:10.688195+00:00"
+  },
+  "COINUSDT|1h": {
+    "symbol": "COINUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T23:03:52.259522+00:00"
+  },
+  "GOOGLUSDT|1h": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T23:03:54.251322+00:00"
   }
 }
