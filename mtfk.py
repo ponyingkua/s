@@ -25,9 +25,10 @@ TINT_NONE = (0.5, 0.5, 0.5, 0.03)
 RSI_COLOR = "#4DD0E1"
 BB_COLOR = "#90A4AE"
 
-# Khusus single_mtfk: candle dibuat lebih besar drpd grid multi-panel
+# Khusus single_mtfk: lebar body candle dibuat lebih ramping drpd sebelumnya
+# supaya candle tampak lebih "pipih" (tinggi lebih dominan drpd lebar) -
 # (chart.CANDLE_WIDTH=0.8 tidak diubah krn dipakai bareng oleh chart.py & multi-panel).
-SINGLE_CANDLE_WIDTH = 0.86
+SINGLE_CANDLE_WIDTH = 0.58
 
 
 def _fmt_volume(value: float, _pos=None) -> str:
@@ -179,11 +180,14 @@ def _draw_candles_single(ax, df: pd.DataFrame) -> list:
         colors.append(color)
 
         ax.plot(
-            [i, i], [low_p, high_p], color=color, linewidth=1.5,
+            [i, i], [low_p, high_p], color=color, linewidth=1.3,
             solid_capstyle="round", zorder=chart.Z_CANDLE_WICK,
         )
         body_bottom = min(open_p, close_p)
-        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.012)
+        # Tinggi minimum dinaikkan (0.012 -> 0.02) supaya candle doji/nyaris-
+        # doji tetap kelihatan sbg garis tipis-tinggi, bukan hilang jadi titik,
+        # selaras dgn body yang sekarang lebih ramping.
+        body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.02)
         ax.add_patch(Rectangle(
             (i - SINGLE_CANDLE_WIDTH / 2, body_bottom), SINGLE_CANDLE_WIDTH, body_height,
             facecolor=color, edgecolor=color, alpha=0.92, linewidth=0, zorder=chart.Z_CANDLE_BODY,
@@ -352,9 +356,11 @@ def _draw_indicators_single(
     square: bool = False,
 ) -> list:
     """Varian _draw_analyze_indicators khusus single_mtfk: linewidth & style
-    disesuaikan skala chart penuh. S/R digambar inline di kiri (dekat sumbu-y),
-    BUKAN di margin kanan - slot itu direservasi untuk label ENTRY/TP/SL.
-    Tidak dipakai oleh build_mtfk_chart (multi-panel)."""
+    disesuaikan skala chart penuh. S/R digambar inline di kanan (dekat tepi
+    kanan chart, area harga terbaru) supaya jaraknya ke harga sekarang mudah
+    dibaca; legend EMA/BB dipindah ke kiri (lihat build_single_mtfk_chart)
+    supaya kedua elemen tidak saling menumpuk di satu sudut. Tidak dipakai
+    oleh build_mtfk_chart (multi-panel)."""
     emas = _compute_ema_set(df, n_show, tf)
     x = range(n_show)
     ema_values = list(emas["ema20"]) + list(emas["ema50"])
@@ -408,15 +414,15 @@ def _draw_indicators_single(
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
-            [0.016], [s_val], marker="^", markersize=(7.5 if square else 6.0),
+            [0.984], [s_val], marker="^", markersize=(7.5 if square else 6.0),
             color=chart.UP, transform=ax.get_yaxis_transform(),
             zorder=chart.Z_LEVEL_LABEL, clip_on=False,
         )
         ax.text(
-            0.032, s_val,
+            0.968, s_val,
             f"SUPPORT  {chart.format_price(s_val, chart.decimals_from_price(s_val))}",
             transform=ax.get_yaxis_transform(), color=chart.UP,
-            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
             zorder=chart.Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
         )
@@ -428,15 +434,15 @@ def _draw_indicators_single(
             linewidth=1.4, alpha=0.85, zorder=chart.Z_LEVEL_LINE,
         )
         ax.plot(
-            [0.016], [r_val], marker="v", markersize=(7.5 if square else 6.0),
+            [0.984], [r_val], marker="v", markersize=(7.5 if square else 6.0),
             color=chart.DOWN, transform=ax.get_yaxis_transform(),
             zorder=chart.Z_LEVEL_LABEL, clip_on=False,
         )
         ax.text(
-            0.032, r_val,
+            0.968, r_val,
             f"RESISTANCE  {chart.format_price(r_val, chart.decimals_from_price(r_val))}",
             transform=ax.get_yaxis_transform(), color=chart.DOWN,
-            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
+            fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
             zorder=chart.Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=chart.BG, edgecolor="none", alpha=0.80),
         )
@@ -482,7 +488,7 @@ def _draw_trigger_highlight(ax, plot_df: pd.DataFrame, tf_info: dict, y_span: fl
     # mengambang, supaya tidak berpotensi tabrakan dengan legend EMA/BB di
     # sudut chart manapun. Jenis setup (BREAKOUT/BREAKDOWN/REJECTION) sudah
     # tertulis di header, kotak ini cukup menunjuk candle mana pemicunya.
-    half_w = SINGLE_CANDLE_WIDTH / 2 + 0.55
+    half_w = SINGLE_CANDLE_WIDTH / 2 + 0.30
     pad_y = max(y_span * 0.012, (high - low) * 0.10)
     ax.add_patch(Rectangle(
         (idx - half_w, low - pad_y), half_w * 2, (high - low) + pad_y * 2,
@@ -541,7 +547,7 @@ def build_single_mtfk_chart(
 
     for ax in (ax_price, ax_vol, ax_rsi):
         ax.set_facecolor(chart.PANEL)
-        ax.grid(True, linestyle="-", alpha=0.8, color=chart.GRID, linewidth=0.5)
+        ax.grid(True, linestyle="-", alpha=0.55, color=chart.GRID, linewidth=0.5)
         ax.set_axisbelow(True)
         ax.tick_params(colors=chart.AXIS, labelcolor=chart.AXIS, labelsize=7.5)
         for side in ("top", "right"):
@@ -611,10 +617,12 @@ def build_single_mtfk_chart(
         ax_rsi.set_xticklabels(labels, fontsize=7.5, color=chart.AXIS)
 
     if not has_error:
+        # Legend ditaruh di kiri-atas (bukan kanan) supaya tidak menumpuk
+        # dengan label SUPPORT/RESISTANCE yang sekarang ada di kanan.
         handles, labels = _ordered_legend_handles(ax_price)
         legend = ax_price.legend(
             handles, labels,
-            loc="upper right", fontsize=(13.5 if square else 7.5), framealpha=0.95,
+            loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
             facecolor=chart.BG, edgecolor=chart.SPINE, labelcolor=chart.TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
