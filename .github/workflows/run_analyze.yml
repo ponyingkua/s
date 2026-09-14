@@ -4,9 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       symbols:
-        description: "Nama Symbol (pisahkan dengan koma). Contoh: ZEC,SOL,BTC atau ZECUSDT,SOLUSDT"
+        description: "Nama Symbol (pisahkan dengan koma)"
         required: true
         type: string
+      chart_format:
+        description: "Rasio chart"
+        required: false
+        type: choice
+        options:
+          - wide
+          - square
+        default: wide
+      chart_type:
+        description: "Jenis Chart"
+        required: false
+        type: choice
+        options:
+          - both
+          - single
+        default: both
 
 jobs:
   analyze:
@@ -26,7 +42,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Jalankan analisa multi-timeframe
-        run: python analyze.py --symbols "${{ inputs.symbols }}"
+        run: python analyze.py --symbols "${{ inputs.symbols }}" --chart-format "${{ inputs.chart_format }}" --chart-type "${{ inputs.chart_type }}"
 
       - name: Upload hasil analisa (1 artifact, file terpisah per token)
         if: always()
