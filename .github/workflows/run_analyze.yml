@@ -15,7 +15,7 @@ on:
           - wide
           - square
           - both
-        default: both
+        default: wide
       chart_type:
         description: "MTF/SINGLE"
         required: false
@@ -23,7 +23,7 @@ on:
         options:
           - both
           - single
-        default: single
+        default: both
 
 jobs:
   analyze:
