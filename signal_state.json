@@ -40,12 +40,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T10:04:16.223484+00:00"
   },
-  "REZUSDT|1h": {
-    "symbol": "REZUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T23:03:46.552500+00:00"
-  },
   "BIRBUSDT|1h": {
     "symbol": "BIRBUSDT",
     "timeframe": "1h",
@@ -165,5 +159,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T10:04:17.201480+00:00"
+  },
+  "BABAUSDT|1h": {
+    "symbol": "BABAUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T11:04:10.975727+00:00"
   }
 }
