@@ -20042,5 +20042,50 @@
     "tp": 59.501721,
     "tp1": 60.469845,
     "scanned_at": "2026-09-14T01:03:58.174264+00:00"
+  },
+  {
+    "symbol": "SOPHUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (40) menguatkan momentum turun",
+      "ADX (47.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP diambil dari level struktur (prior low 50-bar), RR aktual 2.17",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.17 (sisa posisi)"
+    ],
+    "entry": 0.004232,
+    "sl": 0.004419,
+    "tp": 0.003828,
+    "tp1": 0.004045,
+    "scanned_at": "2026-09-14T03:03:34.628398+00:00"
+  },
+  {
+    "symbol": "XPLUSDT",
+    "direction": "SHORT",
+    "score": 68.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (49) menguatkan momentum turun",
+      "ADX (34.0) tren kuat (+14.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.08,
+    "sl": 0.082228,
+    "tp": 0.075989,
+    "tp1": 0.077772,
+    "scanned_at": "2026-09-14T03:03:34.628398+00:00"
   }
 ]

@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "THETAUSDT|1h": {
-    "symbol": "THETAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T15:03:53.873208+00:00"
-  },
   "NEOUSDT|1h": {
     "symbol": "NEOUSDT",
     "timeframe": "1h",
@@ -21,30 +15,6 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-13T21:03:58.251160+00:00"
-  },
-  "POLYXUSDT|1h": {
-    "symbol": "POLYXUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T14:03:54.454368+00:00"
-  },
-  "HIVEUSDT|1h": {
-    "symbol": "HIVEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T14:03:56.662958+00:00"
-  },
-  "GLMUSDT|1h": {
-    "symbol": "GLMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T15:03:56.141134+00:00"
-  },
-  "KNCUSDT|1h": {
-    "symbol": "KNCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T15:03:57.009492+00:00"
   },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
@@ -80,7 +50,7 @@
     "symbol": "SOPHUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-13T21:03:56.970297+00:00"
+    "timestamp": "2026-09-14T03:04:36.581185+00:00"
   },
   "AKEUSDT|15m": {
     "symbol": "AKEUSDT",
@@ -195,5 +165,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T01:05:02.623540+00:00"
+  },
+  "XPLUSDT|1h": {
+    "symbol": "XPLUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-14T03:04:38.139330+00:00"
   }
 }
