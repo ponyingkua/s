@@ -14,7 +14,7 @@
     "symbol": "ASTERUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T21:03:58.251160+00:00"
+    "timestamp": "2026-09-14T06:04:51.662185+00:00"
   },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
@@ -27,18 +27,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T03:04:36.581185+00:00"
-  },
-  "BATUSDT|1h": {
-    "symbol": "BATUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-13T18:04:36.671206+00:00"
-  },
-  "SKHYNIXUSDT|1h": {
-    "symbol": "SKHYNIXUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-13T18:04:38.949186+00:00"
   },
   "BABYUSDT|1h": {
     "symbol": "BABYUSDT",
@@ -62,7 +50,7 @@
     "symbol": "TIAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T20:04:19.966399+00:00"
+    "timestamp": "2026-09-14T06:04:50.059497+00:00"
   },
   "DOGSUSDT|1h": {
     "symbol": "DOGSUSDT",
@@ -177,5 +165,17 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T05:03:50.040266+00:00"
+  },
+  "PUNDIXUSDT|4h": {
+    "symbol": "PUNDIXUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T06:04:48.412700+00:00"
+  },
+  "BZUSDT|1h": {
+    "symbol": "BZUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T06:04:50.855704+00:00"
   }
 }
