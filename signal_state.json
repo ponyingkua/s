@@ -38,7 +38,7 @@
     "symbol": "CVCUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-13T22:03:50.354674+00:00"
+    "timestamp": "2026-09-14T10:04:16.223484+00:00"
   },
   "REZUSDT|1h": {
     "symbol": "REZUSDT",
@@ -153,5 +153,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T09:05:45.768720+00:00"
+  },
+  "XPLUSDT|15m": {
+    "symbol": "XPLUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T10:04:15.166742+00:00"
+  },
+  "CLUSDT|1h": {
+    "symbol": "CLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T10:04:17.201480+00:00"
   }
 }
