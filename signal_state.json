@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T06:04:51.662185+00:00"
   },
-  "SOPHUSDT|1h": {
-    "symbol": "SOPHUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T03:04:36.581185+00:00"
-  },
   "CTSIUSDT|4h": {
     "symbol": "CTSIUSDT",
     "timeframe": "4h",
@@ -33,12 +27,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T10:04:16.223484+00:00"
-  },
-  "XPLUSDT|1h": {
-    "symbol": "XPLUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T03:04:38.139330+00:00"
   },
   "MAVIAUSDT|4h": {
     "symbol": "MAVIAUSDT",
@@ -122,7 +110,7 @@
     "symbol": "CLUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T10:04:17.201480+00:00"
+    "timestamp": "2026-09-14T15:06:47.569174+00:00"
   },
   "BABAUSDT|1h": {
     "symbol": "BABAUSDT",
@@ -183,5 +171,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-14T14:04:13.663507+00:00"
+  },
+  "IBMUSDT|1h": {
+    "symbol": "IBMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T15:06:41.943948+00:00"
+  },
+  "XRPUSDT|1h": {
+    "symbol": "XRPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T15:06:45.204884+00:00"
+  },
+  "OPENAIUSDT|1h": {
+    "symbol": "OPENAIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T15:06:46.752175+00:00"
+  },
+  "PENDLEUSDT|1h": {
+    "symbol": "PENDLEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T15:06:48.387291+00:00"
   }
 }
