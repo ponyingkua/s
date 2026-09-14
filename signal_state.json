@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T06:04:51.662185+00:00"
   },
-  "HYPEUSDT|1h": {
-    "symbol": "HYPEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T01:05:01.164994+00:00"
-  },
   "SOPHUSDT|1h": {
     "symbol": "SOPHUSDT",
     "timeframe": "1h",
@@ -26,7 +20,7 @@
     "symbol": "CTSIUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T09:05:42.911353+00:00"
+    "timestamp": "2026-09-14T13:06:57.874600+00:00"
   },
   "TIAUSDT|4h": {
     "symbol": "TIAUSDT",
@@ -39,18 +33,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T10:04:16.223484+00:00"
-  },
-  "POWERUSDT|1h": {
-    "symbol": "POWERUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T01:04:59.695237+00:00"
-  },
-  "AXTIUSDT|1h": {
-    "symbol": "AXTIUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T01:05:02.623540+00:00"
   },
   "XPLUSDT|1h": {
     "symbol": "XPLUSDT",
@@ -122,7 +104,7 @@
     "symbol": "BZUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T06:04:50.855704+00:00"
+    "timestamp": "2026-09-14T13:06:59.330926+00:00"
   },
   "STEEMUSDT|1h": {
     "symbol": "STEEMUSDT",
@@ -165,5 +147,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T12:05:17.715032+00:00"
+  },
+  "ALTUSDT|4h": {
+    "symbol": "ALTUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-14T13:07:00.132128+00:00"
   }
 }
