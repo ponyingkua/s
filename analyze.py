@@ -138,13 +138,15 @@ def _levels(df: pd.DataFrame, lookback: int = 100):
     # (e.g. right before a big crash) or pre-move low (before a big pump) could
     # keep winning as "resistance"/"support" long after it stopped being a
     # relevant reference for the current price.
+    res_above = [v for v in res_candidates if v >= price]
     resistance = (
-        min(res_candidates, key=lambda v: abs(v - price))
-        if res_candidates else float(x["high"].max())
+        min(res_above, key=lambda v: abs(v - price)) if res_above
+        else float(x["high"].max())
     )
+    sup_below = [v for v in sup_candidates if v <= price]
     support = (
-        min(sup_candidates, key=lambda v: abs(v - price))
-        if sup_candidates else float(x["low"].min())
+        min(sup_below, key=lambda v: abs(v - price)) if sup_below
+        else float(x["low"].min())
     )
     return float(support), float(resistance)
 
