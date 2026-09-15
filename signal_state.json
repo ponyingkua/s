@@ -10,71 +10,17 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T17:03:25.619416+00:00"
   },
-  "CLUSDT|1h": {
-    "symbol": "CLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T15:06:47.569174+00:00"
-  },
   "\u9f99\u867eUSDT|1h": {
     "symbol": "\u9f99\u867eUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T19:05:58.933978+00:00"
   },
-  "IBMUSDT|1h": {
-    "symbol": "IBMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T15:06:41.943948+00:00"
-  },
-  "XRPUSDT|1h": {
-    "symbol": "XRPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T15:06:45.204884+00:00"
-  },
-  "OPENAIUSDT|1h": {
-    "symbol": "OPENAIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T15:06:46.752175+00:00"
-  },
   "PENDLEUSDT|1h": {
     "symbol": "PENDLEUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-15T01:05:20.269331+00:00"
-  },
-  "PAXGUSDT|1h": {
-    "symbol": "PAXGUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T16:03:50.635671+00:00"
-  },
-  "XAUUSDT|1h": {
-    "symbol": "XAUUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T16:03:52.344506+00:00"
-  },
-  "XAGUSDT|1h": {
-    "symbol": "XAGUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T16:03:52.916176+00:00"
-  },
-  "CBRSUSDT|1h": {
-    "symbol": "CBRSUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T16:03:53.602384+00:00"
-  },
-  "SLXUSDT|1h": {
-    "symbol": "SLXUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T16:03:54.173946+00:00"
   },
   "QCOMUSDT|15m": {
     "symbol": "QCOMUSDT",
@@ -237,5 +183,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-15T03:05:58.659091+00:00"
+  },
+  "ATOMUSDT|4h": {
+    "symbol": "ATOMUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T04:04:51.102595+00:00"
+  },
+  "SKHYNIXUSDT|4h": {
+    "symbol": "SKHYNIXUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T04:04:52.680422+00:00"
+  },
+  "TREEUSDT|4h": {
+    "symbol": "TREEUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T04:04:54.122997+00:00"
+  },
+  "ANKRUSDT|1h": {
+    "symbol": "ANKRUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T04:04:55.600929+00:00"
   }
 }

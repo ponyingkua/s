@@ -21903,5 +21903,99 @@
     "tp": 0.020931,
     "tp1": 0.019935,
     "scanned_at": "2026-09-15T03:04:57.764904+00:00"
+  },
+  {
+    "symbol": "ATOMUSDT",
+    "direction": "LONG",
+    "score": 71.8,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (40), tidak menambah skor",
+      "ADX (29.2) tren kuat (+8.8 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 6.08",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 6.08 (sisa posisi)"
+    ],
+    "entry": 1.577,
+    "sl": 1.501894,
+    "tp": 2.034,
+    "tp1": 1.652106,
+    "scanned_at": "2026-09-15T04:03:47.259322+00:00"
+  },
+  {
+    "symbol": "SKHYNIXUSDT",
+    "direction": "LONG",
+    "score": 71.8,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (34), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (34.8) tren kuat (+14.8 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 4.16",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 4.16 (sisa posisi)"
+    ],
+    "entry": 1262.42,
+    "sl": 1219.866101,
+    "tp": 1439.28,
+    "tp1": 1304.973899,
+    "scanned_at": "2026-09-15T04:03:47.259322+00:00"
+  },
+  {
+    "symbol": "TREEUSDT",
+    "direction": "LONG",
+    "score": 70.9,
+    "timeframe": "4h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (33.0) tren kuat (+12.9 skor)",
+      "Setup terdeteksi: CONTINUATION (-35 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.04563,
+    "sl": 0.041057,
+    "tp": 0.053862,
+    "tp1": 0.050203,
+    "scanned_at": "2026-09-15T04:03:47.259322+00:00"
+  },
+  {
+    "symbol": "ANKRUSDT",
+    "direction": "LONG",
+    "score": 68.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (29.4) tren kuat (+9.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.004858,
+    "sl": 0.004687,
+    "tp": 0.005166,
+    "tp1": 0.005029,
+    "scanned_at": "2026-09-15T04:03:47.259322+00:00"
   }
 ]
