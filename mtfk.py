@@ -313,11 +313,10 @@ def _volume_ratio_last(df: pd.DataFrame, lookback: int = 20):
 
 
 def _compute_ema_set(df: pd.DataFrame, n_show: int, tf: str) -> dict:
-    """Hitung EMA20/EMA50/EMA200(kondisional) satu kali di sini, dipakai
-    bersama oleh _draw_analyze_indicators (multi-panel) dan
-    _draw_indicators_single (single) - supaya logika "kapan EMA200 layak
-    ditampilkan" konsisten di kedua jenis chart (sebelumnya logic ATR/near
-    ini terduplikasi & bisa drift kalau salah satu diubah)."""
+    """Hitung EMA20/EMA50/EMA200(kondisional) satu kali di sini, dipakai oleh
+    _draw_indicators_single (dipanggil dari build_single_mtfk_chart MAUPUN
+    build_mtfk_chart) - supaya logika "kapan EMA200 layak ditampilkan"
+    konsisten di kedua jenis chart."""
     close = df["close"]
     p = float(close.iloc[-1])
     ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
@@ -436,122 +435,46 @@ def _draw_rsi_panel(ax, rsi_values, tick_fs: float = 7.5) -> None:
     ax.tick_params(labelsize=tick_fs)
 
 
-def _draw_analyze_indicators(
-    ax,
-    df: pd.DataFrame,
-    n_show: int,
-    tf: str,
-    tf_info: dict,
-    label_fs: float = 6.5,
-    show_legend: bool = False,
-) -> list:
-    p = float(df["close"].iloc[-1])
-    emas = _compute_ema_set(df, n_show, tf)
-    x = range(n_show)
+def _resolve_sr_label_anchors(
+    s_val: float | None,
+    r_val: float | None,
+    price_span_hint: float,
+    square: bool = False,
+) -> tuple[float | None, float | None]:
+    """Tentukan titik anchor vertikal (dipakai bareng oleh marker & teks)
+    untuk label SUPPORT/RESISTANCE.
 
-    # Urutan gambar: EMA200 (paling lambat) dulu di paling bawah, EMA20
-    # (paling cepat/paling relevan) digambar PALING TERAKHIR supaya selalu
-    # terlihat di atas - sebelumnya EMA200 digambar terakhir dan malah
-    # menutupi persilangan EMA20/50 saat ketiganya berdekatan.
-    if emas["ema200"] is not None:
-        ax.plot(
-            x, emas["ema200"], color=EMA200_COLOR, linewidth=1.1, alpha=0.85,
-            zorder=Z_EMA, solid_capstyle="round",
-            label="EMA 200" if show_legend else None,
-        )
-    ax.plot(
-        x, emas["ema50"], color=EMA50_COLOR, linewidth=1.1, alpha=0.92,
-        zorder=Z_EMA + 1, solid_capstyle="round",
-        label="EMA 50" if show_legend else None,
-    )
-    ax.plot(
-        x, emas["ema20"], color=EMA20_COLOR, linewidth=1.15, alpha=0.95,
-        zorder=Z_EMA + 2, solid_capstyle="round",
-        label="EMA 20" if show_legend else None,
-    )
+    BUG yang diperbaiki fungsi ini: sebelumnya label SUPPORT & RESISTANCE
+    selalu digambar tepat di harga aslinya (s_val/r_val) tanpa cek jarak -
+    begitu kedua level berdekatan (mis. kasus KAITOUSDT 15m/1h/4h: S/R cuma
+    beda ~0.15-0.3% dari harga saat market lagi konsolidasi sempit), kedua
+    kotak label saling menimpa dan jadi tidak terbaca sama sekali (kotak
+    yang digambar belakangan - RESISTANCE - menutupi penuh kotak SUPPORT).
 
-    structure = tf_info.get("structure") or {}
-    support = structure.get("support")
-    resistance = structure.get("resistance")
-    # Nilai S/R dikumpulkan & dikembalikan supaya build_mtfk_chart bisa
-    # mengikutsertakannya saat menghitung batas atas/bawah sumbu-y panel ini
-    # (persis seperti di _draw_indicators_single). Sebelumnya y-range cuma
-    # dihitung dari high/low candle, jadi kalau S/R terletak di luar rentang
-    # candle yang tampil, garis+labelnya ikut ter-render di luar axes (label
-    # teks defaultnya tidak clip) - itu penyebab "R ..." kadang menimpa judul
-    # TF di panel yang lain.
-    level_values = []
-    if support:
-        s_val = float(support)
-        level_values.append(s_val)
-        ax.axhline(
-            s_val, color=UP, linestyle="--",
-            linewidth=0.9, alpha=0.50, zorder=3,
-        )
-        ax.text(
-            0.012, s_val,
-            f"S {format_price(s_val, decimals_from_price(s_val))}",
-            transform=ax.get_yaxis_transform(), color=UP,
-            fontsize=label_fs, fontweight="bold", ha="left", va="bottom",
-            zorder=5,
-            bbox=dict(boxstyle="round,pad=0.15", facecolor=BG, edgecolor="none", alpha=0.7),
-        )
-    if resistance:
-        r_val = float(resistance)
-        level_values.append(r_val)
-        ax.axhline(
-            r_val, color=DOWN, linestyle="--",
-            linewidth=0.9, alpha=0.50, zorder=3,
-        )
-        ax.text(
-            0.012, r_val,
-            f"R {format_price(r_val, decimals_from_price(r_val))}",
-            transform=ax.get_yaxis_transform(), color=DOWN,
-            fontsize=label_fs, fontweight="bold", ha="left", va="top",
-            zorder=5,
-            bbox=dict(boxstyle="round,pad=0.15", facecolor=BG, edgecolor="none", alpha=0.7),
-        )
+    Kalau kedua level cukup berjauhan, anchor = harga aslinya masing-masing
+    (tidak ada perubahan sama sekali). Kalau berdekatan, keduanya digeser
+    simetris menjauhi titik tengah supaya kotak label tidak lagi saling
+    menimpa. Garis putus-putus (axhline) TETAP digambar di harga asli -
+    hanya anchor marker+teks yang digeser, jadi masih jelas warna mana
+    mewakili level mana meski posisi labelnya sedikit "meleset" dari
+    garisnya sendiri saat market sedang sangat sempit.
 
-    direction = tf_info.get("direction", "NONE")
-    last_c = float(df["close"].iloc[-1])
-    if direction == "LONG":
-        ax.scatter(
-            n_show - 1, last_c, marker="o", s=18,
-            color=UP, edgecolors=TEXT, linewidths=0.4,
-            zorder=6, alpha=0.95,
-        )
-    elif direction == "SHORT":
-        ax.scatter(
-            n_show - 1, last_c, marker="o", s=18,
-            color=DOWN, edgecolors=TEXT, linewidths=0.4,
-            zorder=6, alpha=0.95,
-        )
-
-    if show_legend:
-        handles, labels = _ordered_legend_handles(ax)
-        legend = ax.legend(
-            handles, labels,
-            loc="upper left", fontsize=label_fs + 1.5, framealpha=0.85,
-            facecolor=BG, edgecolor=SPINE, labelcolor=TEXT,
-            borderpad=0.35, handlelength=1.4,
-        )
-        legend.get_frame().set_linewidth(0.6)
-
-    return level_values
-
-
-def _nearest_level_text(price: float, support, resistance) -> str:
-    candidates = []
-    if support is not None:
-        candidates.append(("S", float(support)))
-    if resistance is not None:
-        candidates.append(("R", float(resistance)))
-    if not candidates or price == 0:
-        return ""
-    label, level = min(candidates, key=lambda t: abs(price - t[1]))
-    pct = (price - level) / price * 100
-    sign = "+" if pct >= 0 else ""
-    return f"  ·  {sign}{pct:.2f}% → {label}"
+    `price_span_hint` = perkiraan rentang high-low candle yang sedang
+    ditampilkan (dipakai sbg basis heuristik jarak minimum antar label,
+    krn y-limit final axes belum ditentukan saat fungsi ini dipanggil)."""
+    if s_val is None or r_val is None:
+        return s_val, r_val
+    span = max(price_span_hint, 1e-9)
+    # Fraksi dipilih & divalidasi scr visual (bukan cuma dihitung dari tinggi
+    # font) supaya cukup lega utk 2 baris label bold 8.5-10.5pt tanpa
+    # menggeser anchor jauh-jauh saat kasusnya cuma sedikit berdekatan.
+    min_gap = span * (0.12 if square else 0.14)
+    lo, hi = min(s_val, r_val), max(s_val, r_val)
+    if hi - lo >= min_gap:
+        return s_val, r_val
+    mid = (lo + hi) / 2.0
+    lo_new, hi_new = mid - min_gap / 2.0, mid + min_gap / 2.0
+    return (lo_new, hi_new) if s_val <= r_val else (hi_new, lo_new)
 
 
 def _draw_indicators_single(
@@ -563,14 +486,13 @@ def _draw_indicators_single(
     right_pad: float,
     square: bool = False,
 ) -> list:
-    """Varian _draw_analyze_indicators khusus single_mtfk: linewidth & style
-    disesuaikan skala chart penuh. S/R digambar di ruang kosong sebelah kanan
-    (antara candle terakhir & tepi chart, lihat `right_pad` di
-    build_single_mtfk_chart) - bukan lagi menumpuk di atas candle - supaya
-    labelnya selalu bersih terbaca terpisah dari data harga; legend EMA/BB
-    dipindah ke kiri (lihat build_single_mtfk_chart) supaya kedua elemen
-    tidak saling menumpuk di satu sudut. Tidak dipakai oleh build_mtfk_chart
-    (multi-panel)."""
+    """Gambar EMA/BB/S-R/marker arah untuk satu panel harga, skala penuh.
+    S/R digambar di ruang kosong sebelah kanan (antara candle terakhir &
+    tepi chart, lihat `right_pad` di pemanggil) - bukan menumpuk di atas
+    candle - supaya labelnya selalu bersih terbaca terpisah dari data harga;
+    legend EMA/BB ditaruh di kiri supaya tidak menumpuk dgn label S/R di
+    kanan. Dipakai oleh KEDUA build_single_mtfk_chart (1 panel) dan
+    build_mtfk_chart (tiap blok TF di chart multi-timeframe)."""
     last_x = n_show - 1
     # marker (segitiga) nempel tepat di ujung ruang kosong (dekat candle
     # terakhir), teks nilai S/R nempel ke tepi kanan chart - keduanya pakai
@@ -585,8 +507,9 @@ def _draw_indicators_single(
     x = range(n_show)
     ema_values = list(emas["ema20"]) + list(emas["ema50"])
 
-    # Sama seperti _draw_analyze_indicators: EMA200 (lambat) di bawah, EMA20
-    # (cepat) digambar terakhir supaya selalu di atas EMA50/EMA200.
+    # EMA200 (lambat) digambar dulu di paling bawah, EMA20 (cepat) digambar
+    # PALING TERAKHIR supaya selalu terlihat di atas EMA50/EMA200 saat
+    # ketiganya berdekatan.
     if emas["ema200"] is not None:
         ax.plot(
             x, emas["ema200"], color=EMA200_COLOR, linewidth=1.4, alpha=0.92,
@@ -624,12 +547,24 @@ def _draw_indicators_single(
     support = structure.get("support")
     resistance = structure.get("resistance")
     label_fs = 10.5 if square else 8.5
+    marker_size = 7.5 if square else 6.0
+
+    s_val = float(support) if support else None
+    r_val = float(resistance) if resistance else None
+    # Lihat docstring _resolve_sr_label_anchors: anchor cuma beda dari
+    # s_val/r_val saat kedua level berdekatan, supaya kotak label tidak
+    # saling menimpa. price_span_hint dari rentang high-low candle yang
+    # tampil (proxy y-span, krn y-limit final axes belum diset di sini).
+    price_span_hint = float(df["high"].tail(n_show).max() - df["low"].tail(n_show).min())
+    s_anchor, r_anchor = _resolve_sr_label_anchors(s_val, r_val, price_span_hint, square=square)
 
     level_values = []
-    if support:
-        s_val = float(support)
-        level_values.append(s_val)
-        marker_size = 7.5 if square else 6.0
+    if s_val is not None:
+        # s_val (harga asli, utk axhline) DAN s_anchor (posisi label yg
+        # sudah dipisah) dua-duanya masuk ke level_values supaya y-limit
+        # akhir yang dihitung pemanggil selalu cukup lega menampung label,
+        # walau anchornya digeser sedikit dari harga aslinya.
+        level_values += [s_val, s_anchor]
         ax.axhline(
             s_val, color=UP, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=Z_LEVEL_LINE,
@@ -638,22 +573,20 @@ def _draw_indicators_single(
             ax.transData, fig=ax.figure, x=0, y=marker_size / 2 + 0.6, units="points",
         )
         ax.plot(
-            [marker_x], [s_val], marker="^", markersize=marker_size,
+            [marker_x], [s_anchor], marker="^", markersize=marker_size,
             color=UP, zorder=Z_LEVEL_LABEL, clip_on=False,
             transform=support_trans,
         )
         ax.text(
-            label_x, s_val,
+            label_x, s_anchor,
             f"SUPPORT  {format_price(s_val, decimals_from_price(s_val))}",
             color=UP,
-            fontsize=label_fs, fontweight="bold", ha="right", va="bottom",
+            fontsize=label_fs, fontweight="bold", ha="right", va="center",
             zorder=Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=BG, edgecolor="none", alpha=0.80),
         )
-    if resistance:
-        r_val = float(resistance)
-        level_values.append(r_val)
-        marker_size = 7.5 if square else 6.0
+    if r_val is not None:
+        level_values += [r_val, r_anchor]
         ax.axhline(
             r_val, color=DOWN, linestyle="--",
             linewidth=1.4, alpha=0.85, zorder=Z_LEVEL_LINE,
@@ -662,15 +595,15 @@ def _draw_indicators_single(
             ax.transData, fig=ax.figure, x=0, y=-(marker_size / 2 + 0.6), units="points",
         )
         ax.plot(
-            [marker_x], [r_val], marker="v", markersize=marker_size,
+            [marker_x], [r_anchor], marker="v", markersize=marker_size,
             color=DOWN, zorder=Z_LEVEL_LABEL, clip_on=False,
             transform=resistance_trans,
         )
         ax.text(
-            label_x, r_val,
+            label_x, r_anchor,
             f"RESISTANCE  {format_price(r_val, decimals_from_price(r_val))}",
             color=DOWN,
-            fontsize=label_fs, fontweight="bold", ha="right", va="top",
+            fontsize=label_fs, fontweight="bold", ha="right", va="center",
             zorder=Z_LEVEL_LABEL,
             bbox=dict(boxstyle="round,pad=0.22", facecolor=BG, edgecolor="none", alpha=0.80),
         )
