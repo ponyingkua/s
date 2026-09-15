@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "MAVIAUSDT|4h": {
-    "symbol": "MAVIAUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T17:03:25.619416+00:00"
-  },
   "\u9f99\u867eUSDT|1h": {
     "symbol": "\u9f99\u867eUSDT",
     "timeframe": "1h",
@@ -22,29 +16,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-15T01:05:20.269331+00:00"
   },
-  "QCOMUSDT|15m": {
-    "symbol": "QCOMUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T17:03:27.615215+00:00"
-  },
   "WAXPUSDT|1h": {
     "symbol": "WAXPUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-15T01:05:22.776639+00:00"
-  },
-  "BTCUSDT|1h": {
-    "symbol": "BTCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T17:03:29.576872+00:00"
-  },
-  "AAOIUSDT|1h": {
-    "symbol": "AAOIUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T17:03:30.952902+00:00"
   },
   "HYPEUSDT|1h": {
     "symbol": "HYPEUSDT",
@@ -158,7 +134,7 @@
     "symbol": "MRVLUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T00:05:24.230360+00:00"
+    "timestamp": "2026-09-15T05:04:40.931618+00:00"
   },
   "ALTUSDT|1h": {
     "symbol": "ALTUSDT",
