@@ -4,23 +4,11 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "CTSIUSDT|4h": {
-    "symbol": "CTSIUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T13:06:57.874600+00:00"
-  },
   "MAVIAUSDT|4h": {
     "symbol": "MAVIAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-14T17:03:25.619416+00:00"
-  },
-  "BZUSDT|1h": {
-    "symbol": "BZUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T13:06:59.330926+00:00"
   },
   "CLUSDT|1h": {
     "symbol": "CLUSDT",
@@ -28,41 +16,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T15:06:47.569174+00:00"
   },
-  "ALTUSDT|4h": {
-    "symbol": "ALTUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T13:07:00.132128+00:00"
-  },
-  "MSTRUSDT|1h": {
-    "symbol": "MSTRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T14:04:07.715828+00:00"
-  },
-  "TSMUSDT|1h": {
-    "symbol": "TSMUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T14:04:09.850588+00:00"
-  },
-  "CRWVUSDT|1h": {
-    "symbol": "CRWVUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T14:04:11.265918+00:00"
-  },
   "\u9f99\u867eUSDT|1h": {
     "symbol": "\u9f99\u867eUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T19:05:58.933978+00:00"
-  },
-  "BEUSDT|1h": {
-    "symbol": "BEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T14:04:13.663507+00:00"
   },
   "IBMUSDT|1h": {
     "symbol": "IBMUSDT",
@@ -200,7 +158,7 @@
     "symbol": "XPTUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-14T20:05:03.996118+00:00"
+    "timestamp": "2026-09-15T02:05:55.933820+00:00"
   },
   "ORCLUSDT|1h": {
     "symbol": "ORCLUSDT",
@@ -267,5 +225,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T01:05:21.537129+00:00"
+  },
+  "SOPHUSDT|1h": {
+    "symbol": "SOPHUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T02:05:54.634070+00:00"
   }
 }
