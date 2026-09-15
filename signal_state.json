@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "\u9f99\u867eUSDT|1h": {
-    "symbol": "\u9f99\u867eUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T19:05:58.933978+00:00"
-  },
   "PENDLEUSDT|1h": {
     "symbol": "PENDLEUSDT",
     "timeframe": "1h",
@@ -28,29 +22,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-15T00:05:23.451125+00:00"
   },
-  "BCHUSDT|1h": {
-    "symbol": "BCHUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T19:05:56.728751+00:00"
-  },
-  "AAPLUSDT|1h": {
-    "symbol": "AAPLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T19:05:59.826840+00:00"
-  },
   "POWERUSDT|1h": {
     "symbol": "POWERUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-14T19:06:01.249916+00:00"
-  },
-  "CXMTUSDT|1h": {
-    "symbol": "CXMTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T19:06:02.657582+00:00"
+    "timestamp": "2026-09-15T07:07:25.276182+00:00"
   },
   "LAUSDT|1h": {
     "symbol": "LAUSDT",
@@ -134,7 +110,7 @@
     "symbol": "SOPHUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T02:05:54.634070+00:00"
+    "timestamp": "2026-09-15T07:07:26.167901+00:00"
   },
   "SAGAUSDT|1h": {
     "symbol": "SAGAUSDT",
@@ -165,5 +141,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-15T04:04:55.600929+00:00"
+  },
+  "NATGASUSDT|1h": {
+    "symbol": "NATGASUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T07:07:23.634435+00:00"
+  },
+  "UAIUSDT|1h": {
+    "symbol": "UAIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T07:07:27.601270+00:00"
   }
 }
