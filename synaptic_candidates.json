@@ -22533,5 +22533,99 @@
     "tp": 54.681594,
     "tp1": 53.094219,
     "scanned_at": "2026-09-15T15:04:00.190084+00:00"
+  },
+  {
+    "symbol": "SOXSUSDT",
+    "direction": "LONG",
+    "score": 73.0,
+    "timeframe": "4h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (39.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-35 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 51.47,
+    "sl": 48.960909,
+    "tp": 55.986364,
+    "tp1": 53.979091,
+    "scanned_at": "2026-09-15T16:03:19.433155+00:00"
+  },
+  {
+    "symbol": "GRAMUSDT",
+    "direction": "SHORT",
+    "score": 70.9,
+    "timeframe": "4h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (23.7) tren kuat (+2.9 skor)",
+      "Setup terdeteksi: BREAKOUT (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1.325,
+    "sl": 1.378461,
+    "tp": 1.22877,
+    "tp1": 1.271539,
+    "scanned_at": "2026-09-15T16:03:19.433155+00:00"
+  },
+  {
+    "symbol": "MSFTUSDT",
+    "direction": "LONG",
+    "score": 65.7,
+    "timeframe": "4h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (28.2) tren kuat (+7.7 skor)",
+      "Setup terdeteksi: CONTINUATION (-35 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 501.47,
+    "sl": 495.053056,
+    "tp": 513.020499,
+    "tp1": 507.886944,
+    "scanned_at": "2026-09-15T16:03:19.433155+00:00"
+  },
+  {
+    "symbol": "TAOUSDT",
+    "direction": "SHORT",
+    "score": 65.2,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (38) menguatkan momentum turun",
+      "ADX (31.4) tren kuat (+11.2 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 225.45,
+    "sl": 231.533828,
+    "tp": 214.49911,
+    "tp1": 219.366172,
+    "scanned_at": "2026-09-15T16:03:19.433155+00:00"
   }
 ]

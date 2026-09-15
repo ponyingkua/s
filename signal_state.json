@@ -28,12 +28,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-15T07:07:26.167901+00:00"
   },
-  "SAGAUSDT|1h": {
-    "symbol": "SAGAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T03:05:58.659091+00:00"
-  },
   "ATOMUSDT|4h": {
     "symbol": "ATOMUSDT",
     "timeframe": "4h",
@@ -153,5 +147,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-15T15:04:47.161711+00:00"
+  },
+  "SOXSUSDT|4h": {
+    "symbol": "SOXSUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T16:04:23.138462+00:00"
+  },
+  "GRAMUSDT|4h": {
+    "symbol": "GRAMUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T16:04:24.777747+00:00"
+  },
+  "MSFTUSDT|4h": {
+    "symbol": "MSFTUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T16:04:25.597980+00:00"
+  },
+  "TAOUSDT|1h": {
+    "symbol": "TAOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T16:04:26.986320+00:00"
   }
 }
