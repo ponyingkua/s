@@ -20,7 +20,7 @@
     "symbol": "MRVLUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-15T12:04:52.932636+00:00"
+    "timestamp": "2026-09-15T18:04:32.343517+00:00"
   },
   "SOPHUSDT|1h": {
     "symbol": "SOPHUSDT",
@@ -183,5 +183,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T17:04:15.898070+00:00"
+  },
+  "LTCUSDT|1h": {
+    "symbol": "LTCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T18:04:28.512624+00:00"
+  },
+  "LDOUSDT|1h": {
+    "symbol": "LDOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T18:04:30.463334+00:00"
+  },
+  "APTUSDT|1h": {
+    "symbol": "APTUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T18:04:31.105562+00:00"
   }
 }
