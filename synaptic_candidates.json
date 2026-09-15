@@ -22627,5 +22627,121 @@
     "tp": 214.49911,
     "tp1": 219.366172,
     "scanned_at": "2026-09-15T16:03:19.433155+00:00"
+  },
+  {
+    "symbol": "CROSSUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (38.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.12823,
+    "sl": 0.12223,
+    "tp": 0.139031,
+    "tp1": 0.13423,
+    "scanned_at": "2026-09-15T17:03:07.359605+00:00"
+  },
+  {
+    "symbol": "ATOMUSDT",
+    "direction": "LONG",
+    "score": 70.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (37), tidak menambah skor",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (27.5) tren kuat (+7.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 6.42",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 6.42 (sisa posisi)"
+    ],
+    "entry": 1.552,
+    "sl": 1.476913,
+    "tp": 2.034,
+    "tp1": 1.627087,
+    "scanned_at": "2026-09-15T17:03:07.359605+00:00"
+  },
+  {
+    "symbol": "BTCUSDT_260925",
+    "direction": "SHORT",
+    "score": 67.5,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (33.6) tren kuat (+13.5 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 76505.6,
+    "sl": 77440.006879,
+    "tp": 74823.667618,
+    "tp1": 75571.193121,
+    "scanned_at": "2026-09-15T17:03:07.359605+00:00"
+  },
+  {
+    "symbol": "BTCUSDT_261225",
+    "direction": "SHORT",
+    "score": 67.5,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (35) menguatkan momentum turun",
+      "ADX (33.6) tren kuat (+13.5 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 77417.5,
+    "sl": 78325.824794,
+    "tp": 75782.515371,
+    "tp1": 76509.175206,
+    "scanned_at": "2026-09-15T17:03:07.359605+00:00"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "direction": "SHORT",
+    "score": 66.7,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (34) menguatkan momentum turun",
+      "ADX (32.9) tren kuat (+12.7 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 76352.3,
+    "sl": 77305.626664,
+    "tp": 74636.312005,
+    "tp1": 75398.973336,
+    "scanned_at": "2026-09-15T17:03:07.359605+00:00"
   }
 ]

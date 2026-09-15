@@ -32,25 +32,13 @@
     "symbol": "ATOMUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-15T12:04:50.192427+00:00"
+    "timestamp": "2026-09-15T17:04:11.574208+00:00"
   },
   "SKHYNIXUSDT|4h": {
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T08:05:03.716914+00:00"
-  },
-  "TREEUSDT|4h": {
-    "symbol": "TREEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T04:04:54.122997+00:00"
-  },
-  "ANKRUSDT|1h": {
-    "symbol": "ANKRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T04:04:55.600929+00:00"
   },
   "NATGASUSDT|1h": {
     "symbol": "NATGASUSDT",
@@ -171,5 +159,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T16:04:26.986320+00:00"
+  },
+  "CROSSUSDT|1h": {
+    "symbol": "CROSSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T17:04:09.984006+00:00"
+  },
+  "BTCUSDT_260925|1h": {
+    "symbol": "BTCUSDT_260925",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T17:04:13.064015+00:00"
+  },
+  "BTCUSDT_261225|1h": {
+    "symbol": "BTCUSDT_261225",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T17:04:14.484575+00:00"
+  },
+  "BTCUSDT|1h": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T17:04:15.898070+00:00"
   }
 }
