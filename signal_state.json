@@ -201,5 +201,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T18:04:31.105562+00:00"
+  },
+  "STRKUSDT|1h": {
+    "symbol": "STRKUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T19:03:43.870383+00:00"
+  },
+  "PENGUUSDT|1h": {
+    "symbol": "PENGUUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T19:03:45.181797+00:00"
+  },
+  "BCHUSDT|1h": {
+    "symbol": "BCHUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T19:03:46.264930+00:00"
   }
 }
