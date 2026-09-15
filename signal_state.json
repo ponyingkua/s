@@ -16,12 +16,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-15T07:07:25.276182+00:00"
   },
-  "XPTUSDT|1h": {
-    "symbol": "XPTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T02:05:55.933820+00:00"
-  },
   "MRVLUSDT|4h": {
     "symbol": "MRVLUSDT",
     "timeframe": "4h",
@@ -153,5 +147,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T14:04:12.742640+00:00"
+  },
+  "SOXSUSDT|1h": {
+    "symbol": "SOXSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T15:04:47.161711+00:00"
   }
 }

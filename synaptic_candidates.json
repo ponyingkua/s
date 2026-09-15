@@ -22509,5 +22509,29 @@
     "tp": 7.181746,
     "tp1": 7.281859,
     "scanned_at": "2026-09-15T14:03:34.789776+00:00"
+  },
+  {
+    "symbol": "SOXSUSDT",
+    "direction": "LONG",
+    "score": 68.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (56) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (39.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 51.11,
+    "sl": 49.125781,
+    "tp": 54.681594,
+    "tp1": 53.094219,
+    "scanned_at": "2026-09-15T15:04:00.190084+00:00"
   }
 ]
