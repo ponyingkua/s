@@ -32,9 +32,31 @@ def parse_symbols(raw: str) -> list[str]:
     return [s.strip() for s in cleaned.split(",") if s.strip()]
 
 
+def _decimals_from_price(price: float) -> int:
+    """Disalin dari chart.py::decimals_from_price - supaya analyze.py tidak
+    perlu `import chart` cuma untuk format angka (dulu di-import lokal di
+    dalam _fmt_price & _round_price di bawah, dipanggil berkali-kali per
+    analisa)."""
+    p = abs(float(price))
+    if p < 0.0001:
+        return 8
+    if p < 0.001:
+        return 7
+    if p < 0.01:
+        return 6
+    if p < 0.1:
+        return 5
+    if p < 1:
+        return 5
+    if p < 10:
+        return 4
+    if p < 100:
+        return 3
+    return 2
+
+
 def _fmt_price(value: float) -> str:
-    import chart
-    return chart.format_price(value, chart.decimals_from_price(value))
+    return f"{float(value):.{_decimals_from_price(value)}f}"
 
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -417,8 +439,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
 def _round_price(value: float) -> float:
     if value == 0:
         return 0.0
-    import chart
-    return round(float(value), chart.decimals_from_price(value))
+    return round(float(value), _decimals_from_price(value))
 
 
 def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dict) -> dict:
