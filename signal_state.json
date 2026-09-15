@@ -4,18 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "PENDLEUSDT|1h": {
-    "symbol": "PENDLEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T01:05:20.269331+00:00"
-  },
-  "WAXPUSDT|1h": {
-    "symbol": "WAXPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T01:05:22.776639+00:00"
-  },
   "INTWUSDT|4h": {
     "symbol": "INTWUSDT",
     "timeframe": "4h",
@@ -39,18 +27,6 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-15T12:04:52.932636+00:00"
-  },
-  "ALTUSDT|1h": {
-    "symbol": "ALTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T01:05:18.370259+00:00"
-  },
-  "FFUSDT|1h": {
-    "symbol": "FFUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T01:05:21.537129+00:00"
   },
   "SOPHUSDT|1h": {
     "symbol": "SOPHUSDT",
@@ -171,5 +147,11 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T13:05:10.567056+00:00"
+  },
+  "ETCUSDT|1h": {
+    "symbol": "ETCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T14:04:12.742640+00:00"
   }
 }

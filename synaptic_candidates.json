@@ -22486,5 +22486,28 @@
     "tp": 409.911962,
     "tp1": 414.822201,
     "scanned_at": "2026-09-15T13:04:32.473498+00:00"
+  },
+  {
+    "symbol": "ETCUSDT",
+    "direction": "SHORT",
+    "score": 69.9,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "Volume spike di candle bearish (menguatkan sinyal SHORT)",
+      "ADX (24.6) tren kuat (+3.9 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 7.407,
+    "sl": 7.532141,
+    "tp": 7.181746,
+    "tp1": 7.281859,
+    "scanned_at": "2026-09-15T14:03:34.789776+00:00"
   }
 ]
