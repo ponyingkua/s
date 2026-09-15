@@ -22,24 +22,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-15T01:05:22.776639+00:00"
   },
-  "HYPEUSDT|1h": {
-    "symbol": "HYPEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T18:04:21.125633+00:00"
-  },
-  "REDUSDT|1h": {
-    "symbol": "REDUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T18:04:27.533823+00:00"
-  },
-  "EWYUSDT|1h": {
-    "symbol": "EWYUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T18:04:28.387225+00:00"
-  },
   "INTWUSDT|4h": {
     "symbol": "INTWUSDT",
     "timeframe": "4h",
