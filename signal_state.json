@@ -16,12 +16,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-14T17:03:25.619416+00:00"
   },
-  "PENDLEUSDT|4h": {
-    "symbol": "PENDLEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T12:05:15.808819+00:00"
-  },
   "BZUSDT|1h": {
     "symbol": "BZUSDT",
     "timeframe": "1h",
@@ -33,30 +27,6 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T15:06:47.569174+00:00"
-  },
-  "BABAUSDT|1h": {
-    "symbol": "BABAUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T11:04:10.975727+00:00"
-  },
-  "BABYUSDT|4h": {
-    "symbol": "BABYUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T12:05:14.573476+00:00"
-  },
-  "COHRUSDT|4h": {
-    "symbol": "COHRUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T12:05:16.500455+00:00"
-  },
-  "KOMAUSDT|1h": {
-    "symbol": "KOMAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T12:05:17.715032+00:00"
   },
   "ALTUSDT|4h": {
     "symbol": "ALTUSDT",
@@ -194,7 +164,7 @@
     "symbol": "INTWUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-14T20:05:08.292240+00:00"
+    "timestamp": "2026-09-15T00:05:23.451125+00:00"
   },
   "BCHUSDT|1h": {
     "symbol": "BCHUSDT",
@@ -273,5 +243,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-14T23:03:54.251322+00:00"
+  },
+  "MSFTUSDT|1h": {
+    "symbol": "MSFTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T00:05:21.418779+00:00"
+  },
+  "MRVLUSDT|4h": {
+    "symbol": "MRVLUSDT",
+    "timeframe": "4h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T00:05:24.230360+00:00"
   }
 }
