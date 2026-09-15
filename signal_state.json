@@ -34,18 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-15T02:05:55.933820+00:00"
   },
-  "COINUSDT|1h": {
-    "symbol": "COINUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T23:03:52.259522+00:00"
-  },
-  "GOOGLUSDT|1h": {
-    "symbol": "GOOGLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T23:03:54.251322+00:00"
-  },
   "MSFTUSDT|1h": {
     "symbol": "MSFTUSDT",
     "timeframe": "1h",
