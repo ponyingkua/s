@@ -34,30 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-15T02:05:55.933820+00:00"
   },
-  "ORCLUSDT|1h": {
-    "symbol": "ORCLUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-14T20:05:05.456989+00:00"
-  },
-  "TIAUSDT|4h": {
-    "symbol": "TIAUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T20:05:06.881074+00:00"
-  },
-  "AEROUSDT|1h": {
-    "symbol": "AEROUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T21:04:32.669707+00:00"
-  },
-  "RONINUSDT|1h": {
-    "symbol": "RONINUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T21:04:35.139329+00:00"
-  },
   "CAPUSDT|1h": {
     "symbol": "CAPUSDT",
     "timeframe": "1h",
@@ -165,5 +141,17 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-15T08:05:02.139371+00:00"
+  },
+  "COTIUSDT|1h": {
+    "symbol": "COTIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T09:06:48.876305+00:00"
+  },
+  "INTCUSDT|1h": {
+    "symbol": "INTCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T09:06:50.394592+00:00"
   }
 }

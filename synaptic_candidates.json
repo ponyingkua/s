@@ -22231,5 +22231,52 @@
     "tp": 1169.935083,
     "tp1": 1204.528379,
     "scanned_at": "2026-09-15T08:04:23.156418+00:00"
+  },
+  {
+    "symbol": "COTIUSDT",
+    "direction": "LONG",
+    "score": 115.5,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (68) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (27.0) tren kuat (+6.5 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.017609,
+    "sl": 0.016471,
+    "tp": 0.019658,
+    "tp1": 0.018747,
+    "scanned_at": "2026-09-15T09:05:44.954063+00:00"
+  },
+  {
+    "symbol": "INTCUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (39) menguatkan momentum turun",
+      "ADX (46.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 96.94,
+    "sl": 98.575604,
+    "tp": 93.995912,
+    "tp1": 95.304396,
+    "scanned_at": "2026-09-15T09:05:44.954063+00:00"
   }
 ]
