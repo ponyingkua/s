@@ -22278,5 +22278,27 @@
     "tp": 93.995912,
     "tp1": 95.304396,
     "scanned_at": "2026-09-15T09:05:44.954063+00:00"
+  },
+  {
+    "symbol": "KAITOUSDT",
+    "direction": "SHORT",
+    "score": 65.4,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (39) menguatkan momentum turun",
+      "ADX (31.7) tren kuat (+11.4 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.2958,
+    "sl": 0.300309,
+    "tp": 0.287683,
+    "tp1": 0.291291,
+    "scanned_at": "2026-09-15T10:04:50.843316+00:00"
   }
 ]

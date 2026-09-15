@@ -34,12 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-15T02:05:55.933820+00:00"
   },
-  "CAPUSDT|1h": {
-    "symbol": "CAPUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-14T22:04:10.688195+00:00"
-  },
   "COINUSDT|1h": {
     "symbol": "COINUSDT",
     "timeframe": "1h",
@@ -153,5 +147,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T09:06:50.394592+00:00"
+  },
+  "KAITOUSDT|1h": {
+    "symbol": "KAITOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-15T10:05:54.155128+00:00"
   }
 }
