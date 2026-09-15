@@ -14,6 +14,7 @@ from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
 OUT_DIR = "analysis_output"
 FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
+MAX_SL_ATR_MULT = 2.5  # SL tidak boleh lebih dari N x ATR dari harga saat ini
 
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
@@ -46,6 +47,7 @@ def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
     out = 100 - (100 / (1 + rs))
     out = out.mask((avg_loss == 0) & (avg_gain > 0), 100.0)
     out = out.mask((avg_gain == 0) & (avg_loss > 0), 0.0)
+    out = out.mask((avg_gain == 0) & (avg_loss == 0), 50.0)
     return out
 
 
@@ -104,8 +106,24 @@ def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
 def _levels(df: pd.DataFrame, lookback: int = 100):
     x = df.tail(min(lookback, len(df)))
     sh, sl = _swing_points(x, 2, 2)
-    resistance = max([v for _, v in sh[-5:]], default=float(x["high"].max()))
-    support = min([v for _, v in sl[-5:]], default=float(x["low"].min()))
+    price = float(x["close"].iloc[-1])
+
+    res_candidates = [v for _, v in sh[-5:]]
+    sup_candidates = [v for _, v in sl[-5:]]
+
+    # Pick the swing high/low CLOSEST to current price among the recent few,
+    # not the most extreme one. Taking the extreme meant a stale pre-move high
+    # (e.g. right before a big crash) or pre-move low (before a big pump) could
+    # keep winning as "resistance"/"support" long after it stopped being a
+    # relevant reference for the current price.
+    resistance = (
+        min(res_candidates, key=lambda v: abs(v - price))
+        if res_candidates else float(x["high"].max())
+    )
+    support = (
+        min(sup_candidates, key=lambda v: abs(v - price))
+        if sup_candidates else float(x["low"].min())
+    )
     return float(support), float(resistance)
 
 
@@ -233,6 +251,8 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
             notes.append(f"RSI {r:.1f} is deeply weak, increasing bounce risk.")
         else:
             notes.append(f"RSI {r:.1f} is transitional.")
+    else:
+        notes.append("RSI not available (flat price over lookback window).")
 
     h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
     hp = float(hist.iloc[-2]) if pd.notna(hist.iloc[-2]) else None
@@ -303,7 +323,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
         "bear": round(bear, 2),
         "rsi": r,
         "atr": float(atr.iloc[-1]) if pd.notna(atr.iloc[-1]) else None,
-        "atr_pct": float(atr.iloc[-1] / p * 100) if pd.notna(atr.iloc[-1]) and p else None,
+        "atr_pct": round(atr_pct, 4) if pd.notna(atr.iloc[-1]) else None,
         "bb_width_pct": float(bb_width.iloc[-1]) if pd.notna(bb_width.iloc[-1]) else None,
         "notes": notes,
     }
@@ -338,12 +358,23 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
 
         upper_wick = float(last.high - max(last.open, last.close))
         lower_wick = float(min(last.open, last.close) - last.low)
+        # A rejection wick becomes the primary setup only if nothing stronger
+        # was already found; otherwise it's recorded as a secondary
+        # confirmation note so the setup label and its notes never disagree.
         if bear_bias and upper_wick / rng >= 0.45 and last.high >= resistance:
-            setup, score = "REJECTION", max(score, 2.5)
-            notes.append("Upper-wick rejection is visible at structural resistance.")
+            if score >= 2.5:
+                notes.append("Upper-wick rejection also visible at structural resistance (secondary confirmation).")
+            else:
+                setup = "REJECTION"
+                notes.append("Upper-wick rejection is visible at structural resistance.")
+            score = max(score, 2.5)
         elif bull_bias and lower_wick / rng >= 0.45 and last.low <= support:
-            setup, score = "REJECTION", max(score, 2.5)
-            notes.append("Lower-wick rejection is visible at structural support.")
+            if score >= 2.5:
+                notes.append("Lower-wick rejection also visible at structural support (secondary confirmation).")
+            else:
+                setup = "REJECTION"
+                notes.append("Lower-wick rejection is visible at structural support.")
+            score = max(score, 2.5)
 
     if setup == "NONE":
         ema20 = df["close"].ewm(span=20, adjust=False).mean()
@@ -364,7 +395,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             if momentum_ok and rsi_ok and atr_ok:
                 setup, score = "CONTINUATION", 2.2
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
-            else:
+            elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
         elif bear_bias and structure["label"] == "BEARISH":
             momentum_ok = slope20 < 0 and h <= 0 and not (h > hp and h > 0.0)
@@ -376,7 +407,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             if momentum_ok and rsi_ok and atr_ok:
                 setup, score = "CONTINUATION", 2.2
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
-            else:
+            elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
@@ -400,31 +431,61 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
     if not (is_long or is_short) or setup["type"] == "NONE":
         return {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
 
+    notes = []
+
     if is_long:
-        anchor = support if support is not None and support < p else p - atr
-        sl = min(anchor - 0.25 * atr, p - atr)
+        anchor = support if support < p else p - atr
+        sl_raw = min(anchor - 0.25 * atr, p - atr)
+        sl_floor = p - MAX_SL_ATR_MULT * atr
+        sl = max(sl_raw, sl_floor)
+        if sl > sl_raw:
+            notes.append(
+                f"SL distance capped at {MAX_SL_ATR_MULT}x ATR "
+                f"(structural support was farther away at {_fmt_price(sl_raw)})."
+            )
         lo = min(p, max(anchor, p - 0.45 * atr))
         hi = max(p, lo + 0.15 * atr)
         risk = max(hi - sl, 0.25 * atr)
+        tp1, tp2 = hi + risk, hi + 1.8 * risk
+        if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
+            return {
+                "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
+                "notes": ["Setup discarded: computed entry/SL/TP were not usable (non-positive price)."],
+            }
         return {
             "direction": "LONG",
             "entry": (_round_price(lo), _round_price(hi)),
             "sl": _round_price(sl),
-            "tp1": _round_price(hi + risk),
-            "tp2": _round_price(hi + 1.8 * risk),
+            "tp1": _round_price(tp1),
+            "tp2": _round_price(tp2),
+            "notes": notes,
         }
 
-    anchor = resistance if resistance is not None and resistance > p else p + atr
-    sl = max(anchor + 0.25 * atr, p + atr)
+    anchor = resistance if resistance > p else p + atr
+    sl_raw = max(anchor + 0.25 * atr, p + atr)
+    sl_cap = p + MAX_SL_ATR_MULT * atr
+    sl = min(sl_raw, sl_cap)
+    if sl < sl_raw:
+        notes.append(
+            f"SL distance capped at {MAX_SL_ATR_MULT}x ATR "
+            f"(structural resistance was farther away at {_fmt_price(sl_raw)})."
+        )
     hi = max(p, min(anchor, p + 0.45 * atr))
     lo = min(p, hi - 0.15 * atr)
     risk = max(sl - lo, 0.25 * atr)
+    tp1, tp2 = lo - risk, lo - 1.8 * risk
+    if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
+        return {
+            "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
+            "notes": ["Setup discarded: computed entry/SL/TP were not usable (non-positive price)."],
+        }
     return {
         "direction": "SHORT",
         "entry": (_round_price(lo), _round_price(hi)),
         "sl": _round_price(sl),
-        "tp1": _round_price(lo - risk),
-        "tp2": _round_price(lo - 1.8 * risk),
+        "tp1": _round_price(tp1),
+        "tp2": _round_price(tp2),
+        "notes": notes,
     }
 
 
@@ -449,9 +510,9 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
             f"Divergence: structure is BEARISH (LH/LL intact) but indicator "
             f"confluence is bullish-strong; not treated as an actionable LONG."
         )
-    elif structure["label"] == "BULLISH" and direction["bull"] >= direction["bear"]:
+    elif structure["label"] == "BULLISH" and direction["bull"] > direction["bear"]:
         final = "LONG"
-    elif structure["label"] == "BEARISH" and direction["bear"] >= direction["bull"]:
+    elif structure["label"] == "BEARISH" and direction["bear"] > direction["bull"]:
         final = "SHORT"
     elif conf_bull_strong:
         final = "LONG"
@@ -463,6 +524,11 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     levels = _build_levels(df, direction, structure, setup) if final != "NONE" else {
         "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None
     }
+    if levels["direction"] == "NONE" and final != "NONE":
+        # _build_levels discarded the setup (unrealistic SL/TP) — keep direction and
+        # levels in sync so downstream selection/rendering never sees a mismatched state.
+        final = "NONE"
+    divergence_notes += levels.get("notes", [])
 
     return {
         "symbol": symbol,
@@ -563,16 +629,6 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     }
 
 
-def _mtf_alignment(per_tf: dict) -> dict:
-    actionable = [(tf, x["direction"]) for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"]
-    longs = sum(d == "LONG" for _, d in actionable)
-    shorts = sum(d == "SHORT" for _, d in actionable)
-    overall = None
-    if actionable:
-        overall = "bullish" if longs > shorts else "bearish" if shorts > longs else "mixed"
-    return {"longs": longs, "shorts": shorts, "overall": overall}
-
-
 def compose_analysis_text(result: dict) -> str:
     symbol = result["symbol"]
     per_tf = result["per_tf"]
@@ -597,6 +653,9 @@ def compose_analysis_text(result: dict) -> str:
         lines.append(f"SL: {_fmt_price(lv['sl'])}")
         lines.append(f"TP1: {_fmt_price(lv['tp1'])}")
         lines.append(f"TP2: {_fmt_price(lv['tp2'])}")
+        agree = best_info.get("mtf_agree_tfs", [])
+        if agree:
+            lines.append(f"MTF agreement: {', '.join(agree)}")
     lines.append("")
     lines.append("## Per-timeframe breakdown")
     lines.append("")
@@ -611,6 +670,9 @@ def compose_analysis_text(result: dict) -> str:
         lines.append(f"Direction: {info['direction']}")
         lines.append(f"Technical bias: {info['bias']}")
         lines.append(f"Structure: {st['label']}")
+        agree = info.get("mtf_agree_tfs", [])
+        if agree:
+            lines.append(f"MTF agreement: {', '.join(agree)}")
         for note in st["notes"] + da["notes"] + su["notes"] + info.get("divergence_notes", []):
             lines.append(f"- {note}")
         lines.append("")
@@ -734,6 +796,8 @@ def main():
 
     if not args.symbol and not args.symbols:
         parser.error("Berikan --symbol atau --symbols")
+    if args.symbol and args.symbols:
+        parser.error("Gunakan salah satu saja: --symbol atau --symbols, jangan keduanya")
 
     raw = args.symbols if args.symbols else args.symbol
     symbols = parse_symbols(raw)
