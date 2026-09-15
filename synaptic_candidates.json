@@ -21880,5 +21880,28 @@
     "tp": 1725.171294,
     "tp1": 1742.437386,
     "scanned_at": "2026-09-15T02:05:05.716943+00:00"
+  },
+  {
+    "symbol": "SAGAUSDT",
+    "direction": "LONG",
+    "score": 66.5,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (28.0) tren kuat (+7.5 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.01869,
+    "sl": 0.017445,
+    "tp": 0.020931,
+    "tp1": 0.019935,
+    "scanned_at": "2026-09-15T03:04:57.764904+00:00"
   }
 ]

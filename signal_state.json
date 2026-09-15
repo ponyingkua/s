@@ -231,5 +231,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-15T02:05:54.634070+00:00"
+  },
+  "SAGAUSDT|1h": {
+    "symbol": "SAGAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-15T03:05:58.659091+00:00"
   }
 }
