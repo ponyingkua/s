@@ -95,17 +95,29 @@ def _atr_last(df: pd.DataFrame, period: int = 14) -> float:
 
 
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """Formula & penanganan edge-case (avg_gain/avg_loss = 0) disalin PERSIS
+    dari analyze.py::_rsi - dulu di sini pakai rumus fallback yang sedikit
+    beda (mis. kasus avg_gain==0 & avg_loss==0 sempat jatuh ke 100, padahal
+    di analyze.py itu 50), jadi kurva RSI di chart bisa tidak match dengan
+    nilai RSI & catatan bias yang dipakai analyze.py untuk skoring/setup.
+    Period JUGA tidak lagi dibaca dari cfg (lihat pemanggil di bawah) karena
+    analyze.py::_rsi() selalu pakai 14 tanpa override cfg."""
     delta = series.diff()
     gain = delta.clip(lower=0.0)
     loss = -delta.clip(upper=0.0)
     avg_gain = gain.ewm(alpha=1 / period, min_periods=period).mean()
     avg_loss = loss.ewm(alpha=1 / period, min_periods=period).mean()
-    avg_loss_safe = avg_loss.replace(0, np.nan)
-    rs = avg_gain / avg_loss_safe
+    rs = avg_gain / avg_loss.replace(0, np.nan)
     rsi = 100 - (100 / (1 + rs))
-    rsi = rsi.where(avg_loss != 0, 100.0)
-    rsi = rsi.fillna(50.0)
-    return rsi
+    rsi = rsi.mask((avg_loss == 0) & (avg_gain > 0), 100.0)
+    rsi = rsi.mask((avg_gain == 0) & (avg_loss > 0), 0.0)
+    rsi = rsi.mask((avg_gain == 0) & (avg_loss == 0), 50.0)
+    # fillna cuma jaring pengaman utk baris warmup paling awal (sebelum
+    # min_periods tercapai) supaya tidak ada NaN yang masuk ke array plot -
+    # analyze.py sendiri membiarkan baris warmup itu NaN krn tidak pernah
+    # dipakai (cuma nilai RSI candle terakhir yang dibaca), tapi di sini
+    # seluruh window n_show ikut digambar jadi perlu aman dari NaN.
+    return rsi.fillna(50.0)
 
 
 def _compute_bollinger(df: pd.DataFrame, n_show: int, period: int = 20, std_mult: float = 2.0) -> dict:
@@ -675,8 +687,7 @@ def build_single_mtfk_chart(
     ax_vol.set_ylabel("Vol", color=chart.AXIS, fontsize=8, labelpad=5)
     ax_price.set_ylabel("Price", color=chart.AXIS, fontsize=8.5, labelpad=5)
 
-    rsi_period = cfg.get("indicators", {}).get("rsi", {}).get("period", 14)
-    rsi_tail = _compute_rsi(df["close"], rsi_period).tail(n_show).to_numpy()
+    rsi_tail = _compute_rsi(df["close"]).tail(n_show).to_numpy()
     _draw_rsi_panel(ax_rsi, rsi_tail)
     ax_rsi.set_ylabel("RSI", color=chart.AXIS, fontsize=8, labelpad=5)
 
@@ -947,8 +958,7 @@ def build_mtfk_chart(
         ax_vol.set_ylabel("Vol", color=chart.AXIS, fontsize=8, labelpad=5)
         ax_price.set_ylabel("Price", color=chart.AXIS, fontsize=8.5, labelpad=5)
 
-        rsi_period = cfg.get("indicators", {}).get("rsi", {}).get("period", 14)
-        rsi_tail = _compute_rsi(df["close"], rsi_period).tail(n_show).to_numpy()
+        rsi_tail = _compute_rsi(df["close"]).tail(n_show).to_numpy()
         _draw_rsi_panel(ax_rsi, rsi_tail)
         ax_rsi.set_ylabel("RSI", color=chart.AXIS, fontsize=8, labelpad=5)
 
