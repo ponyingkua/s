@@ -8,7 +8,7 @@
     "symbol": "INTWUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T20:04:58.423244+00:00"
+    "timestamp": "2026-09-16T02:04:30.522124+00:00"
   },
   "POWERUSDT|1h": {
     "symbol": "POWERUSDT",
@@ -33,30 +33,6 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T01:04:27.630697+00:00"
-  },
-  "METAUSDT|15m": {
-    "symbol": "METAUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T13:05:08.376396+00:00"
-  },
-  "CTRUSDT|1h": {
-    "symbol": "CTRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T13:05:10.013423+00:00"
-  },
-  "TSMUSDT|4h": {
-    "symbol": "TSMUSDT",
-    "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T13:05:10.567056+00:00"
-  },
-  "ETCUSDT|1h": {
-    "symbol": "ETCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T14:04:12.742640+00:00"
   },
   "SOXSUSDT|1h": {
     "symbol": "SOXSUSDT",

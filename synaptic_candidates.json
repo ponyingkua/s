@@ -23460,5 +23460,28 @@
     "tp": 2322.119814,
     "tp1": 2367.097674,
     "scanned_at": "2026-09-16T01:03:36.553274+00:00"
+  },
+  {
+    "symbol": "INTWUSDT",
+    "direction": "SHORT",
+    "score": 65.2,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (39) menguatkan momentum turun",
+      "ADX (29.6) tren kuat (+9.2 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 21.12,
+    "sl": 22.814547,
+    "tp": 18.069816,
+    "tp1": 19.425453,
+    "scanned_at": "2026-09-16T02:03:23.120018+00:00"
   }
 ]
