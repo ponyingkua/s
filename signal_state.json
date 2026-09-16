@@ -34,24 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T00:04:56.865287+00:00"
   },
-  "STRKUSDT|1h": {
-    "symbol": "STRKUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T19:03:43.870383+00:00"
-  },
-  "PENGUUSDT|1h": {
-    "symbol": "PENGUUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T19:03:45.181797+00:00"
-  },
-  "BCHUSDT|1h": {
-    "symbol": "BCHUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T19:03:46.264930+00:00"
-  },
   "EGLDUSDT|4h": {
     "symbol": "EGLDUSDT",
     "timeframe": "4h",
@@ -158,7 +140,7 @@
     "symbol": "GIGGLEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-16T01:04:30.086022+00:00"
+    "timestamp": "2026-09-16T07:05:22.579098+00:00"
   },
   "ETHUSDT_261225|1h": {
     "symbol": "ETHUSDT_261225",
@@ -267,5 +249,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T06:05:20.427128+00:00"
+  },
+  "USELESSUSDT|1h": {
+    "symbol": "USELESSUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T07:05:18.119008+00:00"
+  },
+  "TRUMPUSDT|1h": {
+    "symbol": "TRUMPUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T07:05:19.998854+00:00"
+  },
+  "0GUSDT|1h": {
+    "symbol": "0GUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T07:05:21.332420+00:00"
+  },
+  "DEXEUSDT|1h": {
+    "symbol": "DEXEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T07:05:23.313673+00:00"
   }
 }
