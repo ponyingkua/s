@@ -10,29 +10,11 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
   },
-  "AAVEUSDT|1h": {
-    "symbol": "AAVEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T10:04:40.466066+00:00"
-  },
-  "TQQQUSDT|15m": {
-    "symbol": "TQQQUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T11:04:03.119482+00:00"
-  },
   "PEOPLEUSDT|1h": {
     "symbol": "PEOPLEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T17:03:55.606542+00:00"
-  },
-  "OPUSDT|1h": {
-    "symbol": "OPUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T11:04:05.380490+00:00"
   },
   "DRAMUSDT|1h": {
     "symbol": "DRAMUSDT",
@@ -116,7 +98,7 @@
     "symbol": "ARXUSDT",
     "timeframe": "1h",
     "direction": "LONG",
-    "timestamp": "2026-09-16T18:05:02.419528+00:00"
+    "timestamp": "2026-09-16T23:04:12.722660+00:00"
   },
   "RAYSOLUSDT|1h": {
     "symbol": "RAYSOLUSDT",
@@ -165,5 +147,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-16T22:04:01.873498+00:00"
+  },
+  "HOODUSDT|1h": {
+    "symbol": "HOODUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T23:04:15.093716+00:00"
+  },
+  "MSTRUSDT|1h": {
+    "symbol": "MSTRUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T23:04:16.476172+00:00"
   }
 }
