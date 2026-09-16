@@ -23483,5 +23483,119 @@
     "tp": 18.069816,
     "tp1": 19.425453,
     "scanned_at": "2026-09-16T02:03:23.120018+00:00"
+  },
+  {
+    "symbol": "PAXGUSDT",
+    "direction": "LONG",
+    "score": 78.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (21.9) tren kuat (+1.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 4324.69,
+    "sl": 4275.933235,
+    "tp": 4412.452177,
+    "tp1": 4373.446765,
+    "scanned_at": "2026-09-16T03:03:26.076023+00:00"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "ADX (37.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 75853.1,
+    "sl": 77323.353778,
+    "tp": 73206.6432,
+    "tp1": 74382.846222,
+    "scanned_at": "2026-09-16T03:03:26.076023+00:00"
+  },
+  {
+    "symbol": "TRXUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "ADX (39.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.33275,
+    "sl": 0.334777,
+    "tp": 0.329101,
+    "tp1": 0.330723,
+    "scanned_at": "2026-09-16T03:03:26.076023+00:00"
+  },
+  {
+    "symbol": "SUIUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "ADX (40.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.6885,
+    "sl": 0.713633,
+    "tp": 0.64326,
+    "tp1": 0.663367,
+    "scanned_at": "2026-09-16T03:03:26.076023+00:00"
+  },
+  {
+    "symbol": "VIRTUALUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "ADX (42.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.5889,
+    "sl": 0.612322,
+    "tp": 0.54674,
+    "tp1": 0.565478,
+    "scanned_at": "2026-09-16T03:03:26.076023+00:00"
   }
 ]

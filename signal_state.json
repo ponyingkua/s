@@ -86,7 +86,7 @@
     "symbol": "BTCUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T17:04:15.898070+00:00"
+    "timestamp": "2026-09-16T03:04:19.086392+00:00"
   },
   "LTCUSDT|1h": {
     "symbol": "LTCUSDT",
@@ -140,7 +140,7 @@
     "symbol": "VIRTUALUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T21:04:19.503256+00:00"
+    "timestamp": "2026-09-16T03:04:21.820862+00:00"
   },
   "WLDUSDT|1h": {
     "symbol": "WLDUSDT",
@@ -237,5 +237,23 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T01:04:30.797273+00:00"
+  },
+  "PAXGUSDT|1h": {
+    "symbol": "PAXGUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T03:04:16.063723+00:00"
+  },
+  "TRXUSDT|1h": {
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T03:04:19.802951+00:00"
+  },
+  "SUIUSDT|1h": {
+    "symbol": "SUIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T03:04:20.537244+00:00"
   }
 }
