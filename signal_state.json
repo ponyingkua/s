@@ -34,18 +34,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T03:04:21.820862+00:00"
   },
-  "AKEUSDT|1h": {
-    "symbol": "AKEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T22:04:17.105092+00:00"
-  },
-  "VTHOUSDT|1h": {
-    "symbol": "VTHOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T22:04:19.022778+00:00"
-  },
   "QCOMUSDT|1h": {
     "symbol": "QCOMUSDT",
     "timeframe": "1h",
@@ -285,5 +273,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T09:04:28.611364+00:00"
+  },
+  "AAVEUSDT|1h": {
+    "symbol": "AAVEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T10:04:40.466066+00:00"
   }
 }

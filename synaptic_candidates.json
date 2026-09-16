@@ -24205,5 +24205,28 @@
     "tp": 0.386487,
     "tp1": 0.397471,
     "scanned_at": "2026-09-16T09:03:20.907362+00:00"
+  },
+  {
+    "symbol": "AAVEUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (36) menguatkan momentum turun",
+      "ADX (35.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 119.59,
+    "sl": 123.056888,
+    "tp": 113.349601,
+    "tp1": 116.123112,
+    "scanned_at": "2026-09-16T10:03:35.243467+00:00"
   }
 ]
