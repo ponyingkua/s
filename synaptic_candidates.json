@@ -24297,5 +24297,97 @@
     "tp": 0.087317,
     "tp1": 0.089723,
     "scanned_at": "2026-09-16T11:03:25.238151+00:00"
+  },
+  {
+    "symbol": "DRAMUSDT",
+    "direction": "LONG",
+    "score": 81.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (25.0) tren kuat (+4.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 56.44,
+    "sl": 55.428716,
+    "tp": 58.260311,
+    "tp1": 57.451284,
+    "scanned_at": "2026-09-16T12:04:15.805268+00:00"
+  },
+  {
+    "symbol": "EWYUSDT",
+    "direction": "LONG",
+    "score": 80.3,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "ADX (24.1) tren kuat (+3.3 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 179.72,
+    "sl": 177.644225,
+    "tp": 183.456394,
+    "tp1": 181.795775,
+    "scanned_at": "2026-09-16T12:04:15.805268+00:00"
+  },
+  {
+    "symbol": "KORUUSDT",
+    "direction": "LONG",
+    "score": 80.1,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (59) menguatkan momentum naik",
+      "ADX (23.9) tren kuat (+3.1 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 19.58,
+    "sl": 18.904004,
+    "tp": 20.796793,
+    "tp1": 20.255996,
+    "scanned_at": "2026-09-16T12:04:15.805268+00:00"
+  },
+  {
+    "symbol": "DELLUSDT",
+    "direction": "LONG",
+    "score": 70.2,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (31.5) tren kuat (+11.2 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 558.1,
+    "sl": 546.63094,
+    "tp": 578.744308,
+    "tp1": 569.56906,
+    "scanned_at": "2026-09-16T12:04:15.805268+00:00"
   }
 ]
