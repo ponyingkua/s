@@ -4,41 +4,11 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "ASTERUSDT|1h": {
-    "symbol": "ASTERUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T08:04:33.932233+00:00"
-  },
   "GIGGLEUSDT|1h": {
     "symbol": "GIGGLEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
-  },
-  "HUSDT|1h": {
-    "symbol": "HUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T08:04:31.156290+00:00"
-  },
-  "KAVAUSDT|1h": {
-    "symbol": "KAVAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T08:04:32.580425+00:00"
-  },
-  "MVLLUSDT|4h": {
-    "symbol": "MVLLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T08:04:35.195186+00:00"
-  },
-  "BNBUSDT|1h": {
-    "symbol": "BNBUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T08:04:36.402163+00:00"
   },
   "XLMUSDT|1h": {
     "symbol": "XLMUSDT",
@@ -195,5 +165,11 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T20:04:24.166562+00:00"
+  },
+  "DOTUSDT|1h": {
+    "symbol": "DOTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T21:04:06.567592+00:00"
   }
 }

@@ -24833,5 +24833,29 @@
     "tp": 741.099897,
     "tp1": 747.43772,
     "scanned_at": "2026-09-16T20:03:51.745618+00:00"
+  },
+  {
+    "symbol": "DOTUSDT",
+    "direction": "LONG",
+    "score": 80.6,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (69), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (30.0) tren kuat (+9.6 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1.0078,
+    "sl": 0.955721,
+    "tp": 1.101543,
+    "tp1": 1.059879,
+    "scanned_at": "2026-09-16T21:03:23.932501+00:00"
   }
 ]
