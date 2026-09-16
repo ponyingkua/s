@@ -23597,5 +23597,119 @@
     "tp": 0.54674,
     "tp1": 0.565478,
     "scanned_at": "2026-09-16T03:03:26.076023+00:00"
+  },
+  {
+    "symbol": "COPPERUSDT",
+    "direction": "LONG",
+    "score": 78.8,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di bawah EMA200 (tapi indikator lain condong LONG)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "ADX (22.7) tren kuat (+1.8 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 6.49,
+    "sl": 6.436623,
+    "tp": 6.586079,
+    "tp1": 6.543377,
+    "scanned_at": "2026-09-16T04:03:15.096222+00:00"
+  },
+  {
+    "symbol": "AMDUSDT",
+    "direction": "LONG",
+    "score": 71.6,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (32.8) tren kuat (+12.6 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 509.0,
+    "sl": 502.134306,
+    "tp": 521.35825,
+    "tp1": 515.865694,
+    "scanned_at": "2026-09-16T04:03:15.096222+00:00"
+  },
+  {
+    "symbol": "INTWUSDT",
+    "direction": "LONG",
+    "score": 71.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (44), tidak menambah skor",
+      "ADX (28.5) tren kuat (+8.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 3.38",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 3.38 (sisa posisi)"
+    ],
+    "entry": 21.53,
+    "sl": 20.27946,
+    "tp": 25.76,
+    "tp1": 22.78054,
+    "scanned_at": "2026-09-16T04:03:15.096222+00:00"
+  },
+  {
+    "symbol": "ETCUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (40) menguatkan momentum turun",
+      "ADX (43.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 7.213,
+    "sl": 7.382561,
+    "tp": 6.90779,
+    "tp1": 7.043439,
+    "scanned_at": "2026-09-16T04:03:15.096222+00:00"
+  },
+  {
+    "symbol": "DASHUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (37) menguatkan momentum turun",
+      "ADX (36.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 50.42,
+    "sl": 52.181189,
+    "tp": 47.24986,
+    "tp1": 48.658811,
+    "scanned_at": "2026-09-16T04:03:15.096222+00:00"
   }
 ]

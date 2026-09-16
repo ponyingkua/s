@@ -7,8 +7,8 @@
   "INTWUSDT|4h": {
     "symbol": "INTWUSDT",
     "timeframe": "4h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T02:04:30.522124+00:00"
+    "direction": "LONG",
+    "timestamp": "2026-09-16T04:03:49.699462+00:00"
   },
   "POWERUSDT|1h": {
     "symbol": "POWERUSDT",
@@ -33,12 +33,6 @@
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T01:04:27.630697+00:00"
-  },
-  "SOXSUSDT|1h": {
-    "symbol": "SOXSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T15:04:47.161711+00:00"
   },
   "SOXSUSDT|4h": {
     "symbol": "SOXSUSDT",
@@ -255,5 +249,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T03:04:20.537244+00:00"
+  },
+  "COPPERUSDT|1h": {
+    "symbol": "COPPERUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T04:03:47.469515+00:00"
+  },
+  "AMDUSDT|1h": {
+    "symbol": "AMDUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T04:03:48.987827+00:00"
+  },
+  "ETCUSDT|1h": {
+    "symbol": "ETCUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T04:03:50.435579+00:00"
+  },
+  "DASHUSDT|1h": {
+    "symbol": "DASHUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T04:03:51.135092+00:00"
   }
 }
