@@ -222,12 +222,22 @@ def _time_axis_labels(df: pd.DataFrame, n_show: int, tf: str):
     step = max(m // 6, 1)
     positions = list(range(0, m, step))
     if positions[-1] != m - 1:
-        positions.append(m - 1)
+        # Guarantee the final candle is represented, but don't just tack it
+        # on: if the last regular tick is already within half a step of it,
+        # move that tick to the true last index instead of adding a second
+        # one right next to it. Appending unconditionally used to put two
+        # ticks only 1-2 candles apart at the right edge, which rendered as
+        # visibly cramped or even literally duplicated labels (e.g. "21:15"
+        # immediately followed by "21:30", or "15 Sep" printed twice).
+        if step > 1 and (m - 1 - positions[-1]) < step / 2:
+            positions[-1] = m - 1
+        else:
+            positions.append(m - 1)
     labels = [pd.Timestamp(ts[p]).strftime(fmt) for p in positions]
 
     dedup_pos, dedup_lab = [], []
-    for i, (pos, lab) in enumerate(zip(positions, labels)):
-        if dedup_lab and lab == dedup_lab[-1] and i != len(positions) - 1:
+    for pos, lab in zip(positions, labels):
+        if dedup_lab and lab == dedup_lab[-1]:
             continue
         dedup_pos.append(pos)
         dedup_lab.append(lab)
@@ -493,6 +503,20 @@ def _draw_indicators_single(
     legend EMA/BB ditaruh di kiri supaya tidak menumpuk dgn label S/R di
     kanan. Dipakai oleh KEDUA build_single_mtfk_chart (1 panel) dan
     build_mtfk_chart (tiap blok TF di chart multi-timeframe)."""
+    # BUG yang diperbaiki: n_show di sini dulu dipakai APA ADANYA (nilai
+    # nominal dari get_candles_shown, mis. 60 utk "1h") padahal candle yang
+    # BENAR-BENAR digambar pemanggil cuma sebanyak len(plot_df) =
+    # len(df.tail(n_show)) - kalau df yang di-fetch kebetulan lebih pendek
+    # dari n_show (mis. simbol baru listing dgn histori < 60 kline, atau tf
+    # custom yang tidak ada di MAX_CANDLES_BY_TF sehingga jatuh ke default
+    # 120), maka x=range(n_show) (n_show titik) dipasangkan dgn array
+    # EMA/BB hasil `.tail(n_show)` yang panjangnya cuma len(df) (< n_show)
+    # -> matplotlib ValueError ("x and y must have same first dimension")
+    # dan chart gagal dibuat. `last_x`/marker S-R/titik arah LONG-SHORT yang
+    # dihitung dari n_show mentah juga jadi meleset dari posisi candle
+    # terakhir yang sebenarnya. Clamp sekali di sini menyelaraskan SEMUA
+    # pemakaian n_show di bawah dgn jumlah candle yang benar-benar tampil.
+    n_show = min(n_show, len(df))
     last_x = n_show - 1
     # marker (segitiga) nempel tepat di ujung ruang kosong (dekat candle
     # terakhir), teks nilai S/R nempel ke tepi kanan chart - keduanya pakai
