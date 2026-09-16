@@ -125,6 +125,57 @@ def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
     return sh, sl
 
 
+def _rsi_divergence(df: pd.DataFrame, rsi: pd.Series, lookback: int = 50) -> str | None:
+    """Classic 2-point RSI/price divergence, checked against the last two
+    confirmed swing highs (bearish) and swing lows (bullish) within the
+    most recent `lookback` candles.
+
+    Bearish: price prints a higher high while RSI prints a lower high at
+    that same high -> upside momentum is fading even as price still rises.
+    Bullish: price prints a lower low while RSI prints a higher low ->
+    downside momentum is fading even as price still falls.
+
+    Only counted when at least one of the two RSI readings is already in
+    the same momentum zone used elsewhere in this file for RSI scoring
+    (>=55 bullish zone boundary / <=45 bearish zone boundary) - divergence
+    sitting entirely inside the 45-55 no-man's-land is too weak to be a
+    meaningful signal and would mostly just add noise.
+
+    Returns "bullish", "bearish", or None (including when both fire at
+    once, which is not a clean read).
+    """
+    n = min(lookback, len(df))
+    if n < 12:
+        return None
+    x = df.tail(n).reset_index(drop=True)
+    rsi_x = rsi.tail(n).reset_index(drop=True)
+    sh, sl = _swing_points(x, 3, 3)
+
+    bearish = False
+    if len(sh) >= 2:
+        (i1, p1), (i2, p2) = sh[-2], sh[-1]
+        raw1, raw2 = rsi_x.iloc[i1], rsi_x.iloc[i2]
+        if pd.notna(raw1) and pd.notna(raw2):
+            r1, r2 = float(raw1), float(raw2)
+            if p2 > p1 and r2 < r1 and max(r1, r2) >= 55:
+                bearish = True
+
+    bullish = False
+    if len(sl) >= 2:
+        (i1, p1), (i2, p2) = sl[-2], sl[-1]
+        raw1, raw2 = rsi_x.iloc[i1], rsi_x.iloc[i2]
+        if pd.notna(raw1) and pd.notna(raw2):
+            r1, r2 = float(raw1), float(raw2)
+            if p2 < p1 and r2 > r1 and min(r1, r2) <= 45:
+                bullish = True
+
+    if bullish and not bearish:
+        return "bullish"
+    if bearish and not bullish:
+        return "bearish"
+    return None
+
+
 def _levels(df: pd.DataFrame, lookback: int = 100):
     x = df.tail(min(lookback, len(df)))
     sh, sl = _swing_points(x, 2, 2)
@@ -278,6 +329,15 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
     else:
         notes.append("RSI not available (flat price over lookback window).")
 
+    if r is not None:
+        divergence = _rsi_divergence(df, rsi)
+        if divergence == "bullish":
+            bull += 0.8
+            notes.append("Bullish RSI divergence: price made a lower low while RSI made a higher low.")
+        elif divergence == "bearish":
+            bear += 0.8
+            notes.append("Bearish RSI divergence: price made a higher high while RSI made a lower high.")
+
     h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
     hp = float(hist.iloc[-2]) if pd.notna(hist.iloc[-2]) else None
     if h is not None and hp is not None:
@@ -313,8 +373,10 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
                 bear += 1.0
                 notes.append(f"Volume expansion confirms the latest downward candle ({vr:.1f}x average).")
         elif vr >= 1.15:
-            bull += 0.35 if up else 0
-            bear += 0.35 if not up else 0
+            if up:
+                bull += 0.35
+            else:
+                bear += 0.35
 
     if len(obv) >= 12:
         delta = float(obv.iloc[-1] - obv.iloc[-12])
@@ -405,12 +467,11 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
         slope20 = _ema_slope(ema20)
         _, _, hist = _macd(df["close"])
         h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else 0.0
-        hp = float(hist.iloc[-2]) if len(hist) > 1 and pd.notna(hist.iloc[-2]) else 0.0
         rsi = _rsi(df["close"])
         r = float(rsi.iloc[-1]) if pd.notna(rsi.iloc[-1]) else 50.0
 
         if bull_bias and structure["label"] == "BULLISH":
-            momentum_ok = slope20 > 0 and h >= 0 and not (h < hp and h < 0.0)
+            momentum_ok = slope20 > 0 and h >= 0
             rsi_ok = r < 75
             atr_ok = True
             if direction.get("atr_pct") is not None and direction["atr_pct"] < 0.30:
@@ -422,7 +483,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
         elif bear_bias and structure["label"] == "BEARISH":
-            momentum_ok = slope20 < 0 and h <= 0 and not (h > hp and h > 0.0)
+            momentum_ok = slope20 < 0 and h <= 0
             rsi_ok = r > 25
             atr_ok = True
             if direction.get("atr_pct") is not None and direction["atr_pct"] < 0.30:
@@ -434,6 +495,13 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
+    # NOTE: setup type only ever gets one of 4 fixed scores here -
+    # BREAKOUT/BREAKDOWN 3.0, PULLBACK/RETEST 2.6, REJECTION 2.5,
+    # CONTINUATION 2.2 - so with the >=2.0 cutoff below, "LOW" is currently
+    # unreachable in practice (and so is _select_best_setup's "weak" pool
+    # fallback, which only fires on LOW/score<2.0). Not a bug - nothing
+    # downstream assumes LOW ever occurs - but worth knowing before
+    # treating that branch as an active filter.
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
 
@@ -566,6 +634,9 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
     }
 
 
+MTF_AGREE_BONUS = 0.5  # ranking-only bonus per other timeframe agreeing on direction; see _select_best_setup
+
+
 def _select_best_setup(per_tf: dict):
     candidates = []
     weak = []
@@ -577,7 +648,8 @@ def _select_best_setup(per_tf: dict):
             continue
         strength = abs(da["bull"] - da["bear"])
         agree = len(info.get("mtf_agree_tfs", []))
-        row = ((su["score"], strength, agree), tf, info)
+        rank_score = su["score"] + MTF_AGREE_BONUS * agree
+        row = ((rank_score, strength), tf, info)
         if su.get("quality") == "LOW" or su.get("score", 0) < 2.0:
             weak.append(row)
         else:
