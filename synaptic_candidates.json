@@ -24389,5 +24389,29 @@
     "tp": 578.744308,
     "tp1": 569.56906,
     "scanned_at": "2026-09-16T12:04:15.805268+00:00"
+  },
+  {
+    "symbol": "BOMEUSDT",
+    "direction": "LONG",
+    "score": 88.2,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (24.0) tren kuat (+3.2 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.000883,
+    "sl": 0.000862,
+    "tp": 0.000922,
+    "tp1": 0.000905,
+    "scanned_at": "2026-09-16T13:05:01.347524+00:00"
   }
 ]
