@@ -10,18 +10,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
   },
-  "XLMUSDT|1h": {
-    "symbol": "XLMUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T09:04:26.471801+00:00"
-  },
-  "JTOUSDT|1h": {
-    "symbol": "JTOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T09:04:28.611364+00:00"
-  },
   "AAVEUSDT|1h": {
     "symbol": "AAVEUSDT",
     "timeframe": "1h",
@@ -171,5 +159,11 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-16T21:04:06.567592+00:00"
+  },
+  "ASTERUSDT|1h": {
+    "symbol": "ASTERUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T22:04:01.873498+00:00"
   }
 }
