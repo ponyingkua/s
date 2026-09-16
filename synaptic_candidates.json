@@ -24413,5 +24413,51 @@
     "tp": 0.000922,
     "tp1": 0.000905,
     "scanned_at": "2026-09-16T13:05:01.347524+00:00"
+  },
+  {
+    "symbol": "QQQUSDT",
+    "direction": "LONG",
+    "score": 88.7,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (68) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (24.5) tren kuat (+3.7 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 710.95,
+    "sl": 708.254566,
+    "tp": 715.801782,
+    "tp1": 713.645434,
+    "scanned_at": "2026-09-16T14:04:16.306826+00:00"
+  },
+  {
+    "symbol": "GIGGLEUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "ADX (37.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 33.49,
+    "sl": 34.301821,
+    "tp": 32.028722,
+    "tp1": 32.678179,
+    "scanned_at": "2026-09-16T14:04:16.306826+00:00"
   }
 ]
