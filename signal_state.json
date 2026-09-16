@@ -10,18 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-16T04:03:49.699462+00:00"
   },
-  "BTCUSDT|1h": {
-    "symbol": "BTCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T03:04:19.086392+00:00"
-  },
-  "VIRTUALUSDT|1h": {
-    "symbol": "VIRTUALUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T03:04:21.820862+00:00"
-  },
   "ASTERUSDT|1h": {
     "symbol": "ASTERUSDT",
     "timeframe": "1h",
@@ -33,24 +21,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
-  },
-  "PAXGUSDT|1h": {
-    "symbol": "PAXGUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T03:04:16.063723+00:00"
-  },
-  "TRXUSDT|1h": {
-    "symbol": "TRXUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T03:04:19.802951+00:00"
-  },
-  "SUIUSDT|1h": {
-    "symbol": "SUIUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T03:04:20.537244+00:00"
   },
   "COPPERUSDT|1h": {
     "symbol": "COPPERUSDT",
@@ -255,5 +225,23 @@
     "timeframe": "15m",
     "direction": "LONG",
     "timestamp": "2026-09-16T14:05:21.658336+00:00"
+  },
+  "INTWUSDT|1h": {
+    "symbol": "INTWUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T15:04:59.462839+00:00"
+  },
+  "INTCUSDT|1h": {
+    "symbol": "INTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T15:05:00.964530+00:00"
+  },
+  "LSKUSDT|1h": {
+    "symbol": "LSKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T15:05:02.370452+00:00"
   }
 }
