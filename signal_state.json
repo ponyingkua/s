@@ -16,41 +16,11 @@
     "direction": "LONG",
     "timestamp": "2026-09-15T20:04:54.746338+00:00"
   },
-  "MRVLUSDT|4h": {
-    "symbol": "MRVLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T18:04:32.343517+00:00"
-  },
-  "ATOMUSDT|4h": {
-    "symbol": "ATOMUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T17:04:11.574208+00:00"
-  },
   "SKHYNIXUSDT|4h": {
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T01:04:27.630697+00:00"
-  },
-  "CROSSUSDT|1h": {
-    "symbol": "CROSSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-15T17:04:09.984006+00:00"
-  },
-  "BTCUSDT_260925|1h": {
-    "symbol": "BTCUSDT_260925",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T17:04:13.064015+00:00"
-  },
-  "BTCUSDT_261225|1h": {
-    "symbol": "BTCUSDT_261225",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T17:04:14.484575+00:00"
   },
   "BTCUSDT|1h": {
     "symbol": "BTCUSDT",
@@ -63,18 +33,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T00:04:56.865287+00:00"
-  },
-  "LDOUSDT|1h": {
-    "symbol": "LDOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T18:04:30.463334+00:00"
-  },
-  "APTUSDT|1h": {
-    "symbol": "APTUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-15T18:04:31.105562+00:00"
   },
   "STRKUSDT|1h": {
     "symbol": "STRKUSDT",
@@ -279,5 +237,35 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T05:03:40.643009+00:00"
+  },
+  "LINKUSDT|1h": {
+    "symbol": "LINKUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T06:05:14.540121+00:00"
+  },
+  "1000FLOKIUSDT|1h": {
+    "symbol": "1000FLOKIUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T06:05:17.446601+00:00"
+  },
+  "ONDOUSDT|1h": {
+    "symbol": "ONDOUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T06:05:18.246820+00:00"
+  },
+  "MIRAUSDT|1h": {
+    "symbol": "MIRAUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T06:05:19.644706+00:00"
+  },
+  "COINUSDT|1h": {
+    "symbol": "COINUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T06:05:20.427128+00:00"
   }
 }
