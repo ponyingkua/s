@@ -207,5 +207,11 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T17:03:56.083956+00:00"
+  },
+  "ARXUSDT|1h": {
+    "symbol": "ARXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T18:05:02.419528+00:00"
   }
 }

@@ -24645,5 +24645,28 @@
     "tp": 0.068957,
     "tp1": 0.070621,
     "scanned_at": "2026-09-16T17:03:18.388040+00:00"
+  },
+  {
+    "symbol": "ARXUSDT",
+    "direction": "LONG",
+    "score": 66.3,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (27.8) tren kuat (+7.3 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.1673,
+    "sl": 0.157435,
+    "tp": 0.185058,
+    "tp1": 0.177165,
+    "scanned_at": "2026-09-16T18:03:59.774830+00:00"
   }
 ]
