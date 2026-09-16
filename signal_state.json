@@ -32,7 +32,7 @@
     "symbol": "SKHYNIXUSDT",
     "timeframe": "4h",
     "direction": "SHORT",
-    "timestamp": "2026-09-15T20:04:56.274545+00:00"
+    "timestamp": "2026-09-16T01:04:27.630697+00:00"
   },
   "METAUSDT|15m": {
     "symbol": "METAUSDT",
@@ -237,5 +237,29 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T00:05:00.466826+00:00"
+  },
+  "SAGAUSDT|1h": {
+    "symbol": "SAGAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T01:04:25.268750+00:00"
+  },
+  "GRAMUSDT|1h": {
+    "symbol": "GRAMUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T01:04:28.857527+00:00"
+  },
+  "GIGGLEUSDT|1h": {
+    "symbol": "GIGGLEUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T01:04:30.086022+00:00"
+  },
+  "ETHUSDT_261225|1h": {
+    "symbol": "ETHUSDT_261225",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T01:04:30.797273+00:00"
   }
 }
