@@ -24668,5 +24668,53 @@
     "tp": 0.185058,
     "tp1": 0.177165,
     "scanned_at": "2026-09-16T18:03:59.774830+00:00"
+  },
+  {
+    "symbol": "RAYSOLUSDT",
+    "direction": "LONG",
+    "score": 88.1,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (33.2) tren kuat (+13.1 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1.3876,
+    "sl": 1.295705,
+    "tp": 1.553012,
+    "tp1": 1.479495,
+    "scanned_at": "2026-09-16T19:03:14.684086+00:00"
+  },
+  {
+    "symbol": "XMRUSDT",
+    "direction": "SHORT",
+    "score": 69.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di bawah EMA200 (downtrend)",
+      "MACD line di bawah signal line (momentum turun)",
+      "Supertrend menunjukkan uptrend (tapi indikator lain condong SHORT)",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (41) menguatkan momentum turun",
+      "Volume spike terdeteksi tapi arah candle tidak sesuai sinyal \u2014 diabaikan",
+      "ADX (37.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-2 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 494.54,
+    "sl": 508.282161,
+    "tp": 469.804111,
+    "tp1": 480.797839,
+    "scanned_at": "2026-09-16T19:03:14.684086+00:00"
   }
 ]

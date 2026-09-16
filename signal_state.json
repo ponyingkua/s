@@ -16,36 +16,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
   },
-  "LINKUSDT|1h": {
-    "symbol": "LINKUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T06:05:14.540121+00:00"
-  },
-  "1000FLOKIUSDT|1h": {
-    "symbol": "1000FLOKIUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T06:05:17.446601+00:00"
-  },
-  "ONDOUSDT|1h": {
-    "symbol": "ONDOUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T06:05:18.246820+00:00"
-  },
-  "MIRAUSDT|1h": {
-    "symbol": "MIRAUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T06:05:19.644706+00:00"
-  },
-  "COINUSDT|1h": {
-    "symbol": "COINUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T06:05:20.427128+00:00"
-  },
   "USELESSUSDT|1h": {
     "symbol": "USELESSUSDT",
     "timeframe": "1h",
@@ -213,5 +183,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-16T18:05:02.419528+00:00"
+  },
+  "RAYSOLUSDT|1h": {
+    "symbol": "RAYSOLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T19:03:49.577558+00:00"
+  },
+  "XMRUSDT|1h": {
+    "symbol": "XMRUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T19:03:51.298246+00:00"
   }
 }
