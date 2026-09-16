@@ -4,12 +4,6 @@
     "started_at": "2026-09-06T02:36:18.020984+00:00",
     "signal_count": 0
   },
-  "INTWUSDT|4h": {
-    "symbol": "INTWUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T04:03:49.699462+00:00"
-  },
   "ASTERUSDT|1h": {
     "symbol": "ASTERUSDT",
     "timeframe": "1h",
@@ -21,30 +15,6 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T14:05:23.271562+00:00"
-  },
-  "COPPERUSDT|1h": {
-    "symbol": "COPPERUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T04:03:47.469515+00:00"
-  },
-  "AMDUSDT|1h": {
-    "symbol": "AMDUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T04:03:48.987827+00:00"
-  },
-  "ETCUSDT|1h": {
-    "symbol": "ETCUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T04:03:50.435579+00:00"
-  },
-  "DASHUSDT|1h": {
-    "symbol": "DASHUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T04:03:51.135092+00:00"
   },
   "HOMEUSDT|1h": {
     "symbol": "HOMEUSDT",
@@ -243,5 +213,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-16T15:05:02.370452+00:00"
+  },
+  "DELLUSDT|4h": {
+    "symbol": "DELLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-16T16:05:11.931667+00:00"
+  },
+  "KASUSDT|1h": {
+    "symbol": "KASUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-16T16:05:16.146148+00:00"
   }
 }
