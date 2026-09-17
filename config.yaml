@@ -43,10 +43,6 @@ scoring:
     rsi_confluence: 18
     mtf_agreement: 20
     adx_strength: 15
-  # setup_bonus di-lookup lewat get_setup_bonus() di scanner.py, precedence:
-  # [timeframe][direction][setup] > [timeframe][setup] > [direction][setup] > [setup].
-  # Nilai hasil tuning dari backtest gabungan trades-raw-batch-{15m,1h,4h}.json
-  # (8 simbol aktif, 19 Feb-6 Sep 2026) — in-sample satu window, cek ulang tiap ada data baru.
   setup_bonus:
     breakout: 8
     pullback: 0
@@ -57,16 +53,10 @@ scoring:
     short:
       extended: 3
     "15m":
-      pullback: -9   # tetap berlaku untuk SHORT (n=10, avg R -0.03 — masih tipis, belum diubah)
+      pullback: -9
       long:
         extended: -40
         breakout: -8
-        # LONG pullback 15m dua-puncak seperti 1h short-extended: skor 65-75
-        # avg R -0.22 (n=23) vs skor 75-85 avg R +0.75 (n=9). Flat -9 (baris di
-        # atas) kurang tajam untuk LONG -> override lebih dalam supaya klaster
-        # lemah tersaring. Simulasi: n=18, avg R +0.44, win 44.4% (dari n=36,
-        # avg R +0.04, win 33.3%). n makin turun jadi terlalu tipis untuk
-        # penalti lebih dalam lagi (di -20 avg R malah balik negatif, n=4).
         pullback: -17
       short:
         extended: -8
@@ -74,284 +64,42 @@ scoring:
     "1h":
       breakout: 16
       short:
-        breakout: -20   # -10 sebelumnya TIDAK CUKUP: validasi 694 trade (21 Feb-8
-        # Sep 2026, trades_raw_batch.json) tunjukkan BREAKOUT SHORT masih avg R
-        # -0.743, win 0% (n=10 -- SELURUH populasi yang lolos threshold 65 lama,
-        # bukan sampel sebagian; base_score-nya 75.4-83.0, semua turun di bawah
-        # 65 dgn bonus -20 sehingga tersaring threshold flat). n kecil (10),
-        # tapi win rate 0% di seluruh populasi cukup mencolok utk didalami --
-        # cek ulang kalau n bertambah, terutama kalau muncul win pertama.
-        # 6 sebelumnya (avg R +0.21, n=70) tidak lagi konsisten di data terbaru:
-        # keseluruhan turun ke avg R +0.02 (n=127), 58% dari semua sinyal 1h.
-        # Breakdown skor jelas dua-puncak (65-70: R -0.40 n=31; 70-75: R -0.04 n=36;
-        # 75-80: R +0.33 n=56) -> bonus diturunkan ke -2 supaya klaster lemah di
-        # bawah ambang tersaring, klaster 75-80 yang bagus tetap lolos.
-        # Hasil simulasi n=74, avg R +0.31, win 47.3% (dari n=127, avg R +0.02, win 35.4%).
+        breakout: -20
         extended: -2
-        pullback: -22    # -6 sebelumnya belum cukup: masih avg R -0.27 (n=16), makin buruk di skor tinggi
+        pullback: -22
       long:
-        # PULLBACK LONG 1h sebelumnya TIDAK PUNYA override (fallback ke
-        # pullback:0 flat) -- padahal ini KONTRIBUTOR KERUGIAN TERBESAR di
-        # seluruh populasi 1h: 1226 trade (8 Aug 2025-12 Sep 2026, 10 simbol,
-        # trades_raw_batch.json), PULLBACK LONG n=335 (27.3% populasi) avg R
-        # -0.147, win 20.6%, sumR -49.4 -- sendirian lebih besar dari sumR
-        # NEGATIF SEMUA kategori 1h lainnya digabung (overall sumR cuma -36.9).
-        #
-        # BEDA dari 15m: breakdown skor TIDAK monoton membaik di skor tinggi
-        # (pola yang biasanya jadi alasan pakai threshold/band, bukan penalti
-        # flat dalam) -- di sini pola KEBALIKANNYA:
-        #   65-70: n=59  avg R +0.061  win 32.2%  <- satu-satunya bucket tebal yg positif
-        #   70-75: n=62  avg R -0.143  win 17.7%
-        #   75-80: n=65  avg R -0.221  win 12.3%
-        #   80-85: n=92  avg R -0.133  win 23.9%
-        #   85-90: n=52  avg R -0.283  win 15.4%
-        # (bucket >=100 n<=4, terlalu tipis)
-        # Simulasi berbagai penalti (re-filter skor+penalti >= min_score 65)
-        # SEMUA masih net negatif -- penalti dangkal (-8 s/d -20) cuma
-        # menggeser populasi tanpa memperbaiki avg R (-0.20 s/d -0.31 di semua
-        # titik), TIDAK ADA subset skor yang konsisten positif untuk
-        # diselamatkan lewat threshold sendirian. Breakdown per simbol juga
-        # rata (8 dari 10 simbol negatif, LINK & BNB positif tipis) --
-        # bukan masalah satu koin.
-        #
-        # -45 dipilih untuk MENYARING HAMPIR SELURUH populasi (cuma sisa 4
-        # trade skor 107.6-108 di data ini, semua di luar rentang skor wajar
-        # -- bukan strategi "cari ambang optimal" krn tidak ada, ini exclusion
-        # yang disengaja sampai ada bukti subset yang benar-benar sehat).
-        # Simulasi gabungan (fix ini + extended.short band di bawah) pada
-        # SELURUH 1226 trade 1h: overall avg R -0.030 -> +0.027 (sumR -36.9 ->
-        # +23.1), n tersisa 870 (71.0%). BELUM di-backtest ulang lewat
-        # backtest.py sungguhan (angka di atas dari re-filter trade existing)
-        # -- jalankan itu dulu sebelum live, dan cek ulang kalau require_rsi_turn
-        # di pullback_confirmation pernah dicoba (belum, lihat catatan di
-        # setup_engine.pullback_confirmation) karena bisa jadi jalan keluar
-        # lain yang tidak sekadar membuang volume.
         pullback: -45
     "4h":
       continuation: -35
       breakout: 0
       long:
-        breakout: -20   # KOREKSI dari revisi sebelumnya: sempat dihapus
-        # (fallback ke breakout:0) berdasarkan n=8 (avg R +0.18, kelihatan
-        # spt "sweet-spot" di skor tengah) -- SALAH, populasi n=8 itu
-        # terlalu tipis dan pola yang kelihatan tidak bertahan begitu n
-        # bertambah. Validasi ulang 65 trade 4h (8 Mar-6 Sep 2026,
-        # trades_raw_batch.json, breakout:0 aktif saat data ini terkumpul):
-        # BREAKOUT LONG n=26 (naik dari 8 setelah penalti lama dihapus,
-        # lebih banyak trade lolos threshold) avg R turun ke -0.222 --
-        # kontributor kerugian TERBESAR di semua kategori 4h saat itu.
-        # Breakdown skor jelas: 65-80 (n=20) konsisten negatif (avg R -0.4
-        # s/d -0.5), GAP KOSONG di 80-95 (tidak ada trade), 95-105 (n=6)
-        # positif avg R +0.55/+0.18. Bonus -15 s/d -30 semua menghasilkan
-        # n=6 avg R +0.424 identik (gap kosong bikin rentang ini stabil,
-        # tidak ada trade di pinggir yang tergeser) -- -20 dipilih di
-        # tengah rentang stabil itu, bukan di ekstrem. BELUM di-backtest
-        # ulang dgn nilai -20 ini -- angka di atas dari re-filter trade
-        # existing, bukan re-run backtest.py sungguhan.
-        #
-        # DIPERDALAM lagi dari -38 ke -50: 98 trade 4h (8 Agu 2025-18 Agu
-        # 2026, trades_raw_batch.json, -38 sudah aktif) -- cuma n=4 yang masih
-        # lolos, tapi 3 dari 4 nyaris full stop-loss (r_multiple -1.01 s/d
-        # -1.03), skor semuanya mepet ambang (65.4-68.2). Preseden SAMA
-        # seperti short.extended di bawah (n=3, diperdalam konservatif tanpa
-        # klaim ambang optimal) -- di sini n=4 dgn pola sama-sama nyaris
-        # seragam buruk. -50 dipilih supaya rentang skor 65-68 yang keempatnya
-        # ada di situ ikut tersaring; BUKAN hasil pencarian titik infleksi
-        # (data tidak cukup untuk itu). Cek ulang begitu n bertambah.
+        breakout: -20
         extended: -50
       short:
-        # -14 sebelumnya: n=3 saja, avg R -1.04, win 0% — sample sangat tipis,
-        # diperdalam sebagai langkah konservatif, BUKAN hasil pencarian ambang
-        # optimal (datanya tidak cukup untuk itu). Cek ulang begitu n bertambah.
         extended: -24
-  # BREAKOUT & EXTENDED: sinyal yang "disetujui" TF lain justru avg R lebih buruk
-  # (telat masuk rame-rame, bukan konfirmasi kualitas) -> dikecualikan dari bonus MTF.
   mtf_agreement_excluded_setups:
     - extended
     - breakout
-  min_score_to_trigger: 65   # naik dari 63 — sumR gabungan (8 simbol) memuncak di sekitar skor 65
-  # Opsional: override ambang per timeframe (get_min_score_to_trigger() di
-  # scanner.py). Kosong/tidak diisi = semua TF pakai min_score_to_trigger di
-  # atas (perilaku lama, tidak berubah).
-  #
-  # VALIDASI (825 trade 15m, 8 simbol, 21 Feb-8 Sep 2026, dari
-  # trades_raw_batch.json hasil config saat ini -- konfirmasi non-monotonik
-  # yang dicatat sebelumnya, sekaligus temukan titik infleksi):
-  #   score bucket   n    avg_R    win%
-  #   65-70         299  -0.117   24.7
-  #   70-75         265  -0.044   25.7
-  #   75-80          92  -0.227   17.4
-  #   80-85          55  -0.141   21.8
-  #   85-90          58  +0.246   41.4   <- infleksi mulai di sini
-  #   90-95          42  -0.109   28.6   <- turun lagi, JANGAN naikkan ambang
-  #                                          lebih tinggi dari 85 tanpa cek ulang
-  #   95-100          8  +0.473   50.0   (n terlalu tipis utk threshold sendiri)
-  #
-  # Simulasi ambang kumulatif (>=X, re-filter trade existing, TIDAK
-  # mensimulasikan ulang interaksi cooldown/max_signals_per_run/regime-episode
-  # yang berubah kalau threshold naik -- treat sebagai indikasi arah):
-  #   >=65: n=825 (100%)   avg_R=-0.077  sum_R=-63.4
-  #   >=80: n=169 (20.5%)  avg_R=+0.025  sum_R=+4.2
-  #   >=85: n=114 (13.8%)  avg_R=+0.104  sum_R=+11.9  win=36.0%  <- dipilih
-  #   >=90: n=56  (6.8%)   avg_R=-0.042  sum_R=-2.3   (turun lagi)
-  #
-  # 85 dipilih: titik terbaik dengan n masih 2 digit tebal (114), bukan cuma
-  # tepi sampel tipis. BELUM dites lewat backtest.py --batch --timeframe 15m
-  # sungguhan dengan config ini (angka di atas dari re-filter trade existing,
-  # bukan re-run penuh) -- jalankan itu dulu sebelum live, dan cek lagi kalau
-  # ada data baru karena titik infleksi bisa bergeser.
+  min_score_to_trigger: 65
   min_score_to_trigger_by_tf:
     "15m": 85
-  # Rentang skor yang dikecualikan meski sudah lolos min_score_to_trigger --
-  # lubang di tengah, bukan sekadar ambang bawah. Dicek lewat
-  # is_score_excluded() di scanner.py, di DUA titik: score_at() (pra-MTF) dan
-  # sekali lagi setelah MTF agreement bonus diterapkan di run_scan()/
-  # backtest_symbol() -- lihat komentar is_score_excluded() untuk kenapa
-  # re-check kedua itu wajib.
-  #
-  # VALIDASI (120 trade 15m, 8 simbol, 26 Feb-4 Sep 2026, dari
-  # trades_raw_batch.json hasil RE-RUN backtest.py --batch sungguhan dengan
-  # min_score_to_trigger_by_tf 15m:85 + pullback_confirmation.enabled:false
-  # di atas -- BUKAN cuma re-filter approximate seperti validasi
-  # min_score_to_trigger_by_tf):
-  #   Setelah threshold 85 diterapkan: overall avg_R masih -0.066 (belum
-  #   positif, meleset dari estimasi approximate +0.104 sebelumnya -- populasi
-  #   trade berubah signifikan krn gate pullback mati mengubah klasifikasi
-  #   setup_type/skor banyak trade, CONTINUATION+EXTENDED nyaris hilang total
-  #   krn kombinasi penalti besar + threshold 85 saling memperkuat).
-  #   BREAKOUT (n=113, 94% dari total) breakdown by score, LONG & SHORT
-  #   konsisten sama-sama anjlok di satu rentang spesifik:
-  #     85-90: n=50  avg_R=+0.191  win=38.0%
-  #     90-95: n=42  avg_R=-0.282  win=23.8%   <- lubang, LONG & SHORT sama
-  #     95-100: n=10 avg_R=+0.132  win=40.0%
-  #     100-105: n=11 avg_R=-0.287 win=9.1%    (n tipis, belum dikecualikan)
-  #
-  # is_score_excluded() TIDAK menjelaskan MEKANISME kenapa 90-95 buruk --
-  # trade JSON cuma simpan skor final, bukan breakdown komponen (trend/rsi/
-  # adx/setup_bonus terpisah), jadi tidak bisa ditelusuri dari data yang ada
-  # tanpa instrumentasi tambahan di Trade dataclass (backtest.py). ANGKA DI
-  # BAWAH INI ADALAH BAND-AID YANG DISENGAJA: exclude langsung berdasarkan
-  # pola deskriptif (konsisten LONG+SHORT, n=42 bukan super tipis), tanpa
-  # menunggu tahu penyebabnya. Cek ulang begitu ada data baru -- band ini
-  # bisa jadi cuma menutupi gejala dari sumber lain yang belum ketemu.
   excluded_score_bands:
     "15m":
       - [90, 95]
-    # 1h: dict bersarang (bukan list langsung) krn butuh presisi per
-    # setup_type+direction -- lihat is_score_excluded() utk format & precedence
-    # (ADITIF: "all" + override spesifik digabung, bukan saling menimpa).
-    #
-    # "all": [90,100] pada SKOR FINAL -- divalidasi 662 trade 1h (22 Feb-9 Sep
-    # 2026, trades_raw_batch.json, config short.breakout:-20 sudah aktif):
-    # rentang ini sekarang KOSONG (n=0) krn BREAKOUT SHORT yang dulu ngisi
-    # situ sudah tersaring duluan oleh short.breakout:-20. Dibiarkan aktif
-    # sbg guard kalau pola serupa muncul lagi di data mendatang, tidak
-    # mengubah apa pun saat ini.
-    #
-    # continuation.long: [72,82] pada SKOR FINAL -- KOREKSI dari revisi
-    # sebelumnya yang salah: klaim lama bilang band "all" [90,100] sudah
-    # menangani CONTINUATION LONG, itu SALAH -- band itu dicek di SKOR FINAL,
-    # sedangkan analisis yang mendasarinya pakai BASE SCORE (final+18, krn
-    # bonus lama continuation:-18 flat) tanpa dikonversi balik. base_score
-    # 90-100 == final_score 72-82, BUKAN final_score 90-100. Validasi ulang
-    # (data yang sama, 662 trade): CONTINUATION LONG di final_score 72-82
-    # n=70, avg R -0.288, win 20.0% -- sementara BREAKOUT LONG di RENTANG
-    # FINAL SCORE YANG SAMA n=21, avg R +0.461, win 47.6%. Kalau band ini
-    # dibuat TF-wide (spt "all"), BREAKOUT LONG yang bagus itu ikut terbuang
-    # -- makanya butuh override setup+direction spesifik, bukan flat.
-    # Precedence "tinggi=jelek" ini juga TIDAK bisa diperbaiki lewat
-    # setup_bonus/penalti flat (sudah dicoba, penalti makin dalam cuma
-    # membuang base_score RENDAH yang justru bagus, arahnya salah) --
-    # exclude band presisi adalah satu-satunya mekanisme yang cocok.
-    # BELUM di-backtest ulang dgn override baru ini -- estimasi di atas dari
-    # re-filter trade existing (n=70/n=21), bukan re-run backtest.py sungguhan.
     "1h":
       all:
         - [90, 100]
-      # continuation.long DIPERLUAS dari [72,82] ke [65,82] -- divalidasi dari
-      # RE-RUN backtest.py SUNGGUHAN (961 trade 1h, 8 Agu 2025-11 Sep 2026,
-      # trades_raw_batch.json, config dgn long.pullback:-45 di atas SUDAH
-      # aktif -- bukan re-filter approximate). Populasi CONTINUATION LONG naik
-      # dari 162->214 trade (menyerap slot yang dulu diambil PULLBACK LONG),
-      # dan hampir SELURUH sisa yang lolos [72,82] lama ternyata TETAP buruk:
-      #   final_score [65,72): n=208, avg R -0.058, win 20.2%  <- mayoritas, jelek
-      #   final_score >82:      n=6,   avg R +0.929, win 83.3% <- tipis tapi konsisten bagus
-      # Praktis CONTINUATION LONG 1h cuma sehat di atas skor 82 -- band lama
-      # [72,82] cuma membuang bagian tengah, bukan bagian yang benar-benar
-      # jelek (65-72). n=6 di ekor atas tipis, cek ulang begitu n bertambah.
       continuation:
         long:
           - [65, 82]
-      # EXTENDED SHORT 1h: mayoritas populasi (267/288 = 92.7%) ada di bucket
-      # 65-70 dan SEHAT (avg R +0.020, win 31.1%) -- TIDAK dikecualikan.
-      # Sisanya (skor >=70, n=21, 1226 trade 1h 8 Aug 2025-12 Sep 2026) justru
-      # jatuh tajam begitu lolos 70: avg R -0.429 (70-75, n=14), -1.087
-      # (75-80, n=4), -0.086 (80-85, n=3) -- pola "skor tinggi = lebih buruk"
-      # yang sama seperti continuation.long di atas, bukan sekadar noise n
-      # kecil karena konsisten negatif di 3 bucket berurutan. Band dibuka
-      # sampai 100 (bukan cuma ke skor tertinggi yang teramati, 81.0) sebagai
-      # guard kalau skor lebih tinggi muncul di data mendatang dengan pola
-      # yang sama -- tidak mengubah apa pun di bawah 70 saat ini.
-      # BELUM di-backtest ulang lewat backtest.py sungguhan (re-filter trade
-      # existing, bukan re-run) -- cek ulang begitu n bertambah.
       extended:
         short:
           - [70, 100]
-      # BREAKOUT LONG 1h: dip konsisten muncul di DUA dataset berturut-turut
-      # (sebelum & sesudah fix pullback) di rentang skor yang sama --
-      # 85-90 (n=25->31, avg R -0.288->-0.205) dan 100-110 (n=36->45,
-      # avg R -0.25 s/d -0.42 -> -0.227/-0.572), diapit dua rentang yang sehat
-      # (80-85 avg R +0.17-0.19, dan 110-120 avg R +0.06-0.51). Data terbaru
-      # (961 trade, run sama seperti continuation di atas): exclude [85,90)+
-      # [100,110] -> avg R populasi BREAKOUT LONG yang tersisa naik dari
-      # ~+0.02 jadi +0.176 (n=146 dari 222). BELUM ada teori mekanisme (data
-      # trade tidak simpan breakdown komponen skor) -- band deskriptif seperti
-      # continuation/extended.short di atas, bukan hasil analisis sebab-akibat.
-      # BELUM di-backtest ulang lewat backtest.py sungguhan dgn band ini aktif
-      # -- cek ulang begitu n bertambah, terutama gap 90-100 (sudah dikecualikan
-      # oleh "all" di atas, jangan dobel-hitung saat evaluasi ulang).
       breakout:
         long:
           - [85, 90]
           - [100, 110]
-          # [110,115) DITAMBAH -- 653 trade 1h (18 Sep 2025-17 Sep 2026, 10
-          # simbol, trades_raw_batch.json hasil RE-RUN backtest.py sungguhan
-          # dgn band [85,90]+"all"[90,100]+[100,110] & long.pullback:-45 SUDAH
-          # aktif). BREAKOUT LONG 1h n=147, overall avg R +0.183 (naik dari
-          # negatif sebelum fix pullback) -- breakdown skor di atas rentang
-          # yang sudah dikecualikan:
-          #   110-115: n=27  avg R -0.139  win 44.4%  <- dip baru, cukup tebal
-          #   115-120: n=8   avg R +0.474  win 75.0%  (tipis)
-          #   120-125: n=5   avg R -0.338  win 40.0%  (tipis)
-          # Pola sama seperti dip 85-90/100-110 sebelumnya (diapit rentang
-          # sehat 80-85 avg R +0.319 di bawah), tapi kali ini TIDAK ada teori
-          # mekanisme baru. Breakdown by symbol tidak didominasi satu koin
-          # (BTC/BNB/DOGE/LINK/AVAX/SUI semuanya turut negatif, n masing2 1-7)
-          # -- bukan gejala satu simbol. 115-120 & 120-125 SENGAJA TIDAK
-          # dikecualikan dulu (n=8/n=5 terlalu tipis, +0.474 di tengah dua
-          # rentang negatif bisa noise, bukan pola).
-          # Kalau [110,115) dikeluarkan: avg R populasi BREAKOUT LONG 1h
-          # tersisa naik dari +0.183 (n=147) jadi +0.255 (n=120).
-          # BELUM di-backtest ulang lewat backtest.py sungguhan DENGAN band
-          # baru ini aktif (angka di atas dari re-filter trade existing,
-          # sama seperti setiap penemuan baru di file ini sebelum
-          # divalidasi) -- jalankan itu dulu sebelum live, dan cek ulang
-          # begitu n bertambah, terutama ekor 115-125 yang masih tipis.
           - [110, 115]
-    # 4h: [80, 90] TF-wide (list biasa, bukan dict bersarang spt 1h) --
-    # divalidasi dari 71 trade 4h (5 Mar-3 Sep 2026, trades_raw_batch.json).
-    # BEDA KARAKTER dari 15m/1h: n jauh lebih tipis (4h candle jauh lebih
-    # jarang), dan breakdown skor PULLBACK LONG (setup dominan, n=41, avg R
-    # -0.144) TIDAK menunjukkan pola infleksi yang jelas -- kebanyakan bucket
-    # cuma n=1-4 (rawan 1 trade mengubah avg R drastis), cuma 80-85 (n=17,
-    # avg R -0.117) dan 85-90 (n=8, avg R -0.063) yang n-nya lumayan, dan
-    # keduanya negatif RINGAN, bukan ekstrem seperti kasus 90-95 (15m) atau
-    # 72-82 (1h continuation). Breakdown by symbol juga rata, tidak ada satu
-    # koin dominan. Band ini KEPUTUSAN SADAR dengan bukti lebih lemah dari
-    # band 15m/1h -- gabungan 80-90 (n=25 PULLBACK LONG + 2 trade setup lain
-    # yang kebetulan juga negatif) avg R -0.100, bukan titik infleksi tajam.
-    # Cek ulang begitu n bertambah -- rentang ini BISA BERUBAH atau ditarik
-    # sepenuhnya kalau data baru menunjukkan pola berbeda.
     "4h":
       - [80, 90]
   min_trend_alignment: 2
@@ -367,21 +115,12 @@ risk:
   structure_sl_max_atr_mult_breakout: 3.5
   reject_structural_stop_too_wide: true
   max_signals_per_regime_episode: 2
-  # TP final (di atas) tetap dihitung sama seperti sebelumnya (level struktur
-  # atau RR minimum) -- partial_tp cuma menambah TP1 di depannya supaya
-  # sebagian profit terkunci lebih awal, bukan mengganti logika TP final.
-  # Belum divalidasi lewat backtest granular (tp1_rr/tp1_close_pct masih
-  # nilai default akal-sehat) -- cek ulang avg R & win rate setelah beberapa
-  # batch backtest baru sebelum tuning lebih lanjut.
   partial_tp:
     enabled: true
-    tp1_rr: 1.0                 # TP1 di RR 1.0 (1x jarak SL), selalu < RR TP final
-    tp1_close_pct: 0.5          # tutup 50% posisi di TP1
-    move_sl_to_breakeven: true  # sisa 50% posisi: SL digeser ke entry setelah TP1 kena
-    breakeven_buffer_r: -0.05   # geser breakeven +/- sekian R dari entry (0 = pas di entry).
-    # -0.05: SL sisa posisi digeser sedikit di bawah entry (LONG) / atas entry
-    # (SHORT) setelah TP1 kena -- lebih realistis vs slippage & fee round-trip
-    # dibanding breakeven presisi di harga entry.
+    tp1_rr: 1.0
+    tp1_close_pct: 0.5
+    move_sl_to_breakeven: true
+    breakeven_buffer_r: -0.05
 
 setup_engine:
   structure_lookback: 20
@@ -389,43 +128,14 @@ setup_engine:
   pullback_atr_mult: 1.0
   breakout_buffer_atr_mult: 0.10
   extended_atr_mult: 3.2
-  # Di atas ambang ini setup diklasifikasikan OVEREXTENDED dan ditolak langsung
-  # (bukan cuma dapat bonus 0 seperti EXTENDED biasa). Belum divalidasi granular
-  # per-trade lewat backtest — default sengaja longgar, cek ulang kalau ternyata
-  # kebanyakan menolak trade sehat.
   overextended_atr_mult: 5.5
   structure_sl_buffer_atr_mult: 0.25
   target_lookback: 40
-  # Gate konfirmasi tambahan untuk PULLBACK (classify_setup -> _pullback_confirmed
-  # di scanner.py). Kalau enabled, mensyaratkan candle pemicu bergerak searah
-  # sinyal (bukan cuma "kebetulan dekat EMA") sebelum diklasifikasikan PULLBACK;
-  # gagal -> jatuh ke CONTINUATION, bukan ditolak total.
-  #
-  # DIMATIKAN (enabled: false) setelah divalidasi terhadap 825 trade 15m
-  # (21 Feb-8 Sep 2026, trades_raw_batch.json — gate ini AKTIF saat data
-  # dikumpulkan): PULLBACK LONG yang LOLOS gate (n=159, avg R -0.132) justru
-  # LEBIH BURUK dari CONTINUATION LONG (n=302, avg R -0.091) — tempat di mana
-  # trade seharusnya jatuh kalau gate bekerja dan menyaring yang lemah. Kalau
-  # gate efektif, populasi yang lolos harusnya lebih baik dari yang gagal,
-  # bukan sebaliknya. Root cause: require_bullish_candle/require_bearish_candle
-  # cuma mensyaratkan close != open (candle hijau/merah setipis apa pun lolos),
-  # jadi hampir tidak membedakan apa-apa — gate memangkas 50% volume PULLBACK
-  # LONG (320->159) tapi avg R nyaris tidak bergerak (-0.155 -> -0.132).
-  #
-  # Filter kualitas PULLBACK 15m sekarang diserahkan ke
-  # scoring.min_score_to_trigger_by_tf (lihat komentar di sana) yang titik
-  # infleksinya jauh lebih jelas dan konsisten di data yang sama.
-  #
-  # require_rsi_turn: true BELUM dicoba (syarat lebih ketat dari sekadar warna
-  # candle) -- kalau mau eksperimen lagi nanti, nyalakan enabled:true +
-  # require_rsi_turn:true dan bandingkan avg R PULLBACK LONG vs CONTINUATION
-  # LONG dengan cara yang sama seperti di atas, jangan cuma lihat avg R
-  # PULLBACK sendirian sebelum/sesudah.
   pullback_confirmation:
     enabled: false
-    require_bullish_candle: true   # LONG: candle pemicu harus close > open
-    require_bearish_candle: true   # SHORT: candle pemicu harus close < open
-    require_rsi_turn: false        # opsional, lebih ketat: RSI harus naik (LONG)/turun (SHORT) vs candle sebelumnya
+    require_bullish_candle: true
+    require_bearish_candle: true
+    require_rsi_turn: false
   "15m":
     structure_lookback: 40
     stop_lookback: 10
@@ -454,8 +164,6 @@ regime_filter:
   symbol: "BTCUSDT"
   timeframe: "4h"
   adx_min: 27
-  # "not_bull" (bukan "bear_only") supaya SHORT tetap boleh di regime NEUTRAL,
-  # bukan cuma BEAR murni yang nyaris tidak pernah terjadi.
   short_mode: "not_bull"
   long_mode: "not_bear"
 
@@ -474,8 +182,4 @@ chart:
   auto_generate: true
   width_px: 2800
   height_ratio: 0.45
-  # Fallback untuk timeframe di luar 15m/1h/4h; ketiga TF utama sudah override
-  # lewat MAX_CANDLES_BY_TF di chart.py.
   candles_shown: 120
-  # Palet warna chart (kandil, EMA, Supertrend, entry/SL/TP, zona demand/supply,
-  # dst) di-hardcode di chart.py sendiri, bukan dibaca dari sini.
