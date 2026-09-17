@@ -314,6 +314,30 @@ scoring:
         long:
           - [85, 90]
           - [100, 110]
+          # [110,115) DITAMBAH -- 653 trade 1h (18 Sep 2025-17 Sep 2026, 10
+          # simbol, trades_raw_batch.json hasil RE-RUN backtest.py sungguhan
+          # dgn band [85,90]+"all"[90,100]+[100,110] & long.pullback:-45 SUDAH
+          # aktif). BREAKOUT LONG 1h n=147, overall avg R +0.183 (naik dari
+          # negatif sebelum fix pullback) -- breakdown skor di atas rentang
+          # yang sudah dikecualikan:
+          #   110-115: n=27  avg R -0.139  win 44.4%  <- dip baru, cukup tebal
+          #   115-120: n=8   avg R +0.474  win 75.0%  (tipis)
+          #   120-125: n=5   avg R -0.338  win 40.0%  (tipis)
+          # Pola sama seperti dip 85-90/100-110 sebelumnya (diapit rentang
+          # sehat 80-85 avg R +0.319 di bawah), tapi kali ini TIDAK ada teori
+          # mekanisme baru. Breakdown by symbol tidak didominasi satu koin
+          # (BTC/BNB/DOGE/LINK/AVAX/SUI semuanya turut negatif, n masing2 1-7)
+          # -- bukan gejala satu simbol. 115-120 & 120-125 SENGAJA TIDAK
+          # dikecualikan dulu (n=8/n=5 terlalu tipis, +0.474 di tengah dua
+          # rentang negatif bisa noise, bukan pola).
+          # Kalau [110,115) dikeluarkan: avg R populasi BREAKOUT LONG 1h
+          # tersisa naik dari +0.183 (n=147) jadi +0.255 (n=120).
+          # BELUM di-backtest ulang lewat backtest.py sungguhan DENGAN band
+          # baru ini aktif (angka di atas dari re-filter trade existing,
+          # sama seperti setiap penemuan baru di file ini sebelum
+          # divalidasi) -- jalankan itu dulu sebelum live, dan cek ulang
+          # begitu n bertambah, terutama ekor 115-125 yang masih tipis.
+          - [110, 115]
     # 4h: [80, 90] TF-wide (list biasa, bukan dict bersarang spt 1h) --
     # divalidasi dari 71 trade 4h (5 Mar-3 Sep 2026, trades_raw_batch.json).
     # BEDA KARAKTER dari 15m/1h: n jauh lebih tipis (4h candle jauh lebih
