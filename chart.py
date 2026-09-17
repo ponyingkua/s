@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-import random
 
 import matplotlib
 matplotlib.use("Agg")
@@ -30,32 +29,6 @@ GRID = "#3A3A3A"
 TEXT = "#F2F2F2"
 AXIS = "#B8B8B8"
 SPINE = "#4A4A4A"
-
-# Variasi warna background acak -- HANYA dipakai untuk chart yang dikirim ke
-# Telegram sebagai file zip (lihat build_chart(..., random_bg=True) yang
-# dipanggil dari scanner.run_scan). Rentangnya sengaja lebar (dari hitam
-# sampai abu terang), sehingga TEXT/AXIS/GRID/SPINE tidak bisa dipakai apa
-# adanya di semua kasus -- lihat _contrast_colors_for_bg() di bawah, yang
-# otomatis memilih set warna teks/grid gelap saat bg-nya terang, dan set
-# warna terang (sama seperti default) saat bg-nya gelap.
-RANDOM_BG_PALETTE = [
-    "#050505",
-    "#0b0b0b",
-    "#121212",
-    "#161618",
-    "#000000",
-    "#181818",
-    "#1f1f1f",
-    "#000401",
-]
-
-# Warna teks/grid/axis/spine dipakai saat bg acak tergolong TERANG (mis.
-# #bdbdbd, #636363) -- supaya tetap kontras & terbaca, tanpa menyentuh
-# palet warna sinyal (UP/DOWN/EMA/dst) yang sudah dipilih dengan hati-hati.
-TEXT_ON_LIGHT_BG = "#1A1A1A"
-AXIS_ON_LIGHT_BG = "#3D3D3D"
-GRID_ON_LIGHT_BG = "#8A8A8A"
-SPINE_ON_LIGHT_BG = "#5C5C5C"
 
 UP = "#26A69A"
 DOWN = "#EF5350"
@@ -114,32 +87,6 @@ STRUCTURE_CONTEXT = 30
 MAX_BOS_EVENTS = 1
 MIN_BOS_GAP_FRACTION = 0.10
 MIN_LABEL_GAP_FRACTION = 0.18
-
-
-def _pick_random_bg() -> str:
-    """Pilih warna background acak dari RANDOM_BG_PALETTE."""
-    return random.choice(RANDOM_BG_PALETTE)
-
-
-def _relative_luminance(hex_color: str) -> float:
-    """Hitung relative luminance (0=hitam, 1=putih) dari warna hex #RRGGBB."""
-    hex_color = hex_color.lstrip("#")
-    r, g, b = (int(hex_color[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-
-def _contrast_colors_for_bg(bg_color: str) -> tuple[str, str, str, str]:
-    """Tentukan (text, axis, grid, spine) yang kontras terhadap bg_color.
-
-    Dipakai HANYA saat random_bg=True, karena RANDOM_BG_PALETTE mencakup
-    warna terang (mis. #bdbdbd) yang membuat TEXT/AXIS/GRID/SPINE default
-    (didesain untuk bg gelap) jadi nyaris tidak terbaca. Threshold 0.4 dipilih
-    supaya warna abu medium seperti #464646 (luminance ~0.08) masih dianggap
-    "gelap" dan tetap pakai warna terang default.
-    """
-    if _relative_luminance(bg_color) > 0.4:
-        return TEXT_ON_LIGHT_BG, AXIS_ON_LIGHT_BG, GRID_ON_LIGHT_BG, SPINE_ON_LIGHT_BG
-    return TEXT, AXIS, GRID, SPINE
 
 
 def get_candles_shown(timeframe: str, cfg: dict) -> int:
@@ -729,21 +676,13 @@ def build_chart(
     square: bool = False,
     random_bg: bool = False,
 ) -> str:
-    # random_bg HANYA dipakai untuk chart yang dikirim ke Telegram sebagai
-    # file zip (dipanggil dari scanner.run_scan, yang juga mengacak `square`
-    # sendiri sebelum memanggil fungsi ini). Saat True, warna background
-    # dipilih acak per-chart dari RANDOM_BG_PALETTE, dan warna teks/axis/
-    # grid/spine ikut menyesuaikan otomatis (_contrast_colors_for_bg) supaya
-    # tetap kontras & terbaca di atas bg terang maupun gelap. Semua pemanggil
-    # lain (generate manual, workflow manual lewat CLI chart.py,
-    # _fetch_and_build*) tidak mengirim random_bg sehingga perilakunya tetap
-    # persis seperti semula (selalu pakai BG/TEXT/AXIS/GRID/SPINE asli).
-    if random_bg:
-        bg_color = _pick_random_bg()
-        text_color, axis_color, grid_color, spine_color = _contrast_colors_for_bg(bg_color)
-    else:
-        bg_color = BG
-        text_color, axis_color, grid_color, spine_color = TEXT, AXIS, GRID, SPINE
+    # Background & warna teks/axis/grid/spine SELALU pakai set default
+    # (BG/TEXT/AXIS/GRID/SPINE) sekarang -- tidak ada lagi variasi acak.
+    # Parameter `random_bg` sengaja dipertahankan (tidak dihapus) supaya
+    # pemanggil lama seperti scanner.run_scan yang masih mengirim
+    # random_bg=True tidak error, tapi nilainya sudah tidak berpengaruh lagi.
+    bg_color = BG
+    text_color, axis_color, grid_color, spine_color = TEXT, AXIS, GRID, SPINE
 
     show_levels = preset != "clean"
     n_show_max = get_candles_shown(timeframe, cfg)
