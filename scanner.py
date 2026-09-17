@@ -919,9 +919,9 @@ def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> N
     }
 
 
-def prune_stale_state(state: dict, cooldown_hours: float, ttl_multiplier: float = 3.0) -> dict:
+def prune_stale_state(state: dict, cooldown_hours: float) -> dict:
     now = datetime.now(timezone.utc)
-    ttl = timedelta(hours=cooldown_hours * ttl_multiplier)
+    ttl = timedelta(hours=cooldown_hours)
     pruned: dict = {}
     for key, entry in state.items():
         if key == "_regime_episode":
