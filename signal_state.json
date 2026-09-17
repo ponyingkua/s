@@ -4,41 +4,11 @@
     "started_at": "2026-09-17T00:04:11.544202+00:00",
     "signal_count": 2
   },
-  "PEOPLEUSDT|1h": {
-    "symbol": "PEOPLEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T17:03:55.606542+00:00"
-  },
   "LSKUSDT|1h": {
     "symbol": "LSKUSDT",
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-16T20:04:22.923170+00:00"
-  },
-  "DELLUSDT|4h": {
-    "symbol": "DELLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T16:05:11.931667+00:00"
-  },
-  "KASUSDT|1h": {
-    "symbol": "KASUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T16:05:16.146148+00:00"
-  },
-  "SYNUSDT|1h": {
-    "symbol": "SYNUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T17:03:53.282374+00:00"
-  },
-  "HBARUSDT|1h": {
-    "symbol": "HBARUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T17:03:56.083956+00:00"
   },
   "ARXUSDT|1h": {
     "symbol": "ARXUSDT",
