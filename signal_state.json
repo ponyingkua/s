@@ -16,30 +16,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T17:03:55.606542+00:00"
   },
-  "DRAMUSDT|1h": {
-    "symbol": "DRAMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T12:05:13.027856+00:00"
-  },
-  "EWYUSDT|1h": {
-    "symbol": "EWYUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T12:05:16.078302+00:00"
-  },
-  "KORUUSDT|1h": {
-    "symbol": "KORUUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T12:05:17.474746+00:00"
-  },
-  "DELLUSDT|1h": {
-    "symbol": "DELLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T12:05:18.798950+00:00"
-  },
   "BOMEUSDT|15m": {
     "symbol": "BOMEUSDT",
     "timeframe": "15m",
