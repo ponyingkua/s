@@ -25088,5 +25088,51 @@
     "tp": 194.587403,
     "tp1": 192.148557,
     "scanned_at": "2026-09-17T20:03:30.938125+00:00"
+  },
+  {
+    "symbol": "GRIFFAINUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (61) menguatkan momentum naik",
+      "ADX (38.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.014125,
+    "sl": 0.013194,
+    "tp": 0.015801,
+    "tp1": 0.015056,
+    "scanned_at": "2026-09-17T21:03:19.718463+00:00"
+  },
+  {
+    "symbol": "QQQUSDT",
+    "direction": "LONG",
+    "score": 66.3,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (27.8) tren kuat (+7.3 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 717.22,
+    "sl": 713.834489,
+    "tp": 723.31392,
+    "tp1": 720.605511,
+    "scanned_at": "2026-09-17T21:03:19.718463+00:00"
   }
 ]

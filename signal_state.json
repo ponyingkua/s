@@ -27,5 +27,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-17T20:04:38.242437+00:00"
+  },
+  "GRIFFAINUSDT|1h": {
+    "symbol": "GRIFFAINUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T21:04:19.405456+00:00"
+  },
+  "QQQUSDT|1h": {
+    "symbol": "QQQUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T21:04:20.907569+00:00"
   }
 }
