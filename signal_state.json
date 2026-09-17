@@ -57,5 +57,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-17T22:04:16.294178+00:00"
+  },
+  "HYPEUSDT|1h": {
+    "symbol": "HYPEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T23:03:44.022392+00:00"
+  },
+  "1000PEPEUSDT|1h": {
+    "symbol": "1000PEPEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T23:03:46.175712+00:00"
+  },
+  "ARMUSDT|1h": {
+    "symbol": "ARMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T23:03:46.969222+00:00"
+  },
+  "CSOPSKHYNIX2LUSDT|1h": {
+    "symbol": "CSOPSKHYNIX2LUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T23:03:47.753435+00:00"
+  },
+  "SOXSUSDT|1h": {
+    "symbol": "SOXSUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-17T23:03:48.547592+00:00"
   }
 }
