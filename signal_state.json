@@ -10,12 +10,6 @@
     "direction": "LONG",
     "timestamp": "2026-09-16T23:04:12.722660+00:00"
   },
-  "DOTUSDT|1h": {
-    "symbol": "DOTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T21:04:06.567592+00:00"
-  },
   "ASTERUSDT|1h": {
     "symbol": "ASTERUSDT",
     "timeframe": "1h",
