@@ -39,5 +39,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-17T21:04:20.907569+00:00"
+  },
+  "ARBUSDT|1h": {
+    "symbol": "ARBUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T22:04:14.441346+00:00"
+  },
+  "CRWVUSDT|1h": {
+    "symbol": "CRWVUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-17T22:04:15.679492+00:00"
+  },
+  "ZHONGJIUSDT|1h": {
+    "symbol": "ZHONGJIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T22:04:16.294178+00:00"
   }
 }
