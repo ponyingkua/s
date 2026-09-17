@@ -676,11 +676,6 @@ def build_chart(
     square: bool = False,
     random_bg: bool = False,
 ) -> str:
-    # Background & warna teks/axis/grid/spine SELALU pakai set default
-    # (BG/TEXT/AXIS/GRID/SPINE) sekarang -- tidak ada lagi variasi acak.
-    # Parameter `random_bg` sengaja dipertahankan (tidak dihapus) supaya
-    # pemanggil lama seperti scanner.run_scan yang masih mengirim
-    # random_bg=True tidak error, tapi nilainya sudah tidak berpengaruh lagi.
     bg_color = BG
     text_color, axis_color, grid_color, spine_color = TEXT, AXIS, GRID, SPINE
 
