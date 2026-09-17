@@ -3,17 +3,5 @@
     "regime": "BULL",
     "started_at": "2026-09-17T00:04:11.544202+00:00",
     "signal_count": 2
-  },
-  "CBRSUSDT|1h": {
-    "symbol": "CBRSUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T00:04:45.441842+00:00"
-  },
-  "BEUSDT|4h": {
-    "symbol": "BEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T00:04:46.755373+00:00"
   }
 }
