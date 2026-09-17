@@ -63,6 +63,34 @@ class BinanceFuturesClient:
             return 0.0
         return float(data.get("quoteVolume", 0))
 
+    async def get_all_24h_volumes(self) -> dict[str, float]:
+        """Ambil volume 24h SEMUA simbol dalam SATU request (tanpa param
+        `symbol`), bukan satu request per simbol.
+
+        BUG FIX: get_24h_volume() lama dipanggil per-simbol lewat
+        asyncio.gather untuk ratusan simbol sekaligus (lihat run_scan()).
+        Kalau salah satu request itu kena rate limit (status != 200),
+        get_24h_volume() diam-diam mengembalikan 0.0 -- simbol itu lalu
+        gagal lolos filter min_volume_usdt_24h dan HILANG dari active_symbols
+        tanpa ada warning sama sekali, padahal volumenya mungkin jauh di atas
+        ambang. Endpoint ini me-return semua simbol sekaligus, jadi tidak ada
+        lagi ratusan request paralel yang rawan kena rate limit di langkah
+        ini, dan tidak ada "silent zero volume".
+        """
+        url = f"{BASE_URL}/fapi/v1/ticker/24hr"
+        async with self._session.get(url) as resp:
+            data = await resp.json()
+        if resp.status != 200 or not isinstance(data, list):
+            raise RuntimeError(
+                f"Binance API tidak mengembalikan data 24hr ticker yang "
+                f"diharapkan. Status: {resp.status}, Response: {data}"
+            )
+        return {
+            item["symbol"]: float(item.get("quoteVolume", 0))
+            for item in data
+            if isinstance(item, dict) and "symbol" in item
+        }
+
     @staticmethod
     def _parse_klines_df(raw: list) -> pd.DataFrame:
         df = pd.DataFrame(
@@ -1332,9 +1360,11 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
     async with BinanceFuturesClient() as client:
         symbols = await client.get_active_symbols(cfg["exchange"]["quote_asset"])
 
-        volumes = await asyncio.gather(*(client.get_24h_volume(s) for s in symbols))
+        volumes_by_symbol = await client.get_all_24h_volumes()
         min_vol = cfg["exchange"]["min_volume_usdt_24h"]
-        active_symbols = [s for s, v in zip(symbols, volumes) if v >= min_vol]
+        active_symbols = [
+            s for s in symbols if volumes_by_symbol.get(s, 0.0) >= min_vol
+        ]
 
         regime_cfg = cfg.get("regime_filter", {})
         regime = await get_market_regime(client, cfg) if regime_cfg.get("enabled", False) else "NEUTRAL"
