@@ -16,12 +16,6 @@
     "direction": "SHORT",
     "timestamp": "2026-09-16T17:03:55.606542+00:00"
   },
-  "BOMEUSDT|15m": {
-    "symbol": "BOMEUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T13:06:03.737748+00:00"
-  },
   "QQQUSDT|15m": {
     "symbol": "QQQUSDT",
     "timeframe": "15m",
