@@ -24995,5 +24995,98 @@
     "tp": 318.565519,
     "tp1": 300.789733,
     "scanned_at": "2026-09-17T00:04:08.696825+00:00"
+  },
+  {
+    "symbol": "CRVUSDT",
+    "direction": "LONG",
+    "score": 75.1,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (48), tidak menambah skor",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (21.1) tren kuat (+0.1 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 1.83",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.83 (sisa posisi)"
+    ],
+    "entry": 0.3267,
+    "sl": 0.297624,
+    "tp": 0.38,
+    "tp1": 0.355776,
+    "scanned_at": "2026-09-17T20:03:30.938125+00:00"
+  },
+  {
+    "symbol": "MRVLUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (54.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 240.98,
+    "sl": 235.289344,
+    "tp": 251.223182,
+    "tp1": 246.670656,
+    "scanned_at": "2026-09-17T20:03:30.938125+00:00"
+  },
+  {
+    "symbol": "MVLLUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "ADX (54.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 30.1,
+    "sl": 28.763402,
+    "tp": 32.505877,
+    "tp1": 31.436598,
+    "scanned_at": "2026-09-17T20:03:30.938125+00:00"
+  },
+  {
+    "symbol": "QCOMUSDT",
+    "direction": "LONG",
+    "score": 70.8,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (54) menguatkan momentum naik",
+      "ADX (32.0) tren kuat (+11.8 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 189.1,
+    "sl": 186.051443,
+    "tp": 194.587403,
+    "tp1": 192.148557,
+    "scanned_at": "2026-09-17T20:03:30.938125+00:00"
   }
 ]

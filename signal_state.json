@@ -1,7 +1,31 @@
 {
   "_regime_episode": {
-    "regime": "BULL",
-    "started_at": "2026-09-17T00:04:11.544202+00:00",
-    "signal_count": 2
+    "regime": "NEUTRAL",
+    "started_at": "2026-09-17T20:03:32.440127+00:00",
+    "signal_count": 0
+  },
+  "CRVUSDT|4h": {
+    "symbol": "CRVUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T20:04:33.318247+00:00"
+  },
+  "MRVLUSDT|1h": {
+    "symbol": "MRVLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T20:04:35.408062+00:00"
+  },
+  "MVLLUSDT|1h": {
+    "symbol": "MVLLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T20:04:36.832475+00:00"
+  },
+  "QCOMUSDT|1h": {
+    "symbol": "QCOMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-17T20:04:38.242437+00:00"
   }
 }
