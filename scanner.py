@@ -63,19 +63,6 @@ class BinanceFuturesClient:
         return float(data.get("quoteVolume", 0))
 
     async def get_all_24h_volumes(self) -> dict[str, float]:
-        """Ambil volume 24h SEMUA simbol dalam SATU request (tanpa param
-        `symbol`), bukan satu request per simbol.
-
-        BUG FIX: get_24h_volume() lama dipanggil per-simbol lewat
-        asyncio.gather untuk ratusan simbol sekaligus (lihat run_scan()).
-        Kalau salah satu request itu kena rate limit (status != 200),
-        get_24h_volume() diam-diam mengembalikan 0.0 -- simbol itu lalu
-        gagal lolos filter min_volume_usdt_24h dan HILANG dari active_symbols
-        tanpa ada warning sama sekali, padahal volumenya mungkin jauh di atas
-        ambang. Endpoint ini me-return semua simbol sekaligus, jadi tidak ada
-        lagi ratusan request paralel yang rawan kena rate limit di langkah
-        ini, dan tidak ada "silent zero volume".
-        """
         url = f"{BASE_URL}/fapi/v1/ticker/24hr"
         async with self._session.get(url) as resp:
             data = await resp.json()
@@ -135,8 +122,6 @@ class BinanceFuturesClient:
             df = self._parse_klines_df(raw)
             return Kline(symbol=symbol, timeframe=interval, df=df)
 
-        # Tidak akan tercapai dalam praktik (loop di atas selalu return atau
-        # raise), disisakan sebagai pengaman kalau logika di atas berubah.
         raise RuntimeError(
             f"Gagal mengambil klines {symbol} {interval} setelah {max_retries} retry (429 terus)"
         )
@@ -240,7 +225,6 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 
 def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 2.5) -> pd.Series:
-    """Return the trend direction (1 = up, -1 = down) of the Supertrend indicator."""
     if df.empty:
         return pd.Series(dtype="int64", index=df.index)
 
@@ -327,8 +311,8 @@ class SignalResult:
     reasons: list[str] = field(default_factory=list)
     entry: float | None = None
     sl: float | None = None
-    tp: float | None = None       # TP final / TP2
-    tp1: float | None = None      # TP partial (opsional, aktif kalau risk.partial_tp.enabled)
+    tp: float | None = None
+    tp1: float | None = None
 
 
 def compute_indicators(df: pd.DataFrame, cfg: dict) -> dict:
@@ -364,27 +348,6 @@ def get_setup_engine_param(cfg: dict, param: str, timeframe: str = "", default: 
 
 
 def _pullback_confirmed(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict) -> bool:
-    """
-    Gate konfirmasi tambahan untuk PULLBACK, di-toggle lewat
-    setup_engine.pullback_confirmation di config (default OFF -> perilaku
-    lama, murni proximity ke EMA200).
-
-    Motivasi: proximity-to-EMA saja (dist_ema_atr <= pullback_atr_mult) tidak
-    membedakan pullback yang baru mulai bangkit dari yang masih jatuh bebas.
-    Backtest 895 trade 15m (19 Feb-8 Sep 2026) menunjukkan PULLBACK LONG
-    (n=320) avg R -0.155, win rate 21.2% -- menyumbang ~71% dari total
-    kerugian R gabungan semua setup, jauh lebih buruk dari BREAKOUT/
-    CONTINUATION (avg R sekitar -0.03 sampai -0.05 di sampel yang sama).
-    Kalau gate ini gagal, classify_setup TIDAK menolak sinyal -- cuma tidak
-    mengembalikan PULLBACK, biasanya jatuh ke CONTINUATION di bawahnya
-    (bonus skor lebih rendah/negatif), bukan diklasifikasikan ulang jadi
-    setup lain yang tidak sesuai realitanya.
-
-    BELUM divalidasi lewat backtest granular (angka di atas adalah motivasi
-    korelasional, bukan hasil A/B test gate ini) -- jalankan backtest.py
-    dengan enabled: true vs false sebelum dipakai live, bandingkan avg R
-    & win rate khusus PULLBACK LONG di kedua kondisi.
-    """
     pb_cfg = cfg.get("setup_engine", {}).get("pullback_confirmation", {})
     if not pb_cfg.get("enabled", False):
         return True
@@ -414,8 +377,6 @@ def _pullback_confirmed(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg
 def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dict, timeframe: str = "") -> str:
     structure_lookback = int(get_setup_engine_param(cfg, "structure_lookback", timeframe, 20))
     extended_atr_mult = get_setup_engine_param(cfg, "extended_atr_mult", timeframe, 3.5)
-    # Ambang tambahan di ATAS extended_atr_mult — guardrail blow-off/capitulation,
-    # belum divalidasi granular per-trade lewat backtest.
     overextended_atr_mult = get_setup_engine_param(
         cfg, "overextended_atr_mult", timeframe, max(extended_atr_mult * 1.8, extended_atr_mult + 2)
     )
@@ -448,10 +409,6 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
     if on_trend_side and dist_ema_atr <= pullback_atr_mult:
         if _pullback_confirmed(df, ind, i, direction, cfg):
             return "PULLBACK"
-        # Konfirmasi gagal -> jangan langsung PULLBACK. Lanjut ke bawah;
-        # karena dist_ema_atr di sini masih <= pullback_atr_mult (< extended),
-        # baris EXTENDED/OVEREXTENDED tidak akan kena, jadi akan jatuh ke
-        # CONTINUATION di baris terakhir fungsi ini.
     if on_trend_side and dist_ema_atr >= overextended_atr_mult:
         return "OVEREXTENDED"
     if on_trend_side and dist_ema_atr >= extended_atr_mult:
@@ -460,20 +417,6 @@ def classify_setup(df: pd.DataFrame, ind: dict, i: int, direction: str, cfg: dic
 
 
 def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: str = "") -> float:
-    """
-    Ambil bonus/penalti skor untuk kombinasi setup_type + direction + timeframe.
-
-    Precedence lookup (paling spesifik menang):
-      1. setup_bonus[timeframe][direction][setup_type]
-      2. setup_bonus[timeframe][setup_type]
-      3. setup_bonus[direction][setup_type]
-      4. setup_bonus[setup_type]  (flat, fallback)
-
-    Nilai-nilai di config.yaml (scoring.setup_bonus) di-tuning dari backtest
-    gabungan trade tertutup (15m/1h/4h) — lihat komentar di sana untuk rincian
-    & angka per kombinasi. Ini hasil in-sample dari satu window backtest,
-    bukan out-of-sample tervalidasi — cek ulang setelah ada data baru.
-    """
     sb_cfg = cfg["scoring"].get("setup_bonus", {})
     st = setup_type.lower()
     d = direction.lower()
@@ -494,22 +437,6 @@ def get_setup_bonus(cfg: dict, setup_type: str, direction: str = "", timeframe: 
 
 
 def get_min_score_to_trigger(cfg: dict, timeframe: str = "") -> float:
-    """
-    Ambang skor minimum untuk memicu sinyal, dengan opsional override per
-    timeframe lewat scoring.min_score_to_trigger_by_tf (mis. {'15m': 78}).
-    Fallback ke scoring.min_score_to_trigger (flat, lama) kalau tidak ada
-    override untuk timeframe ini -- backward compatible, tidak mengubah
-    perilaku kalau min_score_to_trigger_by_tf tidak diisi di config.
-
-    Kenapa ini disediakan: backtest 15m (n=895) menunjukkan hubungan skor
-    vs avg R TIDAK monoton naik -- bucket 75-80 avg R -0.207 justru lebih
-    buruk dari 65-70 (-0.097), dan bucket 90-95 masih -0.115. Jadi menaikkan
-    ambang flat untuk SEMUA timeframe bukan lever yang tepat sendirian (dan
-    belum tentu menaikkan pun langsung memperbaiki 15m -- perlu dicek dulu
-    lewat backtest, bukan diasumsikan). Helper ini cuma membuka opsi untuk
-    eksperimen ambang per-TF secara terpisah dari 1h/4h yang pola skornya
-    bisa berbeda -- BUKAN rekomendasi angka tertentu.
-    """
     by_tf = cfg.get("scoring", {}).get("min_score_to_trigger_by_tf", {})
     if timeframe and isinstance(by_tf, dict) and timeframe in by_tf:
         return by_tf[timeframe]
@@ -520,87 +447,30 @@ def is_score_excluded(
     cfg: dict, score: float, timeframe: str = "",
     setup_type: str = "", direction: str = "",
 ) -> bool:
-    """
-    True kalau `score` jatuh di salah satu rentang scoring.excluded_score_bands
-    yang berlaku untuk kombinasi timeframe/setup_type/direction ini -- lubang
-    di tengah rentang skor yang lolos min_score_to_trigger tapi terbukti tetap
-    avg R negatif (beda dari sekadar ambang bawah, yang sudah ditangani
-    get_min_score_to_trigger).
-
-    Dua format config didukung untuk scoring.excluded_score_bands[timeframe]:
-      1. List langsung -- [[low, high], ...]: TF-wide, berlaku untuk SEMUA
-         setup_type & direction di TF itu. Ini format lama (dipakai 15m),
-         tetap didukung apa adanya.
-      2. Dict bersarang -- {"all": [[low,high],...], setup_type: [[low,high],...]
-         | {direction: [[low,high],...]}}: dipakai kalau exclude perlu presisi
-         ke setup_type/direction tertentu supaya tidak "collateral damage" ke
-         setup lain yang justru bagus di rentang skor yang sama (kasus 1h:
-         band [90,100] TF-wide aman untuk BREAKOUT/PULLBACK, tapi CONTINUATION
-         LONG butuh band terpisah [72,82] yang KALAU dibuat TF-wide akan ikut
-         membuang BREAKOUT LONG yang justru avg R +0.461 di rentang skor yang
-         sama). Key setup_type ada di LUAR, direction (opsional) di DALAM --
-         mis. {"continuation": {"long": [[72,82]]}} artinya band ini cuma
-         berlaku untuk CONTINUATION+LONG, bukan CONTINUATION+SHORT.
-
-    PENTING -- pengecekan ADITIF, bukan precedence/override: semua level yang
-    relevan (key "all" DAN key setup_type/direction spesifik) dicek sekaligus,
-    band manapun yang match = excluded. Ini beda dari get_setup_bonus() yang
-    override (paling spesifik menang) -- di sini band "all" harus tetap
-    berlaku sekalipun ada override setup lain di TF yang sama, karena
-    keduanya menangani masalah yang independen.
-
-    Batas band inklusif di kedua sisi. Kosong/tidak diisi = tidak ada band
-    yang dikecualikan (perilaku lama, tidak berubah).
-
-    Dipanggil di DUA tempat yang harus tetap sinkron: score_at() untuk skor
-    pra-MTF, dan sekali lagi di run_scan()/backtest_symbol() setelah MTF
-    agreement bonus ditambahkan -- MTF bonus bisa menggeser skor MASUK atau
-    KELUAR sebuah band setelah cek pertama, jadi re-check pasca-MTF wajib
-    ada supaya band-exclude tidak bisa "diloncati" oleh bonus MTF. Lihat
-    catatan paritas yang sama di get_min_score_to_trigger (re-check
-    min_score pasca-MTF) -- pola dan alasannya identik.
-    """
     tf_cfg = cfg.get("scoring", {}).get("excluded_score_bands", {}).get(timeframe, [])
     st = setup_type.lower()
     d = direction.lower()
 
     all_bands: list = []
     if isinstance(tf_cfg, list):
-        # Format 1: list langsung, TF-wide.
         all_bands.extend(tf_cfg)
     elif isinstance(tf_cfg, dict):
-        # Format 2: dict bersarang {"all": [...], setup_type: [...] | {direction: [...]}}.
         all_bands.extend(tf_cfg.get("all", []))
         st_cfg = tf_cfg.get(st) if st else None
         if isinstance(st_cfg, list):
-            # setup_type: [[low,high],...] -- berlaku semua direction
             all_bands.extend(st_cfg)
         elif isinstance(st_cfg, dict) and d and d in st_cfg:
-            # setup_type: {direction: [[low,high],...]} -- spesifik direction
             all_bands.extend(st_cfg[d])
 
     return any(low <= score <= high for low, high in all_bands)
 
 
-
-
-
 def mtf_bonus_eligible(setup_type: str, cfg: dict) -> bool:
-    """
-    MTF agreement bonus dikecualikan untuk setup_type tertentu via
-    scoring.mtf_agreement_excluded_setups di config (saat ini: EXTENDED,
-    BREAKOUT). Untuk kedua setup ini, sinyal yang kebetulan searah dengan TF
-    lain terbukti avg R-nya LEBIH BURUK daripada yang tidak dapat bonus —
-    "TF lain sudah searah" adalah tanda telat masuk rame-rame, bukan
-    konfirmasi kualitas. Lihat komentar mtf_agreement_excluded_setups di
-    config.yaml untuk angka pendukungnya.
-    """
     excluded = cfg.get("scoring", {}).get("mtf_agreement_excluded_setups", [])
     return setup_type.upper() not in {s.upper() for s in excluded}
 
 
 def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
-    """Return True if the proposed direction is allowed under current market regime."""
     regime_cfg = cfg.get("regime_filter", {})
     if direction == "SHORT":
         mode = regime_cfg.get("short_mode", "bear_only")
@@ -622,7 +492,6 @@ def passes_regime_filter(direction: str, regime: str, cfg: dict) -> bool:
 
 
 def get_regime_gated_direction(regime: str, cfg: dict) -> str | None:
-    """Return the direction that should be rate-limited in the current regime episode."""
     regime_cfg = cfg.get("regime_filter", {})
     short_mode = regime_cfg.get("short_mode", "bear_only")
     if regime == "BEAR" and short_mode in ("bear_only", "not_bull"):
@@ -718,10 +587,6 @@ def score_at(
         alignment_short += 1
 
     if trend_long == trend_short:
-        # Tidak bisa terjadi dengan bobot default (20+18+25=63, ganjil, tidak
-        # bisa terbagi rata jadi dua sisi yang sama persis), tapi kalau bobot
-        # di-tuning nanti sampai bisa dasi, jangan diam-diam menang-kan LONG —
-        # anggap arah tidak jelas dan tolak sinyalnya.
         return SignalResult(
             symbol=symbol, direction="NONE", score=0.0, timeframe=timeframe,
             reasons=["Skor LONG dan SHORT persis sama (dasi) — arah tidak jelas, ditolak"],
@@ -927,19 +792,11 @@ def score_at(
         else:
             tp = rr_tp
 
-    # --- TP1 partial (opsional) ---
-    # Tujuannya: TP final (di atas) kadang jauh (level struktur lama / RR besar),
-    # jadi realisasi profit ditunda terlalu lama. TP1 memberi target dekat untuk
-    # menutup sebagian posisi & (opsional) menggeser SL sisa posisi ke breakeven,
-    # tanpa mengubah cara TP final (tp/TP2) dihitung.
     partial_cfg = cfg.get("risk", {}).get("partial_tp", {})
     tp1 = None
     if partial_cfg.get("enabled", False):
         tp1_rr = float(partial_cfg.get("tp1_rr", 1.0))
         tp1_close_pct = float(partial_cfg.get("tp1_close_pct", 0.5))
-        # TP1 di-cap maksimum 90% jarak menuju TP final, supaya urutan
-        # SL < TP1 <= TP2 (LONG) / TP2 <= TP1 < SL (SHORT) selalu terjaga
-        # walau TP final kebetulan dekat (mis. RR pas-pasan di atas rr_min).
         if direction == "LONG":
             tp1_raw = price + sl_dist * tp1_rr
             tp1_cap = price + (tp - price) * 0.9
@@ -1031,8 +888,6 @@ def save_state(path: str, state: dict) -> None:
 
 
 def load_candidates(path: str) -> list[dict]:
-    """Baca isi file kandidat hasil scan sebelumnya (kalau ada dan valid),
-    dipakai untuk digabung dengan hasil run ini alih-alih menimpa total."""
     if not os.path.exists(path):
         return []
     try:
@@ -1065,13 +920,6 @@ def mark_signaled(state: dict, symbol: str, direction: str, timeframe: str) -> N
 
 
 def prune_stale_state(state: dict, cooldown_hours: float, ttl_multiplier: float = 3.0) -> dict:
-    """
-    Buang entri cooldown yang usianya jauh melewati cooldown_hours (default:
-    3x lipat) — entri seperti itu sudah tidak berpengaruh ke is_in_cooldown()
-    sama sekali, jadi aman dihapus supaya signal_state.json tidak tumbuh
-    tanpa batas seiring waktu. Key khusus "_regime_episode" selalu
-    dipertahankan karena bukan entri cooldown per simbol.
-    """
     now = datetime.now(timezone.utc)
     ttl = timedelta(hours=cooldown_hours * ttl_multiplier)
     pruned: dict = {}
@@ -1122,18 +970,10 @@ async def get_market_regime(client: "BinanceFuturesClient", cfg: dict) -> str:
 
 
 def _clean_technical_reason(reason: str) -> str:
-    """Buang embel-embel skor internal (mis. '(+3.5 skor)') dari sebuah alasan,
-    supaya yang tersisa murni penjelasan teknikal (indikator/struktur/setup)."""
     return re.sub(r"\s*\([+-]?\d+(\.\d+)?\s*(?:MTF agreement\s*)?skor\)", "", reason).strip()
 
 
 def format_price(value: float | None) -> str:
-    """Format harga sebagai desimal biasa, bukan notasi ilmiah Python
-    (mis. '5.2e-05'). entry/sl/tp/tp1 sudah dibulatkan ke 6 desimal saat
-    SignalResult dibuat (round(x, 6)), jadi format 6 desimal di sini tidak
-    mengurangi presisi apa pun -- cuma mengubah cara tampilnya. Perlu untuk
-    token berharga sangat kecil (mis. DOGSUSDT) yang sebelumnya tampil
-    sebagai '5.2e-05' alih-alih '0.000052'."""
     if value is None:
         return "-"
     text = f"{value:.6f}"
@@ -1143,7 +983,6 @@ def format_price(value: float | None) -> str:
 
 
 def format_signal_message(signal: SignalResult) -> str:
-    """Pesan singkat untuk caption Telegram (tetap ringkas & ber-Markdown)."""
     tf_label = f" [{signal.timeframe}]" if signal.timeframe else ""
     setup_label = f" · {signal.setup_type}" if signal.setup_type else ""
     lines = [
@@ -1162,9 +1001,6 @@ def format_signal_message(signal: SignalResult) -> str:
 
 
 def format_technical_summary(signal: SignalResult) -> str:
-    """Blok penjelasan untuk ringkasan.txt — fokus ke analisis teknikal
-    (tren, momentum, struktur harga, R:R) dengan skor tetap ditampilkan,
-    bukan narasi tentang proses/mekanisme scanner-nya."""
     tf_label = f" {signal.timeframe}" if signal.timeframe else ""
     setup_label = signal.setup_type or "-"
 
@@ -1278,10 +1114,6 @@ ZIP_MAX_AGE = timedelta(hours=48)
 
 
 def _parse_zip_timestamp(filename: str) -> datetime | None:
-    """Ambil timestamp dari nama file zip (mis. signal_20260909_143000.zip).
-    Sengaja parse dari NAMA file, bukan mtime filesystem -- karena tiap run
-    GitHub Actions checkout ulang repo, mtime semua file jadi 'baru' lagi
-    (bukan waktu commit asli), jadi mtime tidak bisa dipakai untuk cek umur."""
     match = re.match(
         rf"{re.escape(ZIP_PREFIX)}(\d{{8}}_\d{{6}})\.zip$", os.path.basename(filename)
     )
@@ -1303,10 +1135,6 @@ def zip_charts(
 
     os.makedirs(out_dir, exist_ok=True)
 
-    # Bersihkan arsip signal_*.zip yang usianya sudah lewat 48 jam. Yang
-    # namanya tidak bisa di-parse (rusak/format lama) juga ikut dibuang agar
-    # tidak menumpuk selamanya. File chart PNG lain (mis. dari workflow
-    # generate chart manual) tidak disentuh sama sekali.
     now = datetime.now(timezone.utc)
     for old_zip in glob.glob(os.path.join(out_dir, f"{ZIP_PREFIX}*.zip")):
         zip_time = _parse_zip_timestamp(old_zip)
@@ -1430,7 +1258,6 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
         total_checked = sum(diag_totals.values())
         pass_rate = (diag_totals["passed"] / total_checked * 100) if total_checked else 0
 
-        # console: satu baris ringkas, tetap gampang dibaca di log mentah
         print(
             f"[scan] regime={regime} checked={total_checked} passed={diag_totals['passed']} "
             f"({pass_rate:.1f}%) | rejected: history_too_short={diag_totals['history_too_short']} "
@@ -1438,8 +1265,6 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
             f"risk={diag_totals['risk_rejected']} cooldown={diag_totals['cooldown_rejected']}"
         )
 
-        # console: rincian diagnostik lengkap, langsung ke log mentah (bukan Step Summary)
-        # supaya kelihatan juga di GitHub mobile
         print("[diag] Rincian filter:")
         funnel = [
             ("history_too_short", diag_totals["history_too_short"]),
@@ -1484,20 +1309,6 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
             for signal, kline in cands:
                 direction_map.setdefault(kline.symbol, {})[tf] = signal.direction
 
-        # Re-check pasca-MTF: bonus MTF agreement ditambahkan SETELAH sinyal
-        # lolos min_score_to_trigger & excluded_score_bands di score_at()
-        # (skor pra-MTF). Tanpa re-check di sini, live scanner (run_scan)
-        # tidak sinkron dengan backtest_symbol() di backtest.py, yang SUDAH
-        # re-check min_score pasca-MTF (backtest.py baris ~282) -- gap ini
-        # sudah ada sebelum excluded_score_bands ditambahkan, ditemukan &
-        # diperbaiki bersamaan.
-        #
-        # Dampak historis kecil (MTF bonus applied di 2.7% trade pada
-        # backtest 15m n=825, 0% di n=120 terbaru -- BREAKOUT/PULLBACK yang
-        # dominan sekarang dikecualikan dari bonus MTF) tapi nyata: bonus
-        # selalu +20 flat sekali applied (weights.mtf_agreement), lompatan
-        # sebesar itu bisa menggeser skor MASUK excluded_score_bands yang
-        # tidak diverifikasi ulang kalau tidak ada blok ini.
         mtf_rejected = 0
         flat_candidates: list[tuple[SignalResult, Kline]] = []
         for tf, cands in per_tf_candidates.items():
@@ -1562,12 +1373,6 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
                 import chart as chart_module
 
                 os.makedirs("charts", exist_ok=True)
-                # Chart di jalur ini masuk ke zip yang dikirim ke Telegram
-                # (lihat zip_charts di bawah). Rasio wide/square mengikuti
-                # chart_format (dari --chart-format atau cfg.chart.format,
-                # default "wide") -- sama seperti jalur manual lain (mis.
-                # generate chart lewat CLI chart.py langsung). Tidak ada lagi
-                # rasio atau warna background yang diacak per-chart.
                 is_square = chart_format == "square"
                 suffix = "_square" if is_square else ""
                 chart_path = f"charts/{kline.symbol}_{signal.timeframe}{suffix}.png"
