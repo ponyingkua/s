@@ -4,23 +4,11 @@
     "started_at": "2026-09-17T00:04:11.544202+00:00",
     "signal_count": 2
   },
-  "GIGGLEUSDT|1h": {
-    "symbol": "GIGGLEUSDT",
-    "timeframe": "1h",
-    "direction": "SHORT",
-    "timestamp": "2026-09-16T14:05:23.271562+00:00"
-  },
   "PEOPLEUSDT|1h": {
     "symbol": "PEOPLEUSDT",
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-16T17:03:55.606542+00:00"
-  },
-  "QQQUSDT|15m": {
-    "symbol": "QQQUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-16T14:05:21.658336+00:00"
   },
   "INTWUSDT|1h": {
     "symbol": "INTWUSDT",
