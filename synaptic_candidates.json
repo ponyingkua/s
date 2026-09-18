@@ -25889,5 +25889,121 @@
     "tp": 5.942468,
     "tp1": 5.746704,
     "scanned_at": "2026-09-18T04:03:36.723715+00:00"
+  },
+  {
+    "symbol": "PAXGUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "CONTINUATION",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (62) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (29.4) tren kuat (+9.0 skor)",
+      "Setup terdeteksi: CONTINUATION (-18 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 4366.5,
+    "sl": 4328.250085,
+    "tp": 4435.349847,
+    "tp1": 4404.749915,
+    "scanned_at": "2026-09-18T05:03:03.748022+00:00"
+  },
+  {
+    "symbol": "SNXXUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (74) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 15.11,
+    "sl": 14.514913,
+    "tp": 16.181157,
+    "tp1": 15.705087,
+    "scanned_at": "2026-09-18T05:03:03.748022+00:00"
+  },
+  {
+    "symbol": "SKHYUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (70) overbought \u2014 penalti chasing (-10)",
+      "ADX (43.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 186.17,
+    "sl": 182.695183,
+    "tp": 192.424671,
+    "tp1": 189.644817,
+    "scanned_at": "2026-09-18T05:03:03.748022+00:00"
+  },
+  {
+    "symbol": "DRAMUSDT",
+    "direction": "LONG",
+    "score": 76.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (70), tidak menambah skor",
+      "ADX (39.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 58.35,
+    "sl": 57.40776,
+    "tp": 60.046033,
+    "tp1": 59.29224,
+    "scanned_at": "2026-09-18T05:03:03.748022+00:00"
+  },
+  {
+    "symbol": "ARMUSDT",
+    "direction": "LONG",
+    "score": 76.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (69), tidak menambah skor",
+      "ADX (50.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 268.15,
+    "sl": 261.512193,
+    "tp": 280.098052,
+    "tp1": 274.787807,
+    "scanned_at": "2026-09-18T05:03:03.748022+00:00"
   }
 ]
