@@ -26005,5 +26005,122 @@
     "tp": 280.098052,
     "tp1": 274.787807,
     "scanned_at": "2026-09-18T05:03:03.748022+00:00"
+  },
+  {
+    "symbol": "ZHONGJIUSDT",
+    "direction": "LONG",
+    "score": 117.7,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (29.2) tren kuat (+8.7 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 152.6,
+    "sl": 147.110382,
+    "tp": 162.481312,
+    "tp1": 158.089618,
+    "scanned_at": "2026-09-18T06:04:09.585514+00:00"
+  },
+  {
+    "symbol": "SOXLUSDT",
+    "direction": "LONG",
+    "score": 75.6,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI netral (70), tidak menambah skor",
+      "ADX (34.7) tren kuat (+14.6 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 116.45,
+    "sl": 112.074329,
+    "tp": 124.326208,
+    "tp1": 120.825671,
+    "scanned_at": "2026-09-18T06:04:09.585514+00:00"
+  },
+  {
+    "symbol": "GUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "ADX (41.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.004927,
+    "sl": 0.004507,
+    "tp": 0.005683,
+    "tp1": 0.005347,
+    "scanned_at": "2026-09-18T06:04:09.585514+00:00"
+  },
+  {
+    "symbol": "EGLDUSDT",
+    "direction": "LONG",
+    "score": 69.3,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI netral (49), tidak menambah skor",
+      "ADX (26.9) tren kuat (+6.3 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP diambil dari level struktur (prior high 60-bar), RR aktual 6.82",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 6.82 (sisa posisi)"
+    ],
+    "entry": 3.999,
+    "sl": 3.745272,
+    "tp": 5.73,
+    "tp1": 4.252728,
+    "scanned_at": "2026-09-18T06:04:09.585514+00:00"
+  },
+  {
+    "symbol": "GOOGLUSDT",
+    "direction": "LONG",
+    "score": 67.6,
+    "timeframe": "4h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (67) menguatkan momentum naik",
+      "ADX (27.1) tren kuat (+6.6 skor)",
+      "Setup terdeteksi: BREAKOUT (-20 skor)",
+      "SL digeser ke luar struktur 6-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 351.66,
+    "sl": 343.821806,
+    "tp": 365.76875,
+    "tp1": 359.498194,
+    "scanned_at": "2026-09-18T06:04:09.585514+00:00"
   }
 ]

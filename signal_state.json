@@ -4,66 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "DOTUSDT|15m": {
-    "symbol": "DOTUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T02:04:10.403940+00:00"
-  },
-  "BCHUSDT|15m": {
-    "symbol": "BCHUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T02:04:11.753118+00:00"
-  },
-  "UNIUSDT|1h": {
-    "symbol": "UNIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T02:04:12.474267+00:00"
-  },
-  "AAVEUSDT|1h": {
-    "symbol": "AAVEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T02:04:13.204579+00:00"
-  },
-  "METUSDT|1h": {
-    "symbol": "METUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T02:04:13.933552+00:00"
-  },
-  "LINKUSDT|1h": {
-    "symbol": "LINKUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T03:03:55.413865+00:00"
-  },
-  "RAYSOLUSDT|1h": {
-    "symbol": "RAYSOLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T03:03:58.074269+00:00"
-  },
-  "CFGUSDT|1h": {
-    "symbol": "CFGUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T03:03:58.468156+00:00"
-  },
-  "AVAXUSDT|1h": {
-    "symbol": "AVAXUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T03:03:58.861398+00:00"
-  },
-  "VVVUSDT|4h": {
-    "symbol": "VVVUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T03:03:59.380231+00:00"
-  },
   "CHZUSDT|1h": {
     "symbol": "CHZUSDT",
     "timeframe": "1h",
@@ -123,5 +63,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T05:04:09.294349+00:00"
+  },
+  "ZHONGJIUSDT|1h": {
+    "symbol": "ZHONGJIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T06:04:44.912321+00:00"
+  },
+  "SOXLUSDT|1h": {
+    "symbol": "SOXLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T06:04:48.662840+00:00"
+  },
+  "GUSDT|1h": {
+    "symbol": "GUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T06:04:49.135624+00:00"
+  },
+  "EGLDUSDT|4h": {
+    "symbol": "EGLDUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T06:04:49.719347+00:00"
+  },
+  "GOOGLUSDT|4h": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T06:04:50.224596+00:00"
   }
 }
