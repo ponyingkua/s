@@ -1110,19 +1110,23 @@ async def send_telegram_document(file_path: str, caption: str, cfg: dict) -> Non
 
 
 ZIP_PREFIX = "signal_"
-ZIP_MAX_AGE = timedelta(hours=48)
 
 
-def _parse_zip_timestamp(filename: str) -> datetime | None:
-    match = re.match(
-        rf"{re.escape(ZIP_PREFIX)}(\d{{8}}_\d{{6}})\.zip$", os.path.basename(filename)
-    )
-    if not match:
-        return None
-    try:
-        return datetime.strptime(match.group(1), "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
+def cleanup_chart_files(out_dir: str, max_age: timedelta) -> None:
+    if not os.path.isdir(out_dir):
+        return
+    now = datetime.now(timezone.utc)
+    for pattern in ("*.png", f"{ZIP_PREFIX}*.zip"):
+        for path in glob.glob(os.path.join(out_dir, pattern)):
+            try:
+                mtime = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
+            except OSError:
+                continue
+            if now - mtime >= max_age:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
 
 def zip_charts(
@@ -1136,14 +1140,6 @@ def zip_charts(
     os.makedirs(out_dir, exist_ok=True)
 
     now = datetime.now(timezone.utc)
-    for old_zip in glob.glob(os.path.join(out_dir, f"{ZIP_PREFIX}*.zip")):
-        zip_time = _parse_zip_timestamp(old_zip)
-        if zip_time is None or now - zip_time >= ZIP_MAX_AGE:
-            try:
-                os.remove(old_zip)
-            except OSError:
-                pass
-
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     zip_path = os.path.join(out_dir, f"{ZIP_PREFIX}{timestamp}.zip")
 
@@ -1176,7 +1172,10 @@ async def run_scan(cfg: dict, out_path: str, chart_format: str = "wide") -> list
     min_history_bars = scan_cfg.get("min_history_bars", 260)
     state = load_state(state_path)
 
-    auto_generate_charts = cfg.get("chart", {}).get("auto_generate", True)
+    chart_cfg = cfg.get("chart", {})
+    auto_generate_charts = chart_cfg.get("auto_generate", True)
+    chart_retention_hours = chart_cfg.get("retention_hours", 6)
+    cleanup_chart_files("charts", timedelta(hours=chart_retention_hours))
     timeframes = cfg["timeframes"]
     mtf_bonus_weight = cfg["scoring"]["weights"].get("mtf_agreement", 0)
 
