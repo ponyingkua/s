@@ -9,7 +9,13 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from scanner import BinanceFuturesClient, load_config, drop_unclosed_candle
+from scanner import (
+    BASE_URL,
+    BinanceFuturesClient,
+    drop_unclosed_candle,
+    get_market_regime,
+    load_config,
+)
 
 OUT_DIR = "analysis_output"
 FETCH_MAX_RETRIES = 3
@@ -176,6 +182,44 @@ def _rsi_divergence(df: pd.DataFrame, rsi: pd.Series, lookback: int = 50) -> str
     return None
 
 
+def _volume_nodes(df: pd.DataFrame, lookback: int = 100, n_bins: int = 24):
+    """Cheap volume profile: bucket close prices into n_bins over the lookback
+    window and sum volume per bucket, returning bin centers sorted by volume
+    descending. This approximates high-volume nodes (HVN) without needing
+    intrabar/tick data -- good enough to flag price levels where a lot of
+    activity actually happened, vs. swing S/R which only looks at 2 candles
+    (the swing point itself) and ignores everything traded in between."""
+    x = df.tail(min(lookback, len(df)))
+    if len(x) < 10:
+        return []
+    lo, hi = float(x["low"].min()), float(x["high"].max())
+    if hi <= lo:
+        return []
+    bin_edges = np.linspace(lo, hi, n_bins + 1)
+    bin_vol = np.zeros(n_bins)
+    # Distribute each candle's volume across the bins its range spans,
+    # weighted by overlap -- better than dumping all volume onto the close.
+    for _, row in x.iterrows():
+        c_lo, c_hi, vol = float(row["low"]), float(row["high"]), float(row["volume"])
+        if vol <= 0 or c_hi <= c_lo:
+            continue
+        lo_idx = np.searchsorted(bin_edges, c_lo, side="right") - 1
+        hi_idx = np.searchsorted(bin_edges, c_hi, side="right") - 1
+        lo_idx = max(0, min(lo_idx, n_bins - 1))
+        hi_idx = max(0, min(hi_idx, n_bins - 1))
+        if lo_idx == hi_idx:
+            bin_vol[lo_idx] += vol
+        else:
+            span = c_hi - c_lo
+            for b in range(lo_idx, hi_idx + 1):
+                b_lo, b_hi = bin_edges[b], bin_edges[b + 1]
+                overlap = max(0.0, min(c_hi, b_hi) - max(c_lo, b_lo))
+                bin_vol[b] += vol * (overlap / span)
+    centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    order = np.argsort(bin_vol)[::-1]
+    return [(float(centers[i]), float(bin_vol[i])) for i in order if bin_vol[i] > 0]
+
+
 def _levels(df: pd.DataFrame, lookback: int = 100):
     x = df.tail(min(lookback, len(df)))
     sh, sl = _swing_points(x, 2, 2)
@@ -184,21 +228,41 @@ def _levels(df: pd.DataFrame, lookback: int = 100):
     res_candidates = [v for _, v in sh[-5:]]
     sup_candidates = [v for _, v in sl[-5:]]
 
-    # Pick the swing high/low CLOSEST to current price among the recent few,
-    # not the most extreme one. Taking the extreme meant a stale pre-move high
-    # (e.g. right before a big crash) or pre-move low (before a big pump) could
-    # keep winning as "resistance"/"support" long after it stopped being a
-    # relevant reference for the current price.
-    res_above = [v for v in res_candidates if v >= price]
-    resistance = (
-        min(res_above, key=lambda v: abs(v - price)) if res_above
-        else float(x["high"].max())
-    )
-    sup_below = [v for v in sup_candidates if v <= price]
-    support = (
-        min(sup_below, key=lambda v: abs(v - price)) if sup_below
-        else float(x["low"].min())
-    )
+    # High-volume nodes (HVN): price levels where the most volume actually
+    # traded, independent of swing geometry. Used to pull the swing-based
+    # level toward a spot with real liquidity behind it when one is nearby,
+    # since a swing point with almost no volume traded there is a level in
+    # name only. Kept as a nudge, not a replacement -- swing structure is
+    # still the primary signal because it reflects where price actually
+    # reversed, not just where volume happened to concentrate.
+    nodes = _volume_nodes(x, lookback)
+    top_nodes = [v for v, _ in nodes[:5]]
+
+    def _hvn_adjust(candidates, direction_above: bool):
+        """If a top volume node sits between price and the nearest swing
+        candidate (same side), prefer the node -- it's a more defensible
+        level because it reflects sustained activity, not a single wick."""
+        side_candidates = [v for v in candidates if (v >= price) == direction_above]
+        if not side_candidates:
+            return None
+        nearest = min(side_candidates, key=lambda v: abs(v - price))
+        for node in top_nodes:
+            is_between = (price < node < nearest) if direction_above else (nearest < node < price)
+            if is_between:
+                return node
+        return nearest
+
+    resistance = _hvn_adjust(res_candidates, True)
+    if resistance is None:
+        # Fall back to nearest high-volume node above price, then the window high.
+        above_nodes = [v for v in top_nodes if v >= price]
+        resistance = min(above_nodes, key=lambda v: abs(v - price)) if above_nodes else float(x["high"].max())
+
+    support = _hvn_adjust(sup_candidates, False)
+    if support is None:
+        below_nodes = [v for v in top_nodes if v <= price]
+        support = max(below_nodes, key=lambda v: abs(v - price)) if below_nodes else float(x["low"].min())
+
     return float(support), float(resistance)
 
 
@@ -428,18 +492,33 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     rng = max(float(last.high - last.low), 1e-12)
     body_ratio = abs(float(last.close - last.open)) / rng
 
+    # Directional conviction, used throughout to scale scores continuously
+    # instead of the old fixed-per-type values. Ranges roughly 0..1: how
+    # lopsided bull vs bear votes are (from _direction_analysis) reflects how
+    # confident the underlying signal mix already is, so a BREAKOUT built on
+    # near-unanimous bullish votes should outscore one built on a bare edge.
+    total_bias = direction["bull"] + direction["bear"]
+    conviction = abs(direction["bull"] - direction["bear"]) / total_bias if total_bias > 0 else 0.0
+
     if bull_bias and p > resistance and body_ratio >= 0.45:
-        setup, score = "BREAKOUT", 3.0
+        # Base 2.6..3.4 scaled by candle decisiveness (body_ratio can exceed
+        # 0.45 up to ~1.0) and directional conviction, instead of a flat 3.0.
+        setup = "BREAKOUT"
+        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
         notes.append("Bullish breakout has a decisive candle behind it.")
     elif bear_bias and p < support and body_ratio >= 0.45:
-        setup, score = "BREAKDOWN", 3.0
+        setup = "BREAKDOWN"
+        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
         notes.append("Bearish breakdown has a decisive candle behind it.")
     else:
         if bull_bias and abs(p - support) <= max(1.2 * atr, p * 0.006):
-            setup, score = "PULLBACK / RETEST", 2.6
+            # Closer to support = stronger retest; scale 2.2..2.8 by proximity.
+            dist_ratio = abs(p - support) / max(1.2 * atr, p * 0.006)
+            setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
             notes.append("Price is close to structural support while directional pressure remains bullish.")
         elif bear_bias and abs(p - resistance) <= max(1.2 * atr, p * 0.006):
-            setup, score = "PULLBACK / RETEST", 2.6
+            dist_ratio = abs(p - resistance) / max(1.2 * atr, p * 0.006)
+            setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
             notes.append("Price is close to structural resistance while directional pressure remains bearish.")
 
         upper_wick = float(last.high - max(last.open, last.close))
@@ -448,19 +527,23 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
         # was already found; otherwise it's recorded as a secondary
         # confirmation note so the setup label and its notes never disagree.
         if bear_bias and upper_wick / rng >= 0.45 and last.high >= resistance:
-            if score >= 2.5:
+            wick_ratio = upper_wick / rng
+            rej_score = 2.0 + 0.6 * min((wick_ratio - 0.45) / 0.55, 1.0)
+            if score >= rej_score:
                 notes.append("Upper-wick rejection also visible at structural resistance (secondary confirmation).")
             else:
                 setup = "REJECTION"
                 notes.append("Upper-wick rejection is visible at structural resistance.")
-            score = max(score, 2.5)
+            score = max(score, rej_score)
         elif bull_bias and lower_wick / rng >= 0.45 and last.low <= support:
-            if score >= 2.5:
+            wick_ratio = lower_wick / rng
+            rej_score = 2.0 + 0.6 * min((wick_ratio - 0.45) / 0.55, 1.0)
+            if score >= rej_score:
                 notes.append("Lower-wick rejection also visible at structural support (secondary confirmation).")
             else:
                 setup = "REJECTION"
                 notes.append("Lower-wick rejection is visible at structural support.")
-            score = max(score, 2.5)
+            score = max(score, rej_score)
 
     if setup == "NONE":
         ema20 = df["close"].ewm(span=20, adjust=False).mean()
@@ -478,7 +561,12 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
                 atr_ok = False
                 notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
             if momentum_ok and rsi_ok and atr_ok:
-                setup, score = "CONTINUATION", 2.2
+                # Scale 1.6..2.4 by how much extra room RSI has and how firm
+                # the MACD histogram push is, instead of a flat 2.2.
+                rsi_room = (75 - r) / 75 if bull_bias else (r - 25) / 75
+                hist_strength = min(abs(h) / (atr * 0.05 if atr else 1.0), 1.0) if atr else 0.0
+                setup = "CONTINUATION"
+                score = 1.6 + 0.4 * min(rsi_room, 1.0) + 0.4 * hist_strength
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
@@ -490,19 +578,16 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
                 atr_ok = False
                 notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
             if momentum_ok and rsi_ok and atr_ok:
-                setup, score = "CONTINUATION", 2.2
+                rsi_room = (r - 25) / 75
+                hist_strength = min(abs(h) / (atr * 0.05 if atr else 1.0), 1.0) if atr else 0.0
+                setup = "CONTINUATION"
+                score = 1.6 + 0.4 * min(rsi_room, 1.0) + 0.4 * hist_strength
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
-    # NOTE: setup type only ever gets one of 4 fixed scores here -
-    # BREAKOUT/BREAKDOWN 3.0, PULLBACK/RETEST 2.6, REJECTION 2.5,
-    # CONTINUATION 2.2 - so with the >=2.0 cutoff below, "LOW" is currently
-    # unreachable in practice (and so is _select_best_setup's "weak" pool
-    # fallback, which only fires on LOW/score<2.0). Not a bug - nothing
-    # downstream assumes LOW ever occurs - but worth knowing before
-    # treating that branch as an active filter.
-    quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW"
+    score = round(score, 2)
+    quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW" if score > 0 else "NONE"
     return {"type": setup, "quality": quality, "score": score, "notes": notes}
 
 
@@ -580,8 +665,19 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
     }
 
 
-def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
+def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str, deriv: dict | None = None) -> dict:
     direction = _direction_analysis(df)
+    if deriv is not None:
+        dbias = _derivatives_bias(deriv)
+        direction["bull"] = round(direction["bull"] + dbias["bull"], 2)
+        direction["bear"] = round(direction["bear"] + dbias["bear"], 2)
+        direction["notes"] = direction["notes"] + dbias["notes"]
+        direction["derivatives"] = {
+            "funding_rate_pct": deriv.get("funding_rate_pct"),
+            "open_interest": deriv.get("open_interest"),
+            "oi_change_pct": deriv.get("oi_change_pct"),
+            "ls_account_ratio": deriv.get("ls_account_ratio"),
+        }
     structure = _structure_analysis(df)
     setup = _detect_setup(df, structure, direction)
 
@@ -635,9 +731,13 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str) -> dict:
 
 
 MTF_AGREE_BONUS = 0.5  # ranking-only bonus per other timeframe agreeing on direction; see _select_best_setup
+REGIME_CONFLICT_PENALTY = 0.4  # ranking-only penalty when setup direction fights BTC structure/market regime
 
 
-def _select_best_setup(per_tf: dict):
+def _select_best_setup(per_tf: dict, market_regime: str = "NEUTRAL"):
+    # With continuous setup scoring (see _detect_setup), a weak CONTINUATION
+    # can genuinely score below 2.0 / land as LOW quality now, so this
+    # weak-pool fallback is an active filter, not dead code.
     candidates = []
     weak = []
     for tf, info in per_tf.items():
@@ -649,6 +749,8 @@ def _select_best_setup(per_tf: dict):
         strength = abs(da["bull"] - da["bear"])
         agree = len(info.get("mtf_agree_tfs", []))
         rank_score = su["score"] + MTF_AGREE_BONUS * agree
+        if info.get("btc_correlation", {}).get("conflict"):
+            rank_score -= REGIME_CONFLICT_PENALTY
         row = ((rank_score, strength), tf, info)
         if su.get("quality") == "LOW" or su.get("score", 0) < 2.0:
             weak.append(row)
@@ -680,18 +782,222 @@ async def _fetch_tf(client: "BinanceFuturesClient", symbol: str, tf: str, klines
     return tf, None, str(last_err)
 
 
+# ---------------------------------------------------------------------------
+# Derivatives data (funding rate / open interest / long-short ratio).
+#
+# Endpoint publik Binance Futures ini TIDAK ada di scanner.py (BinanceFuturesClient
+# di sana cuma untuk klines + volume), jadi diambil langsung di sini pakai session
+# aiohttp milik client yang sudah terbuka (client._session) -- tanpa menambah
+# method baru ke class BinanceFuturesClient di scanner.py, biar scanner.py tidak
+# disentuh sama sekali. Semua endpoint ini best-effort: kalau gagal (rate limit,
+# symbol delisting dari data futures publik, dll) dikembalikan None dan dicatat
+# sbg error per-field, tidak pernah membatalkan analisa teknikal utama.
+# ---------------------------------------------------------------------------
+
+async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dict:
+    session = client._session
+    out: dict = {
+        "funding_rate": None,
+        "funding_rate_pct": None,
+        "next_funding_time": None,
+        "open_interest": None,
+        "oi_change_pct": None,
+        "ls_account_ratio": None,
+        "errors": [],
+    }
+
+    # --- Funding rate (current, from premiumIndex -- includes predicted next rate) ---
+    try:
+        url = f"{BASE_URL}/fapi/v1/premiumIndex"
+        async with session.get(url, params={"symbol": symbol}) as resp:
+            data = await resp.json()
+        if resp.status == 200 and isinstance(data, dict) and "lastFundingRate" in data:
+            rate = float(data["lastFundingRate"])
+            out["funding_rate"] = rate
+            out["funding_rate_pct"] = rate * 100
+            out["next_funding_time"] = data.get("nextFundingTime")
+        else:
+            out["errors"].append(f"funding rate: unexpected response ({data})")
+    except Exception as exc:
+        out["errors"].append(f"funding rate: {exc}")
+
+    # --- Open interest: current snapshot + ~5h ago from openInterestHist for a
+    # cheap trend read (rising OI + rising price = new longs; rising OI + falling
+    # price = new shorts; falling OI = position unwinding / closing, either side).
+    try:
+        url = f"{BASE_URL}/fapi/v1/openInterest"
+        async with session.get(url, params={"symbol": symbol}) as resp:
+            data = await resp.json()
+        if resp.status == 200 and isinstance(data, dict) and "openInterest" in data:
+            out["open_interest"] = float(data["openInterest"])
+        else:
+            out["errors"].append(f"open interest: unexpected response ({data})")
+    except Exception as exc:
+        out["errors"].append(f"open interest: {exc}")
+
+    if out["open_interest"] is not None:
+        try:
+            hist_url = f"{BASE_URL}/futures/data/openInterestHist"
+            async with session.get(
+                hist_url, params={"symbol": symbol, "period": "1h", "limit": 6}
+            ) as resp:
+                hist = await resp.json()
+            if resp.status == 200 and isinstance(hist, list) and len(hist) >= 2:
+                oi_then = float(hist[0]["sumOpenInterest"])
+                oi_now = float(hist[-1]["sumOpenInterest"])
+                if oi_then > 0:
+                    out["oi_change_pct"] = (oi_now - oi_then) / oi_then * 100
+        except Exception as exc:
+            out["errors"].append(f"open interest history: {exc}")
+
+    # --- Global long/short account ratio (retail positioning; contrarian read at
+    # extremes -- very crowded retail longs/shorts often precede a squeeze the
+    # other way). Endpoint has ~30min data lag, treated as directional only. ---
+    try:
+        url = f"{BASE_URL}/futures/data/globalLongShortAccountRatio"
+        async with session.get(
+            url, params={"symbol": symbol, "period": "1h", "limit": 1}
+        ) as resp:
+            data = await resp.json()
+        if resp.status == 200 and isinstance(data, list) and data:
+            out["ls_account_ratio"] = float(data[-1]["longShortRatio"])
+        else:
+            out["errors"].append(f"long/short ratio: unexpected response ({data})")
+    except Exception as exc:
+        out["errors"].append(f"long/short ratio: {exc}")
+
+    return out
+
+
+def _derivatives_bias(deriv: dict) -> dict:
+    """Convert raw derivatives numbers into a bull/bear score contribution
+    plus human-readable notes, mirroring the scoring style of _direction_analysis.
+    Every threshold here is a heuristic, not a law -- deliberately kept small
+    relative to the technical score (max ~1.8 total) since derivatives data is
+    a confirming/contrarian signal, not a primary directional one."""
+    bull = bear = 0.0
+    notes = []
+
+    rate = deriv.get("funding_rate_pct")
+    if rate is not None:
+        if rate <= -0.05:
+            bull += 0.5
+            notes.append(f"Funding rate {rate:+.3f}% is meaningfully negative — shorts paying longs.")
+        elif rate >= 0.08:
+            bear += 0.5
+            notes.append(f"Funding rate {rate:+.3f}% is elevated — longs paying a premium, crowded-long risk.")
+        elif rate >= 0.04:
+            bear += 0.2
+            notes.append(f"Funding rate {rate:+.3f}% is mildly positive.")
+        elif rate <= -0.02:
+            bull += 0.2
+            notes.append(f"Funding rate {rate:+.3f}% is mildly negative.")
+
+    oi_chg = deriv.get("oi_change_pct")
+    if oi_chg is not None:
+        if abs(oi_chg) >= 3.0:
+            notes.append(f"Open interest {'up' if oi_chg > 0 else 'down'} {abs(oi_chg):.1f}% over the last ~5h.")
+
+    ratio = deriv.get("ls_account_ratio")
+    if ratio is not None:
+        # ratio = longs/shorts among retail accounts; >1 means more long accounts.
+        if ratio >= 2.2:
+            bear += 0.4
+            notes.append(f"Retail long/short ratio {ratio:.2f} is crowded-long (contrarian bearish tilt).")
+        elif ratio <= 0.55:
+            bull += 0.4
+            notes.append(f"Retail long/short ratio {ratio:.2f} is crowded-short (contrarian bullish tilt).")
+
+    if deriv.get("errors"):
+        notes.append(f"Derivatives data partially unavailable: {'; '.join(deriv['errors'])}")
+
+    return {"bull": round(bull, 2), "bear": round(bear, 2), "notes": notes}
+
+
+def _btc_correlation_note(symbol: str, deriv_regime: str, btc_dfs: dict, per_tf: dict) -> dict:
+    """Soft correlation check against BTC, not a hard block. Altcoins that
+    want to go LONG while BTC's own structure/regime on the same timeframe is
+    BEARISH (or vice versa) get a cautionary note and a small score penalty in
+    ranking (via _select_best_setup reading this field) rather than being
+    filtered out outright -- alts do decouple from BTC sometimes, so this is
+    a risk flag for the trader to weigh, not an automatic disqualifier."""
+    notes_by_tf: dict = {}
+    if symbol.upper().startswith("BTC"):
+        return notes_by_tf
+
+    for tf, info in per_tf.items():
+        if "error" in info or info.get("direction") == "NONE":
+            continue
+        btc_df = btc_dfs.get(tf)
+        if btc_df is None or len(btc_df) < 30:
+            continue
+        try:
+            btc_direction = _direction_analysis(btc_df)
+            btc_structure = _structure_analysis(btc_df)
+        except Exception:
+            continue
+        btc_bull = btc_direction["bull"] > btc_direction["bear"]
+        btc_bear = btc_direction["bear"] > btc_direction["bull"]
+        btc_label = "BULLISH" if btc_bull else "BEARISH" if btc_bear else "NEUTRAL"
+
+        sym_direction = info["direction"]
+        conflict = (sym_direction == "LONG" and (btc_label == "BEARISH" or deriv_regime == "BEAR")) or (
+            sym_direction == "SHORT" and (btc_label == "BULLISH" or deriv_regime == "BULL")
+        )
+        note = None
+        if conflict:
+            parts = []
+            if btc_label != "NEUTRAL":
+                parts.append(f"BTC {tf} structure is {btc_label}")
+            if deriv_regime in ("BULL", "BEAR"):
+                parts.append(f"overall market regime is {deriv_regime}")
+            note = (
+                f"Caution: {sym_direction} on {symbol} runs against "
+                f"{' and '.join(parts)} — correlation risk, not a hard block."
+            )
+        notes_by_tf[tf] = {
+            "btc_structure": btc_label,
+            "conflict": conflict,
+            "note": note,
+        }
+    return notes_by_tf
+
+
 async def analyze_symbol(symbol: str, cfg: dict) -> dict:
     data_cfg = cfg.get("scanning", {})
     klines_limit = int(data_cfg.get("klines_limit", 300))
     timeframes = cfg.get("timeframes", ["1h"])
     per_tf = {}
     dfs = {}
+    need_btc = not symbol.upper().startswith("BTC")
 
     async with BinanceFuturesClient() as client:
-        results = await asyncio.gather(
-            *(_fetch_tf(client, symbol, tf, klines_limit) for tf in timeframes),
-            return_exceptions=True,
-        )
+        awaitables = [
+            asyncio.gather(
+                *(_fetch_tf(client, symbol, tf, klines_limit) for tf in timeframes),
+                return_exceptions=True,
+            ),
+            _fetch_derivatives(client, symbol),
+            get_market_regime(client, cfg),
+        ]
+        if need_btc:
+            awaitables.append(
+                asyncio.gather(
+                    *(_fetch_tf(client, "BTCUSDT", tf, klines_limit) for tf in timeframes),
+                    return_exceptions=True,
+                )
+            )
+        gathered = await asyncio.gather(*awaitables)
+    results, deriv, regime = gathered[0], gathered[1], gathered[2]
+    btc_results = gathered[3] if need_btc else []
+
+    btc_dfs = {}
+    for tf, res in zip(timeframes, btc_results):
+        if isinstance(res, Exception):
+            continue
+        _, bdf, err = res
+        if err is None and bdf is not None:
+            btc_dfs[tf] = bdf
 
     for tf, res in zip(timeframes, results):
         if isinstance(res, Exception):
@@ -703,7 +1009,7 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
             continue
         try:
             dfs[tf] = df
-            info = analyze_timeframe(df, symbol, tf)
+            info = analyze_timeframe(df, symbol, tf, deriv=deriv)
             info["mtf_agree_tfs"] = []
             per_tf[tf] = info
         except Exception as exc:
@@ -714,11 +1020,18 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
         if "direction" in info and info["direction"] != "NONE":
             info["mtf_agree_tfs"] = [t for t, d in directions.items() if t != tf and d == info["direction"]]
 
-    best = _select_best_setup(per_tf)
+    btc_corr = _btc_correlation_note(symbol, regime, btc_dfs, per_tf)
+    for tf, corr in btc_corr.items():
+        per_tf[tf]["btc_correlation"] = corr
+        if corr.get("note"):
+            per_tf[tf]["direction_analysis"]["notes"].append(corr["note"])
+
+    best = _select_best_setup(per_tf, market_regime=regime)
     return {
         "symbol": symbol,
         "per_tf": per_tf,
         "dfs": dfs,
+        "market_regime": regime,
         "best_tf": best[0] if best else None,
         "best": best[1] if best else None,
     }
@@ -731,6 +1044,7 @@ def compose_analysis_text(result: dict) -> str:
     lines = [
         f"# Independent Technical Analysis: {symbol}",
         f"Time: {now}",
+        f"Market regime (BTC 4h): {result.get('market_regime', 'NEUTRAL')}",
         "",
     ]
 
@@ -765,6 +1079,14 @@ def compose_analysis_text(result: dict) -> str:
         lines.append(f"Direction: {info['direction']}")
         lines.append(f"Technical bias: {info['bias']}")
         lines.append(f"Structure: {st['label']}")
+        deriv_info = da.get("derivatives")
+        if deriv_info and deriv_info.get("funding_rate_pct") is not None:
+            lines.append(
+                f"Funding: {deriv_info['funding_rate_pct']:+.4f}% | "
+                f"OI: {deriv_info.get('open_interest')} "
+                f"({deriv_info.get('oi_change_pct') or 0:+.1f}% /5h) | "
+                f"L/S ratio: {deriv_info.get('ls_account_ratio')}"
+            )
         agree = info.get("mtf_agree_tfs", [])
         if agree:
             lines.append(f"MTF agreement: {', '.join(agree)}")
