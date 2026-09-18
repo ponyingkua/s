@@ -22,6 +22,15 @@ FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
 MAX_SL_ATR_MULT = 2.5  # SL tidak boleh lebih dari N x ATR dari harga saat ini
 
+# Interval string -> menit, dipakai _price_change_pct() untuk mencocokkan window
+# perubahan harga dengan window openInterestHist (period=1h, limit=6 -> ~5-6 jam).
+# Hanya interval Binance futures yang umum dipakai; interval lain -> None (skip).
+_TF_MINUTES = {
+    "1m": 1, "3m": 3, "5m": 5, "15m": 15, "30m": 30,
+    "1h": 60, "2h": 120, "4h": 240, "6h": 360, "8h": 480,
+    "12h": 720, "1d": 1440,
+}
+
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
     s = raw.strip().upper()
@@ -264,6 +273,101 @@ def _levels(df: pd.DataFrame, lookback: int = 100):
         support = max(below_nodes, key=lambda v: abs(v - price)) if below_nodes else float(x["low"].min())
 
     return float(support), float(resistance)
+
+
+def _pullback_depth(df: pd.DataFrame, bullish: bool, lookback: int = 100) -> float | None:
+    """Retracement of the current pullback as a % of the most recent
+    impulsive leg (swing low -> swing high for a bullish leg, or the
+    mirror swing high -> swing low for a bearish leg).
+
+    This is the piece plain proximity-to-support/resistance checks miss:
+    two pullbacks can sit at the exact same distance from a support level
+    while one has barely given back any of a huge pump (still hugging the
+    top -- looks more like chasing than a retest) and the other has
+    retraced a healthy chunk of it (a normal, tradeable retest). A third
+    case -- retraced almost the whole leg -- usually means the move is
+    failing rather than resting.
+
+    Returns a percentage: 0 = price is still sitting at the extreme (the
+    peak for a bullish leg, the trough for a bearish one), 100 = price has
+    fully round-tripped back to where the leg started (can exceed 100 if
+    price has since broken past that origin). Returns None when the
+    window is too short or there's no clean leg to measure against (e.g.
+    the extreme sits right at the edge of the lookback window, so we
+    can't see where the leg actually started).
+    """
+    x = df.tail(min(lookback, len(df)))
+    if len(x) < 15:
+        return None
+    price = float(x["close"].iloc[-1])
+
+    if bullish:
+        peak_idx = int(x["high"].to_numpy().argmax())
+        if peak_idx < 3:
+            return None
+        leg_start = float(x["low"].iloc[: peak_idx + 1].min())
+        peak = float(x["high"].iloc[peak_idx])
+        leg_range = peak - leg_start
+        if leg_range <= 0:
+            return None
+        return (peak - price) / leg_range * 100
+
+    trough_idx = int(x["low"].to_numpy().argmin())
+    if trough_idx < 3:
+        return None
+    leg_start = float(x["high"].iloc[: trough_idx + 1].max())
+    trough = float(x["low"].iloc[trough_idx])
+    leg_range = leg_start - trough
+    if leg_range <= 0:
+        return None
+    return (price - trough) / leg_range * 100
+
+
+# Healthy retracement zone for a PULLBACK/RETEST, as % of the recent leg.
+# Centered on 45% (roughly a 0.5 retrace); below PULLBACK_DEPTH_MIN reads as
+# still hugging the extreme (chasing), above PULLBACK_DEPTH_MAX reads as
+# having given back so much the move may already be failing.
+PULLBACK_DEPTH_MIN = 20.0
+PULLBACK_DEPTH_MAX = 70.0
+PULLBACK_DEPTH_CENTER = 45.0
+PULLBACK_DEPTH_ADJ_MAX = 0.4  # max score points added/removed by depth quality
+
+
+def _apply_pullback_depth_quality(df: pd.DataFrame, score: float, bullish: bool) -> tuple[float, str | None]:
+    """Nudge a PULLBACK/RETEST score up or down based on how much of the
+    recent impulsive leg has actually been retraced (see _pullback_depth),
+    and return an explanatory note. Leaves score unchanged (and returns no
+    note) when there isn't a clean leg to measure -- e.g. too little
+    history, or the setup fired on a level from _levels() rather than a
+    single dominant recent leg.
+    """
+    depth = _pullback_depth(df, bullish=bullish)
+    if depth is None:
+        return score, None
+
+    half_zone = (PULLBACK_DEPTH_MAX - PULLBACK_DEPTH_MIN) / 2.0
+    if PULLBACK_DEPTH_MIN <= depth <= PULLBACK_DEPTH_MAX:
+        centered = 1.0 - abs(depth - PULLBACK_DEPTH_CENTER) / half_zone
+        adj = PULLBACK_DEPTH_ADJ_MAX * max(0.0, min(centered, 1.0))
+        note = (
+            f"Pullback has retraced {depth:.0f}% of the recent leg — "
+            f"a reasonably healthy depth for a retest, not just chasing the extreme."
+        )
+    elif depth < PULLBACK_DEPTH_MIN:
+        adj = -PULLBACK_DEPTH_ADJ_MAX * (1.0 - depth / PULLBACK_DEPTH_MIN)
+        note = (
+            f"Pullback has only retraced {depth:.0f}% of the recent leg — "
+            f"price is still hugging the extreme, this reads more like chasing than a genuine retest."
+        )
+    else:
+        over = min((depth - PULLBACK_DEPTH_MAX) / (100.0 - PULLBACK_DEPTH_MAX), 1.0)
+        adj = -PULLBACK_DEPTH_ADJ_MAX * over
+        note = (
+            f"Pullback has retraced {depth:.0f}% of the recent leg — "
+            f"deep enough that the move may already be failing rather than just resting."
+        )
+
+    return max(0.0, round(score + adj, 2)), note
 
 
 def _structure_analysis(df: pd.DataFrame) -> dict:
@@ -516,10 +620,16 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             dist_ratio = abs(p - support) / max(1.2 * atr, p * 0.006)
             setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
             notes.append("Price is close to structural support while directional pressure remains bullish.")
+            score, depth_note = _apply_pullback_depth_quality(df, score, bullish=True)
+            if depth_note:
+                notes.append(depth_note)
         elif bear_bias and abs(p - resistance) <= max(1.2 * atr, p * 0.006):
             dist_ratio = abs(p - resistance) / max(1.2 * atr, p * 0.006)
             setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
             notes.append("Price is close to structural resistance while directional pressure remains bearish.")
+            score, depth_note = _apply_pullback_depth_quality(df, score, bullish=False)
+            if depth_note:
+                notes.append(depth_note)
 
         upper_wick = float(last.high - max(last.open, last.close))
         lower_wick = float(min(last.open, last.close) - last.low)
@@ -668,7 +778,8 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
 def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str, deriv: dict | None = None) -> dict:
     direction = _direction_analysis(df)
     if deriv is not None:
-        dbias = _derivatives_bias(deriv)
+        price_change_pct = _price_change_pct(df, timeframe)
+        dbias = _derivatives_bias(deriv, price_change_pct=price_change_pct)
         direction["bull"] = round(direction["bull"] + dbias["bull"], 2)
         direction["bear"] = round(direction["bear"] + dbias["bear"], 2)
         direction["notes"] = direction["notes"] + dbias["notes"]
@@ -869,12 +980,32 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
     return out
 
 
-def _derivatives_bias(deriv: dict) -> dict:
+def _price_change_pct(df: pd.DataFrame, timeframe: str, hours: float = 5.5) -> float | None:
+    """Price % change over a window matched to openInterestHist's ~5-6h
+    lookback (period=1h, limit=6 in _fetch_derivatives), so the OI-price
+    divergence check in _derivatives_bias compares like with like instead
+    of an arbitrary candle count. Returns None when the timeframe isn't in
+    _TF_MINUTES or there isn't enough history for that many candles back."""
+    minutes = _TF_MINUTES.get(timeframe)
+    if not minutes:
+        return None
+    candles_back = max(1, round(hours * 60 / minutes))
+    if len(df) <= candles_back:
+        return None
+    now = float(df["close"].iloc[-1])
+    then = float(df["close"].iloc[-1 - candles_back])
+    if then == 0:
+        return None
+    return (now - then) / then * 100
+
+
+def _derivatives_bias(deriv: dict, price_change_pct: float | None = None) -> dict:
     """Convert raw derivatives numbers into a bull/bear score contribution
     plus human-readable notes, mirroring the scoring style of _direction_analysis.
     Every threshold here is a heuristic, not a law -- deliberately kept small
-    relative to the technical score (max ~1.8 total) since derivatives data is
-    a confirming/contrarian signal, not a primary directional one."""
+    relative to the technical score (max ~2.4 total with the OI-price check
+    below) since derivatives data is a confirming/contrarian signal, not a
+    primary directional one."""
     bull = bear = 0.0
     notes = []
 
@@ -897,6 +1028,45 @@ def _derivatives_bias(deriv: dict) -> dict:
     if oi_chg is not None:
         if abs(oi_chg) >= 3.0:
             notes.append(f"Open interest {'up' if oi_chg > 0 else 'down'} {abs(oi_chg):.1f}% over the last ~5h.")
+
+        # Price-vs-OI divergence: the classic read is price+OI both up = new
+        # longs opening (real demand); price up but OI down = short covering
+        # (the rally isn't backed by fresh positioning, weaker follow-through);
+        # price+OI both down = new shorts opening (real selling); price down
+        # but OI down = long liquidation/closing (downside may be exhausting
+        # rather than fresh sellers stepping in). This is exactly the signal
+        # that tells a healthy continuation/retest apart from one that's
+        # already running on fumes, which proximity-to-level checks alone
+        # can't see. Needs both legs (meaningful OI change + a price read
+        # over a matched window) to avoid firing on noise.
+        if price_change_pct is not None and abs(oi_chg) >= 2.0 and abs(price_change_pct) >= 0.5:
+            price_up = price_change_pct > 0
+            oi_up = oi_chg > 0
+            mag = min(abs(oi_chg) / 6.0, 1.0)  # scales the contribution with how big the OI move is
+            if price_up and oi_up:
+                bull += 0.7 * mag
+                notes.append(
+                    f"Price +{price_change_pct:.1f}% with OI up {oi_chg:.1f}% over ~5h — "
+                    f"move looks backed by fresh longs, not just short-covering."
+                )
+            elif price_up and not oi_up:
+                bear += 0.5 * mag
+                notes.append(
+                    f"Price +{price_change_pct:.1f}% while OI fell {oi_chg:.1f}% over ~5h — "
+                    f"rally looks more like short-covering/de-leveraging than new buyers stepping in."
+                )
+            elif not price_up and oi_up:
+                bear += 0.7 * mag
+                notes.append(
+                    f"Price {price_change_pct:.1f}% with OI up {oi_chg:.1f}% over ~5h — "
+                    f"move looks backed by fresh shorts, not just long liquidation."
+                )
+            else:
+                bull += 0.3 * mag
+                notes.append(
+                    f"Price {price_change_pct:.1f}% while OI fell {oi_chg:.1f}% over ~5h — "
+                    f"decline looks more like long liquidation than fresh selling, downside pressure may be fading."
+                )
 
     ratio = deriv.get("ls_account_ratio")
     if ratio is not None:
