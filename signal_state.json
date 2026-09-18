@@ -4,36 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "NEARUSDT|15m": {
-    "symbol": "NEARUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T13:04:27.104560+00:00"
-  },
-  "AAVEUSDT|1h": {
-    "symbol": "AAVEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T13:04:29.721915+00:00"
-  },
-  "BRUSDT|1h": {
-    "symbol": "BRUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T13:04:30.467567+00:00"
-  },
-  "ORDIUSDT|1h": {
-    "symbol": "ORDIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T13:04:31.131107+00:00"
-  },
-  "NOKUSDT|1h": {
-    "symbol": "NOKUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T13:04:31.794384+00:00"
-  },
   "CBRSUSDT|1h": {
     "symbol": "CBRSUSDT",
     "timeframe": "1h",
@@ -123,5 +93,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T16:04:09.120319+00:00"
+  },
+  "PENDLEUSDT|1h": {
+    "symbol": "PENDLEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T17:03:48.540353+00:00"
+  },
+  "VIRTUALUSDT|1h": {
+    "symbol": "VIRTUALUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T17:03:51.726424+00:00"
+  },
+  "POLUSDT|1h": {
+    "symbol": "POLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T17:03:52.428188+00:00"
+  },
+  "RAVEUSDT|4h": {
+    "symbol": "RAVEUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T17:03:53.122437+00:00"
   }
 }
