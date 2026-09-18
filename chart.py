@@ -160,7 +160,7 @@ def _draw_change_badge(fig, x: float, y: float, change_pct: float | None,
 
 
 def _place_level_labels(ax, levels: list, label_x: float, min_gap: float,
-                         square: bool = False) -> None:
+                         square: bool = False, hollow: bool = False) -> None:
     if not levels:
         return
 
@@ -177,18 +177,28 @@ def _place_level_labels(ax, levels: list, label_x: float, min_gap: float,
 
     level_fontsize = 15.5 if square else 9.5
     for item, label_y in zip(ordered, positions):
-        ax.text(
-            label_x, label_y, item["text"],
-            color=TEXT,
-            va="center", ha="left", fontweight="bold", fontsize=level_fontsize,
-            zorder=Z_LEVEL_LABEL, clip_on=False,
-            bbox=dict(
+        if hollow:
+            bbox = dict(
+                boxstyle="square,pad=0.35",
+                facecolor="none",
+                edgecolor=item["color"],
+                linewidth=1.6,
+                alpha=1.0,
+            )
+        else:
+            bbox = dict(
                 boxstyle="square,pad=0.35",
                 facecolor=item["color"],
                 edgecolor=item["color"],
                 linewidth=0,
                 alpha=0.92,
-            ),
+            )
+        ax.text(
+            label_x, label_y, item["text"],
+            color=TEXT,
+            va="center", ha="left", fontweight="bold", fontsize=level_fontsize,
+            zorder=Z_LEVEL_LABEL, clip_on=False,
+            bbox=bbox,
         )
 
 
@@ -473,7 +483,7 @@ def _pad_zone_bounds(z: dict, y_span: float) -> tuple[float, float]:
 def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int, y_span: float,
                              square: bool = False) -> None:
     pad = y_span * 0.022
-    fontsize = 12.5 if square else 6.0
+    fontsize = 13.5 if square else 7.0
     for pt in labeled_points:
         px = pt["index"] - offset
         if px < 0 or px >= plot_len:
@@ -513,7 +523,7 @@ def _draw_zones(ax, zones: list, offset: int, plot_len: int, last_x: int, y_span
         mid_x = (start_px + end_px) / 2
         mid_y = (z["top"] + z["bottom"]) / 2
         ax.text(mid_x, mid_y, label, color="#F2F2F2",
-                fontsize=(14.0 if square else 7.5), fontweight="bold", ha="center", va="center",
+                fontsize=(15.0 if square else 8.5), fontweight="bold", ha="center", va="center",
                 alpha=0.95, zorder=Z_ZONE_TEXT, clip_on=False)
 
 
@@ -547,7 +557,7 @@ def _draw_bos_and_confirmation(ax, bos_events: list, offset: int, plot_df: pd.Da
             label_y = min(ev["level"], low[idx_px]) - pad_label
 
         ax.text(idx_px + 0.9, label_y, "BOS", color="#F2F2F2",
-                fontsize=(12.5 if square else 6.0), fontweight="bold",
+                fontsize=(13.5 if square else 7.0), fontweight="bold",
                 ha="left", va="center",
                 zorder=Z_BOS_TEXT, clip_on=False)
 
@@ -737,7 +747,7 @@ def build_chart(
         ax.set_facecolor(bg_color)
         ax.grid(True, linestyle="-", alpha=0.8, color=grid_color, linewidth=0.5)
         ax.set_axisbelow(True)
-        ax.tick_params(colors=axis_color, labelcolor=axis_color, labelsize=7.5)
+        ax.tick_params(colors=axis_color, labelcolor=axis_color, labelsize=8.5)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
         for side in ("left", "bottom"):
@@ -816,13 +826,13 @@ def build_chart(
     _draw_structure_labels(ax_price, structure["labeled_points"], offset, plot_len, y_span, square=square)
 
     label_min_gap = (ax_price.get_ylim()[1] - ax_price.get_ylim()[0]) * 0.065
-    _place_level_labels(ax_price, levels, label_x, label_min_gap, square=square)
+    _place_level_labels(ax_price, levels, label_x, label_min_gap, square=square, hollow=True)
 
     vol_ma_lookback = cfg.get("indicators", {}).get("volume_spike", {}).get("lookback", 20)
     _draw_volume(ax_vol, plot_df, colors, vol_ma_lookback)
     ax_vol.yaxis.set_major_formatter(mticker.FuncFormatter(_format_volume_axis))
-    ax_vol.set_ylabel("Vol", color=axis_color, fontsize=8, labelpad=5)
-    ax_price.set_ylabel("Price", color=axis_color, fontsize=8.5, labelpad=5)
+    ax_vol.set_ylabel("Vol", color=axis_color, fontsize=9, labelpad=5)
+    ax_price.set_ylabel("Price", color=axis_color, fontsize=9.5, labelpad=5)
 
     if "open_time" in plot_df.columns and len(plot_df):
         tick_count = min(6, len(plot_df))
@@ -834,11 +844,11 @@ def build_chart(
         for t in ticks_idx:
             ts = plot_df["open_time"].iloc[int(t)]
             tick_labels.append(ts.strftime("%d %b  %H:%M") if pd.notna(ts) else str(t))
-        ax_vol.set_xticklabels(tick_labels, fontsize=7.5, color=axis_color)
+        ax_vol.set_xticklabels(tick_labels, fontsize=8.5, color=axis_color)
 
     if not hide_indicators:
         legend = ax_price.legend(
-            loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
+            loc="upper left", fontsize=(14.5 if square else 8.5), framealpha=0.95,
             facecolor=bg_color, edgecolor=spine_color, labelcolor=text_color, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
@@ -848,21 +858,21 @@ def build_chart(
     header_title = f"{symbol}  ·  {timeframe}  ·  {signal.direction}{setup_label}"
 
     fig.text(0.07, 0.965, header_title,
-              fontsize=(22.0 if square else 18), fontweight="bold", color=text_color, ha="left", va="top")
-    _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df), fontsize=(19.0 if square else 15))
+              fontsize=(23.5 if square else 19.5), fontweight="bold", color=text_color, ha="left", va="top")
+    _draw_change_badge(fig, 0.96, 0.965, _calc_24h_change(df), fontsize=(20.5 if square else 16.5))
 
     if square:
         footer_left = f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}\n{header_extra}"
         fig.text(0.07, 0.028, footer_left,
-                  fontsize=12.5, color=axis_color, ha="left", va="bottom", linespacing=1.6)
+                  fontsize=13.5, color=axis_color, ha="left", va="bottom", linespacing=1.6)
     else:
         fig.text(0.07, 0.02, f"BINANCE FUTURES  ·  {symbol}  ·  {timeframe}  ·  {header_extra}",
-                  fontsize=7, color=axis_color, ha="left", va="bottom")
+                  fontsize=8, color=axis_color, ha="left", va="bottom")
 
     fig.text(
         0.96, 0.013,
         "Chart-based analysis.\nNOT FINANCIAL ADVICE, DYOR.",
-        fontsize=(13.0 if square else 7.5), fontweight="bold", color=text_color, ha="right", va="bottom",
+        fontsize=(14.0 if square else 8.5), fontweight="bold", color=text_color, ha="right", va="bottom",
         linespacing=1.7,
     )
 
