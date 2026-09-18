@@ -78,9 +78,9 @@ Z_LEVEL_LABEL = 6.5
 Z_TARGET_ARROW = 7.0
 
 MAX_CANDLES_BY_TF = {
-    "15m": 50,
-    "1h": 60,
-    "4h": 45,
+    "15m": 80,   # ~20 jam
+    "1h": 70,    # ~2.9 hari
+    "4h": 60,    # ~10 hari
 }
 
 STRUCTURE_CONTEXT = 30
