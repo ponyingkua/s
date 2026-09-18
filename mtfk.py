@@ -32,7 +32,7 @@ Z_LEVEL_LABEL = 6.5
 STRUCT_TEXT = "#BDBDBD"
 
 MAX_CANDLES_BY_TF = {
-    "15m": 96,   # ~24 jam
+    "15m": 48,   # ~12 jam
     "1h": 48,    # ~2 hari
     "4h": 42,    # ~7 hari
 }
