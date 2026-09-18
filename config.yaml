@@ -9,7 +9,7 @@ timeframes:
   - "4h"
 
 scanning:
-  cooldown_hours: 4
+  cooldown_hours: 3
   state_path: "signal_state.json"
   klines_limit: 300
   min_history_bars: 260
