@@ -26716,5 +26716,120 @@
     "tp": 1.19433,
     "tp1": 1.164361,
     "scanned_at": "2026-09-18T12:03:57.361906+00:00"
+  },
+  {
+    "symbol": "NEARUSDT",
+    "direction": "LONG",
+    "score": 86.9,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (34.0) tren kuat (+13.9 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 3.61,
+    "sl": 3.421604,
+    "tp": 3.949114,
+    "tp1": 3.798396,
+    "scanned_at": "2026-09-18T13:03:34.525099+00:00"
+  },
+  {
+    "symbol": "AAVEUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (75) overbought \u2014 penalti chasing (-10)",
+      "ADX (48.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 137.43,
+    "sl": 132.087492,
+    "tp": 147.046515,
+    "tp1": 142.772508,
+    "scanned_at": "2026-09-18T13:03:34.525099+00:00"
+  },
+  {
+    "symbol": "BRUSDT",
+    "direction": "LONG",
+    "score": 81.1,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (71) overbought \u2014 penalti chasing (-10)",
+      "Volume spike di candle bullish (menguatkan sinyal LONG)",
+      "ADX (21.1) tren kuat (+0.1 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.75684,
+    "sl": 0.623774,
+    "tp": 0.996359,
+    "tp1": 0.889906,
+    "scanned_at": "2026-09-18T13:03:34.525099+00:00"
+  },
+  {
+    "symbol": "ORDIUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (66) menguatkan momentum naik",
+      "ADX (41.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 4.341,
+    "sl": 4.249612,
+    "tp": 4.505499,
+    "tp1": 4.432388,
+    "scanned_at": "2026-09-18T13:03:34.525099+00:00"
+  },
+  {
+    "symbol": "NOKUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (64) menguatkan momentum naik",
+      "ADX (38.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 10.84,
+    "sl": 10.65314,
+    "tp": 11.176348,
+    "tp1": 11.02686,
+    "scanned_at": "2026-09-18T13:03:34.525099+00:00"
   }
 ]
