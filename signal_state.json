@@ -4,36 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "ZHONGJIUSDT|1h": {
-    "symbol": "ZHONGJIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T06:04:44.912321+00:00"
-  },
-  "SOXLUSDT|1h": {
-    "symbol": "SOXLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T06:04:48.662840+00:00"
-  },
-  "GUSDT|1h": {
-    "symbol": "GUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T06:04:49.135624+00:00"
-  },
-  "EGLDUSDT|4h": {
-    "symbol": "EGLDUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T06:04:49.719347+00:00"
-  },
-  "GOOGLUSDT|4h": {
-    "symbol": "GOOGLUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T06:04:50.224596+00:00"
-  },
   "INTCUSDT|1h": {
     "symbol": "INTCUSDT",
     "timeframe": "1h",
@@ -81,5 +51,23 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T08:04:27.441006+00:00"
+  },
+  "ARXUSDT|1h": {
+    "symbol": "ARXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T09:05:07.683060+00:00"
+  },
+  "BZUSDT|1h": {
+    "symbol": "BZUSDT",
+    "timeframe": "1h",
+    "direction": "SHORT",
+    "timestamp": "2026-09-18T09:05:10.315452+00:00"
+  },
+  "LITUSDT|4h": {
+    "symbol": "LITUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T09:05:11.139015+00:00"
   }
 }
