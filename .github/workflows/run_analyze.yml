@@ -23,6 +23,7 @@ on:
         options:
           - both
           - single
+          - mtf
         default: single
 
 jobs:
