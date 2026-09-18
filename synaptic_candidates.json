@@ -26122,5 +26122,74 @@
     "tp": 365.76875,
     "tp1": 359.498194,
     "scanned_at": "2026-09-18T06:04:09.585514+00:00"
+  },
+  {
+    "symbol": "INTCUSDT",
+    "direction": "LONG",
+    "score": 66.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (74) overbought \u2014 penalti chasing (-10)",
+      "ADX (43.8) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 111.91,
+    "sl": 108.700151,
+    "tp": 117.687728,
+    "tp1": 115.119849,
+    "scanned_at": "2026-09-18T07:03:44.351317+00:00"
+  },
+  {
+    "symbol": "RKLBUSDT",
+    "direction": "LONG",
+    "score": 66.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (77) overbought \u2014 penalti chasing (-10)",
+      "ADX (37.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 68.92,
+    "sl": 67.324739,
+    "tp": 71.79147,
+    "tp1": 70.515261,
+    "scanned_at": "2026-09-18T07:03:44.351317+00:00"
+  },
+  {
+    "symbol": "DELLUSDT",
+    "direction": "LONG",
+    "score": 66.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di bawah signal line (tapi indikator lain condong LONG)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 2/3 indikator inti searah",
+      "RSI (75) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 596.49,
+    "sl": 585.087897,
+    "tp": 617.013785,
+    "tp1": 607.892103,
+    "scanned_at": "2026-09-18T07:03:44.351317+00:00"
   }
 ]
