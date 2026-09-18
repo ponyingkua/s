@@ -180,6 +180,7 @@ backtest:
 
 chart:
   auto_generate: true
+  retention_hours: 6
   width_px: 2800
   height_ratio: 0.45
   candles_shown: 120
