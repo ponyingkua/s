@@ -93,5 +93,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T02:04:13.933552+00:00"
+  },
+  "LINKUSDT|1h": {
+    "symbol": "LINKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T03:03:55.413865+00:00"
+  },
+  "RAYSOLUSDT|1h": {
+    "symbol": "RAYSOLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T03:03:58.074269+00:00"
+  },
+  "CFGUSDT|1h": {
+    "symbol": "CFGUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T03:03:58.468156+00:00"
+  },
+  "AVAXUSDT|1h": {
+    "symbol": "AVAXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T03:03:58.861398+00:00"
+  },
+  "VVVUSDT|4h": {
+    "symbol": "VVVUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T03:03:59.380231+00:00"
   }
 }
