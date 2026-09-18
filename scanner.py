@@ -301,6 +301,23 @@ def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return dx.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
 
+def _price_decimals(price: float) -> int:
+    price = abs(price)
+    if price >= 100:
+        return 2
+    if price >= 10:
+        return 3
+    if price >= 1:
+        return 4
+    if price >= 0.1:
+        return 5
+    if price >= 0.01:
+        return 6
+    if price >= 0.001:
+        return 7
+    return 8
+
+
 @dataclass
 class SignalResult:
     symbol: str
@@ -819,6 +836,7 @@ def score_at(
                 + f"), TP2 RR {rr_tp2:.2f} (sisa posisi)"
             )
 
+    decimals = _price_decimals(price)
     return SignalResult(
         symbol=symbol,
         direction=direction,
@@ -826,10 +844,10 @@ def score_at(
         timeframe=timeframe,
         setup_type=setup_type,
         reasons=reasons,
-        entry=round(price, 6),
-        sl=round(sl, 6),
-        tp=round(tp, 6),
-        tp1=round(tp1, 6) if tp1 is not None else None,
+        entry=round(price, decimals),
+        sl=round(sl, decimals),
+        tp=round(tp, decimals),
+        tp1=round(tp1, decimals) if tp1 is not None else None,
     )
 
 
@@ -976,7 +994,7 @@ def _clean_technical_reason(reason: str) -> str:
 def format_price(value: float | None) -> str:
     if value is None:
         return "-"
-    text = f"{value:.6f}"
+    text = f"{value:.8f}"
     if "." in text:
         text = text.rstrip("0").rstrip(".")
     return text
