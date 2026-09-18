@@ -14,31 +14,7 @@
     "symbol": "NVDAUSDT",
     "timeframe": "4h",
     "direction": "LONG",
-    "timestamp": "2026-09-18T16:04:04.251866+00:00"
-  },
-  "LPTUSDT|1h": {
-    "symbol": "LPTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T16:04:06.920888+00:00"
-  },
-  "BOMEUSDT|1h": {
-    "symbol": "BOMEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T16:04:07.599050+00:00"
-  },
-  "GIGGLEUSDT|4h": {
-    "symbol": "GIGGLEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T16:04:08.290324+00:00"
-  },
-  "ZROUSDT|1h": {
-    "symbol": "ZROUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T16:04:09.120319+00:00"
+    "timestamp": "2026-09-18T19:04:29.939630+00:00"
   },
   "PENDLEUSDT|1h": {
     "symbol": "PENDLEUSDT",
@@ -69,5 +45,29 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T18:04:51.006453+00:00"
+  },
+  "AVAXUSDT|1h": {
+    "symbol": "AVAXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T19:04:32.452420+00:00"
+  },
+  "THETAUSDT|1h": {
+    "symbol": "THETAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T19:04:32.997129+00:00"
+  },
+  "DYMUSDT|1h": {
+    "symbol": "DYMUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T19:04:33.680656+00:00"
+  },
+  "0GUSDT|1h": {
+    "symbol": "0GUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T19:04:34.221679+00:00"
   }
 }
