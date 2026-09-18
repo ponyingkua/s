@@ -4,66 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "HEIUSDT|4h": {
-    "symbol": "HEIUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T00:05:05.926381+00:00"
-  },
-  "SUIUSDT|1h": {
-    "symbol": "SUIUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T00:05:07.450510+00:00"
-  },
-  "ZENUSDT|1h": {
-    "symbol": "ZENUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T00:05:08.245371+00:00"
-  },
-  "PROVEUSDT|1h": {
-    "symbol": "PROVEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T00:05:09.027226+00:00"
-  },
-  "ZESTUSDT|1h": {
-    "symbol": "ZESTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T00:05:09.921499+00:00"
-  },
-  "EDGEUSDT|15m": {
-    "symbol": "EDGEUSDT",
-    "timeframe": "15m",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T01:04:20.063375+00:00"
-  },
-  "LTCUSDT|1h": {
-    "symbol": "LTCUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T01:04:22.396440+00:00"
-  },
-  "DOTUSDT|1h": {
-    "symbol": "DOTUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T01:04:23.056859+00:00"
-  },
-  "ONDOUSDT|1h": {
-    "symbol": "ONDOUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T01:04:23.711133+00:00"
-  },
-  "PENDLEUSDT|1h": {
-    "symbol": "PENDLEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T01:04:24.363924+00:00"
-  },
   "DOTUSDT|15m": {
     "symbol": "DOTUSDT",
     "timeframe": "15m",
@@ -123,5 +63,35 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-18T03:03:59.380231+00:00"
+  },
+  "CHZUSDT|1h": {
+    "symbol": "CHZUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T04:04:23.727373+00:00"
+  },
+  "MONUSDT|1h": {
+    "symbol": "MONUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T04:04:25.141910+00:00"
+  },
+  "SNDKUSDT|1h": {
+    "symbol": "SNDKUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T04:04:25.764868+00:00"
+  },
+  "SKHYNIXUSDT|1h": {
+    "symbol": "SKHYNIXUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T04:04:26.384943+00:00"
+  },
+  "CSOPSKHYNIX2LUSDT|1h": {
+    "symbol": "CSOPSKHYNIX2LUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T04:04:27.014623+00:00"
   }
 }

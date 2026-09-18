@@ -25774,5 +25774,120 @@
     "tp": 32.098945,
     "tp1": 29.25408,
     "scanned_at": "2026-09-18T03:03:27.991388+00:00"
+  },
+  {
+    "symbol": "CHZUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (75) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.01471,
+    "sl": 0.014242,
+    "tp": 0.015553,
+    "tp1": 0.015178,
+    "scanned_at": "2026-09-18T04:03:36.723715+00:00"
+  },
+  {
+    "symbol": "MONUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (74) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.4) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.02377,
+    "sl": 0.022656,
+    "tp": 0.025776,
+    "tp1": 0.024884,
+    "scanned_at": "2026-09-18T04:03:36.723715+00:00"
+  },
+  {
+    "symbol": "SNDKUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (72) overbought \u2014 penalti chasing (-10)",
+      "ADX (43.2) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1627.89,
+    "sl": 1602.494548,
+    "tp": 1673.601814,
+    "tp1": 1653.285452,
+    "scanned_at": "2026-09-18T04:03:36.723715+00:00"
+  },
+  {
+    "symbol": "SKHYNIXUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (73) overbought \u2014 penalti chasing (-10)",
+      "ADX (46.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1333.92,
+    "sl": 1306.773692,
+    "tp": 1382.783355,
+    "tp1": 1361.066308,
+    "scanned_at": "2026-09-18T04:03:36.723715+00:00"
+  },
+  {
+    "symbol": "CSOPSKHYNIX2LUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (78) overbought \u2014 penalti chasing (-10)",
+      "ADX (49.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 5.502,
+    "sl": 5.257296,
+    "tp": 5.942468,
+    "tp1": 5.746704,
+    "scanned_at": "2026-09-18T04:03:36.723715+00:00"
   }
 ]
