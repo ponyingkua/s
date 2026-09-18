@@ -4,18 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "GRIFFAINUSDT|1h": {
-    "symbol": "GRIFFAINUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T21:04:19.405456+00:00"
-  },
-  "QQQUSDT|1h": {
-    "symbol": "QQQUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T21:04:20.907569+00:00"
-  },
   "ARBUSDT|1h": {
     "symbol": "ARBUSDT",
     "timeframe": "1h",
@@ -93,5 +81,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T00:05:09.921499+00:00"
+  },
+  "EDGEUSDT|15m": {
+    "symbol": "EDGEUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T01:04:20.063375+00:00"
+  },
+  "LTCUSDT|1h": {
+    "symbol": "LTCUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T01:04:22.396440+00:00"
+  },
+  "DOTUSDT|1h": {
+    "symbol": "DOTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T01:04:23.056859+00:00"
+  },
+  "ONDOUSDT|1h": {
+    "symbol": "ONDOUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T01:04:23.711133+00:00"
+  },
+  "PENDLEUSDT|1h": {
+    "symbol": "PENDLEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T01:04:24.363924+00:00"
   }
 }
