@@ -25545,5 +25545,120 @@
     "tp": 2.470284,
     "tp1": 2.414602,
     "scanned_at": "2026-09-18T01:03:33.744261+00:00"
+  },
+  {
+    "symbol": "DOTUSDT",
+    "direction": "LONG",
+    "score": 88.0,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (45.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 1.1049,
+    "sl": 1.073309,
+    "tp": 1.161764,
+    "tp1": 1.136491,
+    "scanned_at": "2026-09-18T02:03:17.232561+00:00"
+  },
+  {
+    "symbol": "BCHUSDT",
+    "direction": "LONG",
+    "score": 86.4,
+    "timeframe": "15m",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (64) menguatkan momentum naik",
+      "ADX (33.5) tren kuat (+13.4 skor)",
+      "Setup terdeteksi: BREAKOUT (-8 skor)",
+      "SL digeser ke luar struktur 10-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 236.32,
+    "sl": 232.710456,
+    "tp": 242.81718,
+    "tp1": 239.929544,
+    "scanned_at": "2026-09-18T02:03:17.232561+00:00"
+  },
+  {
+    "symbol": "UNIUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (76) overbought \u2014 penalti chasing (-10)",
+      "ADX (44.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 8.002,
+    "sl": 7.452916,
+    "tp": 8.990351,
+    "tp1": 8.551084,
+    "scanned_at": "2026-09-18T02:03:17.232561+00:00"
+  },
+  {
+    "symbol": "AAVEUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (72) overbought \u2014 penalti chasing (-10)",
+      "ADX (40.9) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 130.96,
+    "sl": 125.719037,
+    "tp": 140.393733,
+    "tp1": 136.200963,
+    "scanned_at": "2026-09-18T02:03:17.232561+00:00"
+  },
+  {
+    "symbol": "METUSDT",
+    "direction": "LONG",
+    "score": 84.0,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (80) overbought \u2014 penalti chasing (-10)",
+      "ADX (53.0) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.2288,
+    "sl": 0.218751,
+    "tp": 0.246889,
+    "tp1": 0.238849,
+    "scanned_at": "2026-09-18T02:03:17.232561+00:00"
   }
 ]
