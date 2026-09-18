@@ -93,5 +93,35 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T14:04:31.167108+00:00"
+  },
+  "EGLDUSDT|15m": {
+    "symbol": "EGLDUSDT",
+    "timeframe": "15m",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T15:03:59.577775+00:00"
+  },
+  "JUPUSDT|1h": {
+    "symbol": "JUPUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T15:04:01.411528+00:00"
+  },
+  "GOOGLUSDT|1h": {
+    "symbol": "GOOGLUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T15:04:02.192162+00:00"
+  },
+  "XAGUSDT|1h": {
+    "symbol": "XAGUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T15:04:02.961977+00:00"
+  },
+  "BULLAUSDT|1h": {
+    "symbol": "BULLAUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T15:04:03.739625+00:00"
   }
 }
