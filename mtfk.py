@@ -42,9 +42,9 @@ Z_LEVEL_LABEL = 6.5
 STRUCT_TEXT = "#BDBDBD"  # dipakai internal oleh _draw_structure_labels di bawah
 
 MAX_CANDLES_BY_TF = {
-    "15m": 50,
-    "1h": 60,
-    "4h": 45,
+    "15m": 80,   # ~20 jam
+    "1h": 70,    # ~2.9 hari
+    "4h": 60,    # ~10 hari
 }
 
 
