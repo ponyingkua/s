@@ -4,30 +4,6 @@
     "started_at": "2026-09-17T20:03:32.440127+00:00",
     "signal_count": 0
   },
-  "CRVUSDT|4h": {
-    "symbol": "CRVUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T20:04:33.318247+00:00"
-  },
-  "MRVLUSDT|1h": {
-    "symbol": "MRVLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T20:04:35.408062+00:00"
-  },
-  "MVLLUSDT|1h": {
-    "symbol": "MVLLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T20:04:36.832475+00:00"
-  },
-  "QCOMUSDT|1h": {
-    "symbol": "QCOMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-17T20:04:38.242437+00:00"
-  },
   "GRIFFAINUSDT|1h": {
     "symbol": "GRIFFAINUSDT",
     "timeframe": "1h",
@@ -87,5 +63,35 @@
     "timeframe": "1h",
     "direction": "SHORT",
     "timestamp": "2026-09-17T23:03:48.547592+00:00"
+  },
+  "HEIUSDT|4h": {
+    "symbol": "HEIUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T00:05:05.926381+00:00"
+  },
+  "SUIUSDT|1h": {
+    "symbol": "SUIUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T00:05:07.450510+00:00"
+  },
+  "ZENUSDT|1h": {
+    "symbol": "ZENUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T00:05:08.245371+00:00"
+  },
+  "PROVEUSDT|1h": {
+    "symbol": "PROVEUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T00:05:09.027226+00:00"
+  },
+  "ZESTUSDT|1h": {
+    "symbol": "ZESTUSDT",
+    "timeframe": "1h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T00:05:09.921499+00:00"
   }
 }

@@ -25314,5 +25314,120 @@
     "tp": 43.284814,
     "tp1": 44.140452,
     "scanned_at": "2026-09-17T23:02:45.126401+00:00"
+  },
+  {
+    "symbol": "HEIUSDT",
+    "direction": "LONG",
+    "score": 96.0,
+    "timeframe": "4h",
+    "setup_type": "PULLBACK",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (60) menguatkan momentum naik",
+      "ADX (37.1) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: PULLBACK (+0 skor)",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.13275,
+    "sl": 0.117196,
+    "tp": 0.160748,
+    "tp1": 0.148304,
+    "scanned_at": "2026-09-18T00:04:06.070878+00:00"
+  },
+  {
+    "symbol": "SUIUSDT",
+    "direction": "LONG",
+    "score": 81.7,
+    "timeframe": "1h",
+    "setup_type": "BREAKOUT",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (70) overbought \u2014 penalti chasing (-10)",
+      "ADX (32.8) tren kuat (+12.7 skor)",
+      "Setup terdeteksi: BREAKOUT (+16 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.7411,
+    "sl": 0.720343,
+    "tp": 0.778463,
+    "tp1": 0.761857,
+    "scanned_at": "2026-09-18T00:04:06.070878+00:00"
+  },
+  {
+    "symbol": "ZENUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (63) menguatkan momentum naik",
+      "ADX (36.5) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 7.314,
+    "sl": 6.974286,
+    "tp": 7.925485,
+    "tp1": 7.653714,
+    "scanned_at": "2026-09-18T00:04:06.070878+00:00"
+  },
+  {
+    "symbol": "PROVEUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (65) menguatkan momentum naik",
+      "ADX (55.3) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 1.80 (sisa posisi)"
+    ],
+    "entry": 0.1973,
+    "sl": 0.191232,
+    "tp": 0.208223,
+    "tp1": 0.203368,
+    "scanned_at": "2026-09-18T00:04:06.070878+00:00"
+  },
+  {
+    "symbol": "ZESTUSDT",
+    "direction": "LONG",
+    "score": 74.0,
+    "timeframe": "1h",
+    "setup_type": "EXTENDED",
+    "reasons": [
+      "Harga di atas EMA200 (uptrend)",
+      "MACD line di atas signal line (momentum naik)",
+      "Supertrend menunjukkan uptrend",
+      "Konfluensi tren: 3/3 indikator inti searah",
+      "RSI (64) menguatkan momentum naik",
+      "ADX (42.7) tren kuat (+15.0 skor)",
+      "Setup terdeteksi: EXTENDED (-22 skor)",
+      "SL digeser ke luar struktur 8-bar terakhir",
+      "TP diambil dari level struktur (prior high 50-bar), RR aktual 2.31",
+      "TP dipecah partial: TP1 RR 1.00 (tutup 50% posisi, SL sisa -> breakeven), TP2 RR 2.31 (sisa posisi)"
+    ],
+    "entry": 0.13481,
+    "sl": 0.12936,
+    "tp": 0.14739,
+    "tp1": 0.14026,
+    "scanned_at": "2026-09-18T00:04:06.070878+00:00"
   }
 ]
