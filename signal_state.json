@@ -4,36 +4,6 @@
     "started_at": "2026-09-18T20:03:14.753203+00:00",
     "signal_count": 2
   },
-  "NVDAUSDT|4h": {
-    "symbol": "NVDAUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T19:04:29.939630+00:00"
-  },
-  "AVAXUSDT|1h": {
-    "symbol": "AVAXUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T19:04:32.452420+00:00"
-  },
-  "THETAUSDT|1h": {
-    "symbol": "THETAUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T19:04:32.997129+00:00"
-  },
-  "DYMUSDT|1h": {
-    "symbol": "DYMUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T19:04:33.680656+00:00"
-  },
-  "0GUSDT|1h": {
-    "symbol": "0GUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T19:04:34.221679+00:00"
-  },
   "EDENUSDT|4h": {
     "symbol": "EDENUSDT",
     "timeframe": "4h",
