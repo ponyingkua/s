@@ -13,15 +13,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import FuncFormatter
 from matplotlib.transforms import offset_copy
 
-# --- Disalin dari chart.py -------------------------------------------------
-# mtfk.py sebelumnya `import chart` hanya untuk memakai 20 atribut di bawah
-# ini (8 warna, 5 konstanta Z-order, 8 fungsi helper - lihat daftar di setiap
-# kelompok). Supaya mtfk.py bisa dipakai/diuji tanpa chart.py sama sekali,
-# semuanya disalin verbatim (nilai & logika identik dgn chart.py saat ini) -
-# KONSEKUENSINYA: kalau salah satu definisi ini diubah di chart.py, mtfk.py
-# TIDAK ikut berubah otomatis dan perlu disinkronkan manual di sini juga.
-
-# Warna
 BG = "#121417"
 PANEL = "#121417"
 GRID = "#3A3A3A"
@@ -31,20 +22,19 @@ SPINE = "#4A4A4A"
 UP = "#26A69A"
 DOWN = "#EF5350"
 
-# Z-order
 Z_CANDLE_WICK = 2.0
 Z_CANDLE_BODY = 2.1
 Z_EMA = 4.0
-Z_STRUCT_LABEL = 5.5   # dipakai internal oleh _draw_structure_labels di bawah
+Z_STRUCT_LABEL = 5.5
 Z_LEVEL_LINE = 6.0
 Z_LEVEL_LABEL = 6.5
 
-STRUCT_TEXT = "#BDBDBD"  # dipakai internal oleh _draw_structure_labels di bawah
+STRUCT_TEXT = "#BDBDBD"
 
 MAX_CANDLES_BY_TF = {
-    "15m": 80,   # ~20 jam
-    "1h": 70,    # ~2.9 hari
-    "4h": 60,    # ~10 hari
+    "15m": 80,
+    "1h": 70,
+    "4h": 60,
 }
 
 
@@ -168,7 +158,7 @@ def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int,
             ax.text(px, pt["price"] - pad, pt["label"], color=STRUCT_TEXT,
                     fontsize=fontsize, fontweight="bold", ha="center", va="top",
                     zorder=Z_STRUCT_LABEL, clip_on=False)
-# --- Akhir bagian yang disalin dari chart.py --------------------------------
+
 
 EMA20_COLOR = "#FFD54F"
 EMA50_COLOR = "#29B6F6"
@@ -181,9 +171,6 @@ TINT_NONE = (0.5, 0.5, 0.5, 0.03)
 RSI_COLOR = "#4DD0E1"
 BB_COLOR = "#90A4AE"
 
-# Khusus single_mtfk: lebar body candle dibuat lebih ramping drpd sebelumnya
-# supaya candle tampak lebih "pipih" (tinggi lebih dominan drpd lebar) -
-# (chart.CANDLE_WIDTH=0.8 tidak diubah krn dipakai bareng oleh chart.py & multi-panel).
 SINGLE_CANDLE_WIDTH = 0.58
 
 
@@ -222,13 +209,6 @@ def _time_axis_labels(df: pd.DataFrame, n_show: int, tf: str):
     step = max(m // 6, 1)
     positions = list(range(0, m, step))
     if positions[-1] != m - 1:
-        # Guarantee the final candle is represented, but don't just tack it
-        # on: if the last regular tick is already within half a step of it,
-        # move that tick to the true last index instead of adding a second
-        # one right next to it. Appending unconditionally used to put two
-        # ticks only 1-2 candles apart at the right edge, which rendered as
-        # visibly cramped or even literally duplicated labels (e.g. "21:15"
-        # immediately followed by "21:30", or "15 Sep" printed twice).
         if step > 1 and (m - 1 - positions[-1]) < step / 2:
             positions[-1] = m - 1
         else:
@@ -260,13 +240,6 @@ def _atr_last(df: pd.DataFrame, period: int = 14) -> float:
 
 
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
-    """Formula & penanganan edge-case (avg_gain/avg_loss = 0) disalin PERSIS
-    dari analyze.py::_rsi - dulu di sini pakai rumus fallback yang sedikit
-    beda (mis. kasus avg_gain==0 & avg_loss==0 sempat jatuh ke 100, padahal
-    di analyze.py itu 50), jadi kurva RSI di chart bisa tidak match dengan
-    nilai RSI & catatan bias yang dipakai analyze.py untuk skoring/setup.
-    Period JUGA tidak lagi dibaca dari cfg (lihat pemanggil di bawah) karena
-    analyze.py::_rsi() selalu pakai 14 tanpa override cfg."""
     delta = series.diff()
     gain = delta.clip(lower=0.0)
     loss = -delta.clip(upper=0.0)
@@ -277,18 +250,10 @@ def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     rsi = rsi.mask((avg_loss == 0) & (avg_gain > 0), 100.0)
     rsi = rsi.mask((avg_gain == 0) & (avg_loss > 0), 0.0)
     rsi = rsi.mask((avg_gain == 0) & (avg_loss == 0), 50.0)
-    # fillna cuma jaring pengaman utk baris warmup paling awal (sebelum
-    # min_periods tercapai) supaya tidak ada NaN yang masuk ke array plot -
-    # analyze.py sendiri membiarkan baris warmup itu NaN krn tidak pernah
-    # dipakai (cuma nilai RSI candle terakhir yang dibaca), tapi di sini
-    # seluruh window n_show ikut digambar jadi perlu aman dari NaN.
     return rsi.fillna(50.0)
 
 
 def _compute_bollinger(df: pd.DataFrame, n_show: int, period: int = 20, std_mult: float = 2.0) -> dict:
-    """Bollinger Bands (formula sama dengan analyze.py::_bollinger) - dihitung
-    ulang di sini (bukan lewat tf_info) supaya mtfk.py tetap tidak bergantung
-    pada field baru di hasil analyze.py; input cuma df OHLC yang sudah ada."""
     close = df["close"]
     mid = close.rolling(period).mean()
     std = close.rolling(period).std()
@@ -301,8 +266,6 @@ def _compute_bollinger(df: pd.DataFrame, n_show: int, period: int = 20, std_mult
 
 
 def _macd_histogram_last(df: pd.DataFrame, fast: int = 12, slow: int = 26, signal: int = 9):
-    """Nilai histogram MACD candle terakhir & candle sebelumnya (formula sama
-    dengan analyze.py::_macd) - dipakai untuk badge arah+expanding/contracting."""
     close = df["close"]
     line = close.ewm(span=fast, adjust=False).mean() - close.ewm(span=slow, adjust=False).mean()
     hist = line - line.ewm(span=signal, adjust=False).mean()
@@ -312,8 +275,6 @@ def _macd_histogram_last(df: pd.DataFrame, fast: int = 12, slow: int = 26, signa
 
 
 def _volume_ratio_last(df: pd.DataFrame, lookback: int = 20):
-    """Rasio volume candle terakhir vs rata-rata `lookback` candle - dipakai
-    untuk badge volume spike."""
     if len(df) < lookback:
         return None
     vma = float(df["volume"].tail(lookback).mean())
@@ -323,10 +284,6 @@ def _volume_ratio_last(df: pd.DataFrame, lookback: int = 20):
 
 
 def _compute_ema_set(df: pd.DataFrame, n_show: int, tf: str) -> dict:
-    """Hitung EMA20/EMA50/EMA200(kondisional) satu kali di sini, dipakai oleh
-    _draw_indicators_single (dipanggil dari build_single_mtfk_chart MAUPUN
-    build_mtfk_chart) - supaya logika "kapan EMA200 layak ditampilkan"
-    konsisten di kedua jenis chart."""
     close = df["close"]
     p = float(close.iloc[-1])
     ema20 = close.ewm(span=20, adjust=False).mean().tail(n_show).to_numpy()
@@ -345,9 +302,6 @@ def _compute_ema_set(df: pd.DataFrame, n_show: int, tf: str) -> dict:
 
 
 def _draw_candles_single(ax, df: pd.DataFrame) -> list:
-    """Sama seperti chart._draw_candles tapi body candle dibuat lebih lebar
-    (SINGLE_CANDLE_WIDTH) - khusus dipakai single_mtfk. Tidak mengubah
-    chart.CANDLE_WIDTH itu sendiri (dipakai bareng oleh chart.py & multi-panel)."""
     colors = []
     for i in range(len(df)):
         row = df.iloc[i]
@@ -361,9 +315,6 @@ def _draw_candles_single(ax, df: pd.DataFrame) -> list:
             solid_capstyle="round", zorder=Z_CANDLE_WICK,
         )
         body_bottom = min(open_p, close_p)
-        # Tinggi minimum dinaikkan (0.012 -> 0.02) supaya candle doji/nyaris-
-        # doji tetap kelihatan sbg garis tipis-tinggi, bukan hilang jadi titik,
-        # selaras dgn body yang sekarang lebih ramping.
         body_height = max(abs(close_p - open_p), (high_p - low_p) * 0.02)
         ax.add_patch(Rectangle(
             (i - SINGLE_CANDLE_WIDTH / 2, body_bottom), SINGLE_CANDLE_WIDTH, body_height,
@@ -373,8 +324,6 @@ def _draw_candles_single(ax, df: pd.DataFrame) -> list:
 
 
 def _draw_volume_bars_no_ma(ax, df: pd.DataFrame, colors: list) -> None:
-    """Sama seperti chart._draw_volume tapi tanpa garis moving-average -
-    dipakai khusus di single_mtfk karena baris itu diganti panel RSI."""
     for i in range(len(df)):
         ax.bar(
             i, float(df["volume"].iloc[i]), color=colors[i], alpha=0.48,
@@ -386,11 +335,6 @@ _LEGEND_ORDER = ("EMA 20", "EMA 50", "EMA 200")
 
 
 def _ordered_legend_handles(ax):
-    """Ambil handles/labels legend dari ax lalu urutkan cepat->lambat
-    (EMA 20, 50, 200) tanpa peduli urutan gambar aslinya. Dipisah dari
-    urutan gambar krn urutan gambar sengaja dibalik (200 dulu, 20 terakhir)
-    supaya EMA20 selalu di atas secara visual - urutan legend tetap harus
-    konvensional (cepat ke lambat) biar tidak membingungkan."""
     handles, labels = ax.get_legend_handles_labels()
     pairs = sorted(
         zip(handles, labels),
@@ -409,13 +353,6 @@ def _draw_colored_segments(
     fontsize: float,
     sep: str = "   ·   ",
 ) -> None:
-    """Gambar satu baris teks (figure-fraction) yang tiap bagiannya punya
-    warna sendiri sesuai makna informasinya, dipisah `sep` berwarna netral -
-    dipakai utk baris ringkas ATR/MACD/Vol/MTF di bawah header supaya tiap
-    info langsung kebaca artinya dari warnanya, bukan cuma dari teksnya.
-    Posisi x tiap bagian dihitung dari lebar render bagian sebelumnya (perlu
-    beberapa kali fig.canvas.draw() - baris ini pendek & cuma digambar
-    sekali per chart jadi overhead-nya kecil)."""
     inv = fig.transFigure.inverted()
     x = x0
     for i, (text, color) in enumerate(parts):
@@ -451,33 +388,9 @@ def _resolve_sr_label_anchors(
     price_span_hint: float,
     square: bool = False,
 ) -> tuple[float | None, float | None]:
-    """Tentukan titik anchor vertikal (dipakai bareng oleh marker & teks)
-    untuk label SUPPORT/RESISTANCE.
-
-    BUG yang diperbaiki fungsi ini: sebelumnya label SUPPORT & RESISTANCE
-    selalu digambar tepat di harga aslinya (s_val/r_val) tanpa cek jarak -
-    begitu kedua level berdekatan (mis. kasus KAITOUSDT 15m/1h/4h: S/R cuma
-    beda ~0.15-0.3% dari harga saat market lagi konsolidasi sempit), kedua
-    kotak label saling menimpa dan jadi tidak terbaca sama sekali (kotak
-    yang digambar belakangan - RESISTANCE - menutupi penuh kotak SUPPORT).
-
-    Kalau kedua level cukup berjauhan, anchor = harga aslinya masing-masing
-    (tidak ada perubahan sama sekali). Kalau berdekatan, keduanya digeser
-    simetris menjauhi titik tengah supaya kotak label tidak lagi saling
-    menimpa. Garis putus-putus (axhline) TETAP digambar di harga asli -
-    hanya anchor marker+teks yang digeser, jadi masih jelas warna mana
-    mewakili level mana meski posisi labelnya sedikit "meleset" dari
-    garisnya sendiri saat market sedang sangat sempit.
-
-    `price_span_hint` = perkiraan rentang high-low candle yang sedang
-    ditampilkan (dipakai sbg basis heuristik jarak minimum antar label,
-    krn y-limit final axes belum ditentukan saat fungsi ini dipanggil)."""
     if s_val is None or r_val is None:
         return s_val, r_val
     span = max(price_span_hint, 1e-9)
-    # Fraksi dipilih & divalidasi scr visual (bukan cuma dihitung dari tinggi
-    # font) supaya cukup lega utk 2 baris label bold 8.5-10.5pt tanpa
-    # menggeser anchor jauh-jauh saat kasusnya cuma sedikit berdekatan.
     min_gap = span * (0.12 if square else 0.14)
     lo, hi = min(s_val, r_val), max(s_val, r_val)
     if hi - lo >= min_gap:
@@ -496,33 +409,8 @@ def _draw_indicators_single(
     right_pad: float,
     square: bool = False,
 ) -> list:
-    """Gambar EMA/BB/S-R/marker arah untuk satu panel harga, skala penuh.
-    S/R digambar di ruang kosong sebelah kanan (antara candle terakhir &
-    tepi chart, lihat `right_pad` di pemanggil) - bukan menumpuk di atas
-    candle - supaya labelnya selalu bersih terbaca terpisah dari data harga;
-    legend EMA/BB ditaruh di kiri supaya tidak menumpuk dgn label S/R di
-    kanan. Dipakai oleh KEDUA build_single_mtfk_chart (1 panel) dan
-    build_mtfk_chart (tiap blok TF di chart multi-timeframe)."""
-    # BUG yang diperbaiki: n_show di sini dulu dipakai APA ADANYA (nilai
-    # nominal dari get_candles_shown, mis. 60 utk "1h") padahal candle yang
-    # BENAR-BENAR digambar pemanggil cuma sebanyak len(plot_df) =
-    # len(df.tail(n_show)) - kalau df yang di-fetch kebetulan lebih pendek
-    # dari n_show (mis. simbol baru listing dgn histori < 60 kline, atau tf
-    # custom yang tidak ada di MAX_CANDLES_BY_TF sehingga jatuh ke default
-    # 120), maka x=range(n_show) (n_show titik) dipasangkan dgn array
-    # EMA/BB hasil `.tail(n_show)` yang panjangnya cuma len(df) (< n_show)
-    # -> matplotlib ValueError ("x and y must have same first dimension")
-    # dan chart gagal dibuat. `last_x`/marker S-R/titik arah LONG-SHORT yang
-    # dihitung dari n_show mentah juga jadi meleset dari posisi candle
-    # terakhir yang sebenarnya. Clamp sekali di sini menyelaraskan SEMUA
-    # pemakaian n_show di bawah dgn jumlah candle yang benar-benar tampil.
     n_show = min(n_show, len(df))
     last_x = n_show - 1
-    # marker (segitiga) nempel tepat di ujung ruang kosong (dekat candle
-    # terakhir), teks nilai S/R nempel ke tepi kanan chart - keduanya pakai
-    # koordinat data (bukan fraksi axes) krn xlim final sudah diset sebelum
-    # fungsi ini dipanggil, jadi posisinya presisi & konsisten walau
-    # right_pad berubah-ubah mengikuti jumlah candle.
     edge_margin = max(right_pad * 0.08, 0.35)
     label_x = last_x + right_pad - edge_margin
     marker_x = last_x + SINGLE_CANDLE_WIDTH / 2 + max(right_pad * 0.20, 0.5)
@@ -531,9 +419,6 @@ def _draw_indicators_single(
     x = range(n_show)
     ema_values = list(emas["ema20"]) + list(emas["ema50"])
 
-    # EMA200 (lambat) digambar dulu di paling bawah, EMA20 (cepat) digambar
-    # PALING TERAKHIR supaya selalu terlihat di atas EMA50/EMA200 saat
-    # ketiganya berdekatan.
     if emas["ema200"] is not None:
         ax.plot(
             x, emas["ema200"], color=EMA200_COLOR, linewidth=1.4, alpha=0.92,
@@ -575,19 +460,11 @@ def _draw_indicators_single(
 
     s_val = float(support) if support else None
     r_val = float(resistance) if resistance else None
-    # Lihat docstring _resolve_sr_label_anchors: anchor cuma beda dari
-    # s_val/r_val saat kedua level berdekatan, supaya kotak label tidak
-    # saling menimpa. price_span_hint dari rentang high-low candle yang
-    # tampil (proxy y-span, krn y-limit final axes belum diset di sini).
     price_span_hint = float(df["high"].tail(n_show).max() - df["low"].tail(n_show).min())
     s_anchor, r_anchor = _resolve_sr_label_anchors(s_val, r_val, price_span_hint, square=square)
 
     level_values = []
     if s_val is not None:
-        # s_val (harga asli, utk axhline) DAN s_anchor (posisi label yg
-        # sudah dipisah) dua-duanya masuk ke level_values supaya y-limit
-        # akhir yang dihitung pemanggil selalu cukup lega menampung label,
-        # walau anchornya digeser sedikit dari harga aslinya.
         level_values += [s_val, s_anchor]
         ax.axhline(
             s_val, color=UP, linestyle="--",
@@ -651,10 +528,6 @@ def _draw_indicators_single(
 
 
 def _draw_trigger_highlight(ax, plot_df: pd.DataFrame, tf_info: dict, y_span: float) -> None:
-    """Highlight candle pemicu setup. Di analyze.py::_detect_setup, hanya
-    BREAKOUT/BREAKDOWN/REJECTION yang murni ditentukan dari body/wick candle
-    TERAKHIR - PULLBACK/RETEST & CONTINUATION dipicu oleh posisi harga
-    terhadap level/trend, bukan 1 candle spesifik, jadi tidak dihighlight."""
     setup = tf_info.get("setup") or {}
     setup_type = setup.get("type", "NONE")
     if setup_type not in ("BREAKOUT", "BREAKDOWN", "REJECTION"):
@@ -669,10 +542,6 @@ def _draw_trigger_highlight(ax, plot_df: pd.DataFrame, tf_info: dict, y_span: fl
     last = plot_df.iloc[-1]
     high, low = float(last["high"]), float(last["low"])
 
-    # Cuma kotak putus-putus di sekeliling candle - tanpa label teks
-    # mengambang, supaya tidak berpotensi tabrakan dengan legend EMA/BB di
-    # sudut chart manapun. Jenis setup (BREAKOUT/BREAKDOWN/REJECTION) sudah
-    # tertulis di header, kotak ini cukup menunjuk candle mana pemicunya.
     half_w = SINGLE_CANDLE_WIDTH / 2 + 0.30
     pad_y = max(y_span * 0.012, (high - low) * 0.10)
     ax.add_patch(Rectangle(
@@ -691,12 +560,6 @@ def build_single_mtfk_chart(
     cfg: dict | None = None,
     square: bool = False,
 ) -> str:
-    """Chart single-timeframe versi mtfk (dipakai analyze.py saat cuma 1 tf).
-    Layout/rasio/jumlah candle/warna dibuat persis dengan chart.build_chart,
-    hanya menambahkan panel RSI di bawah volume (volume tanpa garis MA20).
-    Jumlah candle selalu memakai batas maksimum dari get_candles_shown
-    (tidak dipotong dinamis) supaya candle memenuhi chart dari batas kiri
-    sampai batas kanan."""
     cfg = cfg or {}
     has_error = "error" in tf_info
 
@@ -705,12 +568,6 @@ def build_single_mtfk_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
-    # Default 9/20 (0.45) semula dipakai utk chart 2-panel (price+volume) di
-    # chart.py. single_mtfk punya panel ke-3 (RSI), jadi kalau cfg tidak
-    # menimpa height_ratio secara eksplisit, dipakai default sedikit lebih
-    # tinggi (0.54) supaya 3 panel + header/footer tidak terlalu gepeng saat
-    # ditampilkan kecil di preview chat HP. Kalau di config yaml kalian sudah
-    # ada key chart.height_ratio eksplisit, itu tetap yang dipakai.
     height_ratio = 1.0 if square else chart_cfg.get("height_ratio", 0.54)
     dpi = 200
     output_scale = 2
@@ -749,15 +606,6 @@ def build_single_mtfk_chart(
     colors = _draw_candles_single(ax_price, plot_df)
     last_x = len(plot_df) - 1
 
-    # Sisi kiri tetap mepet (histori lama tidak penting dilihat penuh), tapi
-    # sisi kanan dilebarkan jadi zona kosong khusus label SUPPORT/RESISTANCE
-    # - dihitung sbg fraksi TETAP dari lebar axes (label_zone_frac), bukan
-    # cuma kelipatan lebar candle, krn lebar axes dlm pixel itu konstan
-    # (width_px sama berapa pun n_show-nya) sedangkan lebar candle relatif
-    # thd n_show berubah-ubah. Dgn fraksi tetap ini, zona label selalu
-    # cukup lega dari candle manapun n_show-nya - konsekuensinya candle jadi
-    # lebih ramping/pipih drpd sebelumnya, itu memang trade-off yg diambil
-    # supaya labelnya tidak lagi ketiban candle terakhir.
     label_zone_frac = 0.22 if square else 0.19
     right_pad = label_zone_frac * (last_x + 0.6) / (1 - label_zone_frac)
     right_pad = max(right_pad, SINGLE_CANDLE_WIDTH * 8)
@@ -782,8 +630,6 @@ def build_single_mtfk_chart(
         swing_high, swing_low = _find_swings(plot_df, 2, 2)
         labeled_points = _label_structure(plot_df, swing_high, swing_low)
         if labeled_points:
-            # seperlunya saja - hanya beberapa titik swing paling relevan
-            # (terbaru) supaya tidak menuh-menuhin chart.
             labeled_points = labeled_points[-6:]
             _draw_structure_labels(
                 ax_price, labeled_points, offset=0, plot_len=len(plot_df),
@@ -810,8 +656,6 @@ def build_single_mtfk_chart(
         ax_rsi.set_xticklabels(labels, fontsize=7.5, color=AXIS)
 
     if not has_error:
-        # Legend ditaruh di kiri-atas (bukan kanan) supaya tidak menumpuk
-        # dengan label SUPPORT/RESISTANCE yang sekarang ada di kanan.
         handles, labels = _ordered_legend_handles(ax_price)
         legend = ax_price.legend(
             handles, labels,
@@ -827,10 +671,6 @@ def build_single_mtfk_chart(
     header_extra = pd.Timestamp.now(tz="UTC").strftime("Updated %d %b %H:%M UTC")
     header_title = f"{symbol}  ·  {timeframe}  ·  {direction}{setup_txt}"
 
-    # Header sedikit dikecilkan lagi drpd sebelumnya (18/22 -> 16/20) supaya
-    # tidak dominan, dan jarak ke baris indikator di bawahnya dirapikan jadi
-    # gap yang konsisten & lega (bukan mepet) - badge ikut diskalakan turun
-    # supaya proporsinya tetap seimbang dgn teks header.
     header_fs = 20.0 if square else 16.0
     badge_fs = 17.5 if square else 13.5
     segment_fs = 12.0 if square else 9.0
@@ -849,11 +689,6 @@ def build_single_mtfk_chart(
         vol_ratio = _volume_ratio_last(df)
         mtf_agree = tf_info.get("mtf_agree_tfs") or []
 
-        # Tiap segmen diwarnai sesuai fungsinya sendiri (dulu semua satu
-        # warna netral) - ATR murni info volatilitas jadi netral, MACD & MTF
-        # agree ikut warna arah (UP/DOWN) krn keduanya sinyal condong ke satu
-        # sisi, Vol disorot kuning cuma kalau lonjakannya signifikan (>=1.5x
-        # rata-rata), selain itu tetap netral.
         segments: list[tuple[str, str]] = []
         if atr_pct is not None:
             segments.append((f"ATR {atr_pct:.2f}%", AXIS))
@@ -908,8 +743,6 @@ def build_single_mtfk_chart(
     return out_path
 
 
-# Alias: analyze.py mengimpor & memanggil fungsi ini dengan nama `single_mtfk`
-# (keyword args df/symbol/timeframe/tf_info/out_path/cfg persis sama).
 single_mtfk = build_single_mtfk_chart
 
 
@@ -922,19 +755,6 @@ def build_mtfk_chart(
     cfg: dict | None = None,
     square: bool = False,
 ) -> str:
-    """Chart multi-timeframe. Tiap TF digambar sbg satu blok yang gaya &
-    proporsinya PERSIS mengikuti build_single_mtfk_chart (lebar candle,
-    panel RSI, zona label SUPPORT/RESISTANCE di kanan, Bollinger Band, EMA,
-    label struktur swing, trigger highlight, legend) - blok-blok itu ditumpuk
-    vertikal, dibungkus satu judul+badge di paling atas
-    ("{symbol} · MULTI-TIMEFRAME") dan satu footer di paling bawah (mirip
-    footer single, tapi menyebut semua TF).
-
-    Sengaja pakai ULANG fungsi-fungsi gambar yang sama dgn single_mtfk
-    (_draw_candles_single, _draw_indicators_single, _draw_rsi_panel, dst)
-    dan bukan menulis versi baru, supaya kedua jenis chart ini tidak bisa
-    drift satu sama lain - dan supaya perubahan di sini TIDAK menyentuh
-    build_single_mtfk_chart sama sekali (fungsi itu tetap apa adanya)."""
     cfg = cfg or {}
     valid_tfs = [tf for tf in timeframes if tf in dfs and tf in per_tf]
     n_panels = len(valid_tfs)
@@ -943,35 +763,18 @@ def build_mtfk_chart(
 
     chart_cfg = cfg.get("chart", {})
     width_px = chart_cfg.get("width_px", 2800)
-    # Proporsi "badan" (price+vol+rsi) tiap blok TF SELALU pakai height_ratio
-    # non-square (default 0.54) walau square=True - kalau ikut jadi 1.0 spt
-    # di single, tinggi total gambar utk >1 TF bisa meledak (mis. 3 TF
-    # square = puluhan inci tinggi, tidak praktis dilihat di HP). Di sini
-    # `square` cuma memperbesar font/label (lihat header_fs, segment_fs,
-    # dst di bawah, serta diteruskan ke _draw_indicators_single dkk persis
-    # spt cara single memakainya).
     height_ratio = chart_cfg.get("height_ratio", 0.54)
     dpi = 200
     output_scale = 2
     fig_w = width_px / dpi
 
-    # Rasio header:badan tiap blok TF disamakan dgn rasio top/bottom di
-    # build_single_mtfk_chart (top=0.87 -> badan 0.76 dari total, header
-    # 0.13 dari total) - supaya ukuran font & lebar candle blok ini identik
-    # dgn chart single, hanya tanpa footernya sendiri (footer dipakai satu
-    # kali saja di paling bawah gambar gabungan ini, bukan per-blok).
     single_fig_h = (width_px * height_ratio) / dpi
     header_frac, body_frac = 0.13, 0.76
     block_h_in = (header_frac + body_frac) * single_fig_h
 
-    top_margin_in = 0.55    # ruang judul "{symbol} · MULTI-TIMEFRAME" + badge
-    # 0.85in supaya label sumbu-waktu blok TERAKHIR (yg nempel di bawah
-    # panel RSI paling bawah) tidak numpuk sama teks footer di bawahnya -
-    # nilai ini menyamai proporsi ruang footer di build_single_mtfk_chart
-    # (bottom=0.11 dari fig_h single ≈ 0.83in), krn di sana ruang yg sama
-    # juga menampung tick label + footer + disclaimer.
+    top_margin_in = 0.55
     bottom_margin_in = 0.85
-    gap_in = 0.20            # jarak antar blok TF
+    gap_in = 0.20
 
     fig_h = (
         top_margin_in
