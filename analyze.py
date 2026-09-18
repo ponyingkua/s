@@ -806,7 +806,7 @@ def _render_charts_for_format(
     square = chart_format == "square"
     suffix = "_square" if square else ""
 
-    if chart_type == "both":
+    if chart_type in ("both", "mtf"):
         chart_path = os.path.join(OUT_DIR, f"{symbol}_multi{suffix}.png")
         try:
             build_mtfk_chart(
@@ -823,7 +823,7 @@ def _render_charts_for_format(
             print(f"[warn] Gagal membuat chart MTF untuk {symbol} ({chart_format}): {exc}")
 
     best_tf = result.get("best_tf")
-    if best_tf is not None:
+    if chart_type in ("both", "single") and best_tf is not None:
         single_path = os.path.join(OUT_DIR, f"{symbol}_single_{best_tf}{suffix}.png")
         try:
             single_mtfk(
@@ -886,7 +886,7 @@ def main():
     parser.add_argument("--symbols", default=None, help="Comma/space separated symbols, e.g. ZEC,SOL,BTC")
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--chart-format", choices=["wide", "square", "both"], default="wide")
-    parser.add_argument("--chart-type", choices=["both", "single"], default="both")
+    parser.add_argument("--chart-type", choices=["both", "single", "mtf"], default="both")
     args = parser.parse_args()
 
     if not args.symbol and not args.symbols:
