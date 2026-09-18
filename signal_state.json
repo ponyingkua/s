@@ -1,8 +1,8 @@
 {
   "_regime_episode": {
-    "regime": "NEUTRAL",
-    "started_at": "2026-09-17T20:03:32.440127+00:00",
-    "signal_count": 0
+    "regime": "BULL",
+    "started_at": "2026-09-18T20:03:14.753203+00:00",
+    "signal_count": 2
   },
   "BULLAUSDT|1h": {
     "symbol": "BULLAUSDT",
@@ -15,30 +15,6 @@
     "timeframe": "4h",
     "direction": "LONG",
     "timestamp": "2026-09-18T19:04:29.939630+00:00"
-  },
-  "PENDLEUSDT|1h": {
-    "symbol": "PENDLEUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T17:03:48.540353+00:00"
-  },
-  "VIRTUALUSDT|1h": {
-    "symbol": "VIRTUALUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T17:03:51.726424+00:00"
-  },
-  "POLUSDT|1h": {
-    "symbol": "POLUSDT",
-    "timeframe": "1h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T17:03:52.428188+00:00"
-  },
-  "RAVEUSDT|4h": {
-    "symbol": "RAVEUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T17:03:53.122437+00:00"
   },
   "PENGUUSDT|1h": {
     "symbol": "PENGUUSDT",
@@ -69,5 +45,17 @@
     "timeframe": "1h",
     "direction": "LONG",
     "timestamp": "2026-09-18T19:04:34.221679+00:00"
+  },
+  "EDENUSDT|4h": {
+    "symbol": "EDENUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T20:04:25.543917+00:00"
+  },
+  "EWYUSDT|4h": {
+    "symbol": "EWYUSDT",
+    "timeframe": "4h",
+    "direction": "LONG",
+    "timestamp": "2026-09-18T20:04:27.617712+00:00"
   }
 }
