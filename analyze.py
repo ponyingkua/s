@@ -20,7 +20,9 @@ from scanner import (
 OUT_DIR = "analysis_output"
 FETCH_MAX_RETRIES = 3
 FETCH_RETRY_BACKOFF_SECONDS = 1.5
-MAX_SL_ATR_MULT = 2.5  # SL tidak boleh lebih dari N x ATR dari harga saat ini
+MAX_SL_ATR_MULT = 2.5
+MTF_AGREE_BONUS = 0.5
+REGIME_CONFLICT_PENALTY = 0.4
 
 
 def normalize_symbol(raw: str, quote_asset: str) -> str:
@@ -39,10 +41,6 @@ def parse_symbols(raw: str) -> list[str]:
 
 
 def _decimals_from_price(price: float) -> int:
-    """Disalin dari chart.py::decimals_from_price - supaya analyze.py tidak
-    perlu `import chart` cuma untuk format angka (dulu di-import lokal di
-    dalam _fmt_price & _round_price di bawah, dipanggil berkali-kali per
-    analisa)."""
     p = abs(float(price))
     if p < 0.0001:
         return 8
@@ -63,6 +61,28 @@ def _decimals_from_price(price: float) -> int:
 
 def _fmt_price(value: float) -> str:
     return f"{float(value):.{_decimals_from_price(value)}f}"
+
+
+def _round_price(value: float) -> float:
+    if value == 0:
+        return 0.0
+    return round(float(value), _decimals_from_price(value))
+
+
+def _bias_label(bull: float, bear: float) -> str:
+    total = bull + bear
+    if total == 0:
+        return "NEUTRAL"
+    ratio = bull / total
+    if ratio >= 0.70:
+        return "BULLISH STRONG"
+    if ratio >= 0.57:
+        return "BULLISH"
+    if ratio <= 0.30:
+        return "BEARISH STRONG"
+    if ratio <= 0.43:
+        return "BEARISH"
+    return "NEUTRAL / MIXED"
 
 
 def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -124,32 +144,14 @@ def _swing_points(df: pd.DataFrame, left: int = 3, right: int = 3):
     lows = df["low"].to_numpy(float)
     sh, sl = [], []
     for i in range(left, len(df) - right):
-        if highs[i] >= np.max(highs[i-left:i+right+1]):
+        if highs[i] >= np.max(highs[i - left : i + right + 1]):
             sh.append((i, highs[i]))
-        if lows[i] <= np.min(lows[i-left:i+right+1]):
+        if lows[i] <= np.min(lows[i - left : i + right + 1]):
             sl.append((i, lows[i]))
     return sh, sl
 
 
 def _rsi_divergence(df: pd.DataFrame, rsi: pd.Series, lookback: int = 50) -> str | None:
-    """Classic 2-point RSI/price divergence, checked against the last two
-    confirmed swing highs (bearish) and swing lows (bullish) within the
-    most recent `lookback` candles.
-
-    Bearish: price prints a higher high while RSI prints a lower high at
-    that same high -> upside momentum is fading even as price still rises.
-    Bullish: price prints a lower low while RSI prints a higher low ->
-    downside momentum is fading even as price still falls.
-
-    Only counted when at least one of the two RSI readings is already in
-    the same momentum zone used elsewhere in this file for RSI scoring
-    (>=55 bullish zone boundary / <=45 bearish zone boundary) - divergence
-    sitting entirely inside the 45-55 no-man's-land is too weak to be a
-    meaningful signal and would mostly just add noise.
-
-    Returns "bullish", "bearish", or None (including when both fire at
-    once, which is not a clean read).
-    """
     n = min(lookback, len(df))
     if n < 12:
         return None
@@ -183,12 +185,6 @@ def _rsi_divergence(df: pd.DataFrame, rsi: pd.Series, lookback: int = 50) -> str
 
 
 def _volume_nodes(df: pd.DataFrame, lookback: int = 100, n_bins: int = 24):
-    """Cheap volume profile: bucket close prices into n_bins over the lookback
-    window and sum volume per bucket, returning bin centers sorted by volume
-    descending. This approximates high-volume nodes (HVN) without needing
-    intrabar/tick data -- good enough to flag price levels where a lot of
-    activity actually happened, vs. swing S/R which only looks at 2 candles
-    (the swing point itself) and ignores everything traded in between."""
     x = df.tail(min(lookback, len(df)))
     if len(x) < 10:
         return []
@@ -197,8 +193,6 @@ def _volume_nodes(df: pd.DataFrame, lookback: int = 100, n_bins: int = 24):
         return []
     bin_edges = np.linspace(lo, hi, n_bins + 1)
     bin_vol = np.zeros(n_bins)
-    # Distribute each candle's volume across the bins its range spans,
-    # weighted by overlap -- better than dumping all volume onto the close.
     for _, row in x.iterrows():
         c_lo, c_hi, vol = float(row["low"]), float(row["high"]), float(row["volume"])
         if vol <= 0 or c_hi <= c_lo:
@@ -227,21 +221,10 @@ def _levels(df: pd.DataFrame, lookback: int = 100):
 
     res_candidates = [v for _, v in sh[-5:]]
     sup_candidates = [v for _, v in sl[-5:]]
-
-    # High-volume nodes (HVN): price levels where the most volume actually
-    # traded, independent of swing geometry. Used to pull the swing-based
-    # level toward a spot with real liquidity behind it when one is nearby,
-    # since a swing point with almost no volume traded there is a level in
-    # name only. Kept as a nudge, not a replacement -- swing structure is
-    # still the primary signal because it reflects where price actually
-    # reversed, not just where volume happened to concentrate.
     nodes = _volume_nodes(x, lookback)
     top_nodes = [v for v, _ in nodes[:5]]
 
     def _hvn_adjust(candidates, direction_above: bool):
-        """If a top volume node sits between price and the nearest swing
-        candidate (same side), prefer the node -- it's a more defensible
-        level because it reflects sustained activity, not a single wick."""
         side_candidates = [v for v in candidates if (v >= price) == direction_above]
         if not side_candidates:
             return None
@@ -254,7 +237,6 @@ def _levels(df: pd.DataFrame, lookback: int = 100):
 
     resistance = _hvn_adjust(res_candidates, True)
     if resistance is None:
-        # Fall back to nearest high-volume node above price, then the window high.
         above_nodes = [v for v in top_nodes if v >= price]
         resistance = min(above_nodes, key=lambda v: abs(v - price)) if above_nodes else float(x["high"].max())
 
@@ -282,6 +264,16 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
         elif lh and ll:
             bear += 3.0
             notes.append("Lower-high / lower-low structure is intact.")
+        elif hh and ll:
+            # Expanding range — neither side dominates.
+            bull += 0.8
+            bear += 0.8
+            notes.append("Swing structure is expanding (higher-high + lower-low); mixed.")
+        elif lh and hl:
+            # Contracting range / possible squeeze.
+            bull += 0.5
+            bear += 0.5
+            notes.append("Swing structure is contracting (lower-high + higher-low); mixed.")
         elif hh or hl:
             bull += 1.4
             notes.append("Recent swing structure leans bullish but is not fully aligned.")
@@ -290,31 +282,26 @@ def _structure_analysis(df: pd.DataFrame) -> dict:
             notes.append("Recent swing structure leans bearish but is not fully aligned.")
 
     support, resistance = _levels(df)
-
-    # Breakout/breakdown-vs-prior-level check. Earlier this re-ran the full
-    # _levels() on df.iloc[:-1] to get a "prior" support/resistance, but
-    # _levels() picks whichever swing point is CLOSEST to the current price,
-    # not a fixed level -- so dropping one candle can make it jump to a
-    # completely different, unrelated swing point (not just shift slightly).
-    # That produced notes like "holding below prior support" using a level
-    # far from anything currently relevant, contradicting the direction/bias.
-    # Using the second-to-last swing high/low already computed above instead
-    # -- the actual prior structural point price just broke -- is stable
-    # under a 1-candle change and matches what "prior level" should mean.
     last_close = float(df["close"].iloc[-1])
     last_high = float(df["high"].iloc[-1])
     last_low = float(df["low"].iloc[-1])
 
-    if len(sh) >= 2:
-        prior_swing_high = sh[-2][1]
-        if last_close > prior_swing_high and last_high > prior_swing_high:
-            bull += 2.2
-            notes.append(f"Price is holding above prior swing resistance ({_fmt_price(prior_swing_high)}).")
-    if len(sl) >= 2:
-        prior_swing_low = sl[-2][1]
-        if last_close < prior_swing_low and last_low < prior_swing_low:
-            bear += 2.2
-            notes.append(f"Price is holding below prior swing support ({_fmt_price(prior_swing_low)}).")
+    # Prefer the most recent confirmed swing as the level just broken,
+    # not the second-to-last only — if price holds above/below the latest
+    # prior swing it is a stronger structural claim.
+    if len(sh) >= 1:
+        ref_high = sh[-1][1]
+        if last_close > ref_high and last_high > ref_high:
+            # Only score if the swing is not the last bar itself (confirmed).
+            if sh[-1][0] < len(df) - 1:
+                bull += 2.2
+                notes.append(f"Price is holding above prior swing resistance ({_fmt_price(ref_high)}).")
+    if len(sl) >= 1:
+        ref_low = sl[-1][1]
+        if last_close < ref_low and last_low < ref_low:
+            if sl[-1][0] < len(df) - 1:
+                bear += 2.2
+                notes.append(f"Price is holding below prior swing support ({_fmt_price(ref_low)}).")
 
     total = bull + bear
     if total == 0:
@@ -364,14 +351,6 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
         e200 = float(ema200.iloc[-1])
         trend += 1.3 if p > e200 else -1.3
         dist_atr = abs(p - e200) / atr_now if atr_now > 0 else 0.0
-        # Being some distance above/below EMA200 is a normal trend-confirmation
-        # signal (small bonus), but past a few ATRs it stops being "trend
-        # strength" and starts being "chasing an extended move" -- mean-
-        # reversion/pullback risk rises the farther price has run from its
-        # long-run average. So the bonus tapers off past 1x ATR and flips to
-        # a caution note (no bonus at all) once it's extreme, mirroring how
-        # RSI >=70/<=30 already gets a reduced bonus plus an extension warning
-        # elsewhere in this function instead of an ever-growing one.
         if dist_atr >= 1.0:
             if dist_atr >= 4.0:
                 notes.append(
@@ -437,7 +416,7 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
             notes.append("Bearish RSI divergence: price made a higher high while RSI made a lower high.")
 
     h = float(hist.iloc[-1]) if pd.notna(hist.iloc[-1]) else None
-    hp = float(hist.iloc[-2]) if pd.notna(hist.iloc[-2]) else None
+    hp = float(hist.iloc[-2]) if len(hist) >= 2 and pd.notna(hist.iloc[-2]) else None
     if h is not None and hp is not None:
         if h > 0 and h > hp:
             bull += 1.3
@@ -445,10 +424,18 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
         elif h < 0 and h < hp:
             bear += 1.3
             notes.append("MACD histogram is negative and expanding.")
+        elif h > 0 and h < hp:
+            bull += 0.4
+            notes.append("MACD histogram is positive but contracting.")
+        elif h < 0 and h > hp:
+            bear += 0.4
+            notes.append("MACD histogram is negative but contracting.")
         elif h > 0:
             bull += 0.5
+            notes.append("MACD histogram is positive.")
         elif h < 0:
             bear += 0.5
+            notes.append("MACD histogram is negative.")
 
     pb_now = float(pb.iloc[-1]) if pd.notna(pb.iloc[-1]) else None
     if pb_now is not None and h is not None:
@@ -459,50 +446,39 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
             bear += 0.6
             notes.append("Price is pressing below the lower Bollinger area with negative momentum.")
 
-    if len(volume) >= 20:
+    if len(volume) >= 20 and len(close) >= 2:
         vma = float(volume.rolling(20).mean().iloc[-1])
         vr = float(volume.iloc[-1]) / vma if vma > 0 else 0
-        up = float(close.iloc[-1]) > float(close.iloc[-2])
-        if vr >= 1.5:
-            if up:
-                bull += 1.0
-                notes.append(f"Volume expansion confirms the latest upward candle ({vr:.1f}x average).")
-            else:
-                bear += 1.0
-                notes.append(f"Volume expansion confirms the latest downward candle ({vr:.1f}x average).")
-        elif vr >= 1.15:
-            if up:
-                bull += 0.35
-            else:
-                bear += 0.35
+        c_now, c_prev = float(close.iloc[-1]), float(close.iloc[-2])
+        if c_now != c_prev:
+            up = c_now > c_prev
+            if vr >= 1.5:
+                if up:
+                    bull += 1.0
+                    notes.append(f"Volume expansion confirms the latest upward candle ({vr:.1f}x average).")
+                else:
+                    bear += 1.0
+                    notes.append(f"Volume expansion confirms the latest downward candle ({vr:.1f}x average).")
+            elif vr >= 1.15:
+                if up:
+                    bull += 0.35
+                else:
+                    bear += 0.35
 
     if len(obv) >= 12:
         delta = float(obv.iloc[-1] - obv.iloc[-12])
-        if delta > 0:
-            bull += 0.7
-            notes.append("OBV is rising across the recent window.")
-        elif delta < 0:
-            bear += 0.7
-            notes.append("OBV is falling across the recent window.")
-
-    total = bull + bear
-    if total == 0:
-        bias = "NEUTRAL"
-    else:
-        ratio = bull / total
-        if ratio >= 0.70:
-            bias = "BULLISH STRONG"
-        elif ratio >= 0.57:
-            bias = "BULLISH"
-        elif ratio <= 0.30:
-            bias = "BEARISH STRONG"
-        elif ratio <= 0.43:
-            bias = "BEARISH"
-        else:
-            bias = "NEUTRAL / MIXED"
+        # Normalize by recent average absolute step to avoid tiny noise scoring.
+        step = float(obv.diff().abs().tail(12).mean()) if len(obv) >= 12 else 0.0
+        if step > 0 and abs(delta) >= 1.5 * step:
+            if delta > 0:
+                bull += 0.7
+                notes.append("OBV is rising across the recent window.")
+            else:
+                bear += 0.7
+                notes.append("OBV is falling across the recent window.")
 
     return {
-        "bias": bias,
+        "bias": _bias_label(bull, bear),
         "bull": round(bull, 2),
         "bear": round(bear, 2),
         "rsi": r,
@@ -521,48 +497,109 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
     bear_bias = direction["bear"] > direction["bull"]
     notes = []
     setup, score = "NONE", 0.0
+    broken_level = None
 
     last = df.iloc[-1]
     rng = max(float(last.high - last.low), 1e-12)
     body_ratio = abs(float(last.close - last.open)) / rng
 
-    # Directional conviction, used throughout to scale scores continuously
-    # instead of the old fixed-per-type values. Ranges roughly 0..1: how
-    # lopsided bull vs bear votes are (from _direction_analysis) reflects how
-    # confident the underlying signal mix already is, so a BREAKOUT built on
-    # near-unanimous bullish votes should outscore one built on a bare edge.
     total_bias = direction["bull"] + direction["bear"]
     conviction = abs(direction["bull"] - direction["bear"]) / total_bias if total_bias > 0 else 0.0
 
-    if bull_bias and p > resistance and body_ratio >= 0.45:
-        # Base 2.6..3.4 scaled by candle decisiveness (body_ratio can exceed
-        # 0.45 up to ~1.0) and directional conviction, instead of a flat 3.0.
+    vol_ratio = 1.0
+    if len(df) >= 20:
+        vma = float(df["volume"].rolling(20).mean().iloc[-1])
+        if vma > 0:
+            vol_ratio = float(last.volume) / vma
+
+    # Breakout/breakdown must use confirmed prior swing levels, NOT the live
+    # nearest S/R from _levels (those always sit on the same side of price,
+    # so p > resistance / p < support can almost never fire).
+    sh, sl = _swing_points(df, 3, 3)
+    prior_swing_high = sh[-1][1] if sh else None
+    prior_swing_low = sl[-1][1] if sl else None
+
+    breakout_candidate = (
+        bull_bias
+        and prior_swing_high is not None
+        and p > prior_swing_high
+        and float(last.high) > prior_swing_high
+        and body_ratio >= 0.45
+    )
+    breakdown_candidate = (
+        bear_bias
+        and prior_swing_low is not None
+        and p < prior_swing_low
+        and float(last.low) < prior_swing_low
+        and body_ratio >= 0.45
+    )
+
+    # Reject low-volume breaks — likely fakeouts without participation.
+    if breakout_candidate and vol_ratio < 0.85:
+        notes.append(
+            f"Breakout above {_fmt_price(prior_swing_high)} ignored: volume "
+            f"{vol_ratio:.2f}x avg is too weak (min 0.85x)."
+        )
+        breakout_candidate = False
+    if breakdown_candidate and vol_ratio < 0.85:
+        notes.append(
+            f"Breakdown below {_fmt_price(prior_swing_low)} ignored: volume "
+            f"{vol_ratio:.2f}x avg is too weak (min 0.85x)."
+        )
+        breakdown_candidate = False
+
+    if breakout_candidate:
         setup = "BREAKOUT"
-        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
-        notes.append("Bullish breakout has a decisive candle behind it.")
-    elif bear_bias and p < support and body_ratio >= 0.45:
+        broken_level = prior_swing_high
+        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.4 * conviction
+        notes.append(
+            f"Bullish breakout above prior swing high ({_fmt_price(prior_swing_high)}) "
+            f"with decisive candle."
+        )
+        if vol_ratio >= 1.5:
+            score += 0.25
+            notes.append(f"Breakout volume confirmed ({vol_ratio:.1f}x average).")
+        elif vol_ratio >= 1.15:
+            score += 0.1
+            notes.append(f"Breakout volume adequate ({vol_ratio:.1f}x average).")
+        elif vol_ratio < 1.0:
+            score -= 0.3
+            notes.append(f"Breakout volume soft ({vol_ratio:.2f}x average) — reduced conviction.")
+    elif breakdown_candidate:
         setup = "BREAKDOWN"
-        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
-        notes.append("Bearish breakdown has a decisive candle behind it.")
+        broken_level = prior_swing_low
+        score = 2.6 + 0.5 * min((body_ratio - 0.45) / 0.55, 1.0) + 0.4 * conviction
+        notes.append(
+            f"Bearish breakdown below prior swing low ({_fmt_price(prior_swing_low)}) "
+            f"with decisive candle."
+        )
+        if vol_ratio >= 1.5:
+            score += 0.25
+            notes.append(f"Breakdown volume confirmed ({vol_ratio:.1f}x average).")
+        elif vol_ratio >= 1.15:
+            score += 0.1
+            notes.append(f"Breakdown volume adequate ({vol_ratio:.1f}x average).")
+        elif vol_ratio < 1.0:
+            score -= 0.3
+            notes.append(f"Breakdown volume soft ({vol_ratio:.2f}x average) — reduced conviction.")
     else:
-        if bull_bias and abs(p - support) <= max(1.2 * atr, p * 0.006):
-            # Closer to support = stronger retest; scale 2.2..2.8 by proximity.
-            dist_ratio = abs(p - support) / max(1.2 * atr, p * 0.006)
-            setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
+        prox = max(1.2 * atr, p * 0.006)
+        if bull_bias and abs(p - support) <= prox:
+            dist_ratio = abs(p - support) / prox
+            setup = "PULLBACK / RETEST"
+            score = 2.2 + 0.5 * (1.0 - min(dist_ratio, 1.0)) + 0.3 * conviction
             notes.append("Price is close to structural support while directional pressure remains bullish.")
-        elif bear_bias and abs(p - resistance) <= max(1.2 * atr, p * 0.006):
-            dist_ratio = abs(p - resistance) / max(1.2 * atr, p * 0.006)
-            setup, score = "PULLBACK / RETEST", 2.2 + 0.6 * (1.0 - min(dist_ratio, 1.0))
+        elif bear_bias and abs(p - resistance) <= prox:
+            dist_ratio = abs(p - resistance) / prox
+            setup = "PULLBACK / RETEST"
+            score = 2.2 + 0.5 * (1.0 - min(dist_ratio, 1.0)) + 0.3 * conviction
             notes.append("Price is close to structural resistance while directional pressure remains bearish.")
 
         upper_wick = float(last.high - max(last.open, last.close))
         lower_wick = float(min(last.open, last.close) - last.low)
-        # A rejection wick becomes the primary setup only if nothing stronger
-        # was already found; otherwise it's recorded as a secondary
-        # confirmation note so the setup label and its notes never disagree.
         if bear_bias and upper_wick / rng >= 0.45 and last.high >= resistance:
             wick_ratio = upper_wick / rng
-            rej_score = 2.0 + 0.6 * min((wick_ratio - 0.45) / 0.55, 1.0)
+            rej_score = 2.0 + 0.5 * min((wick_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
             if score >= rej_score:
                 notes.append("Upper-wick rejection also visible at structural resistance (secondary confirmation).")
             else:
@@ -571,7 +608,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             score = max(score, rej_score)
         elif bull_bias and lower_wick / rng >= 0.45 and last.low <= support:
             wick_ratio = lower_wick / rng
-            rej_score = 2.0 + 0.6 * min((wick_ratio - 0.45) / 0.55, 1.0)
+            rej_score = 2.0 + 0.5 * min((wick_ratio - 0.45) / 0.55, 1.0) + 0.3 * conviction
             if score >= rej_score:
                 notes.append("Lower-wick rejection also visible at structural support (secondary confirmation).")
             else:
@@ -595,12 +632,10 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
                 atr_ok = False
                 notes.append("CONTINUATION skipped: ATR too compressed for reliable follow-through.")
             if momentum_ok and rsi_ok and atr_ok:
-                # Scale 1.6..2.4 by how much extra room RSI has and how firm
-                # the MACD histogram push is, instead of a flat 2.2.
                 rsi_room = (75 - r) / 75
                 hist_strength = min(abs(h) / (atr * 0.05 if atr else 1.0), 1.0) if atr else 0.0
                 setup = "CONTINUATION"
-                score = 1.6 + 0.4 * min(rsi_room, 1.0) + 0.4 * hist_strength
+                score = 1.6 + 0.3 * min(rsi_room, 1.0) + 0.3 * hist_strength + 0.4 * conviction
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bullish but momentum/slope not supportive enough for CONTINUATION.")
@@ -615,20 +650,23 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
                 rsi_room = (r - 25) / 75
                 hist_strength = min(abs(h) / (atr * 0.05 if atr else 1.0), 1.0) if atr else 0.0
                 setup = "CONTINUATION"
-                score = 1.6 + 0.4 * min(rsi_room, 1.0) + 0.4 * hist_strength
+                score = 1.6 + 0.3 * min(rsi_room, 1.0) + 0.3 * hist_strength + 0.4 * conviction
                 notes.append("Trend, structure, and momentum remain aligned for continuation.")
             elif not (momentum_ok and rsi_ok):
                 notes.append("Structure bearish but momentum/slope not supportive enough for CONTINUATION.")
 
-    score = round(score, 2)
+    score = round(min(max(score, 0.0), 3.5), 2)
+    if score <= 0 and setup != "NONE":
+        notes.append(f"Setup {setup} discarded after score adjustments.")
+        setup, broken_level = "NONE", None
     quality = "HIGH" if score >= 2.8 else "MEDIUM" if score >= 2.0 else "LOW" if score > 0 else "NONE"
-    return {"type": setup, "quality": quality, "score": score, "notes": notes}
-
-
-def _round_price(value: float) -> float:
-    if value == 0:
-        return 0.0
-    return round(float(value), _decimals_from_price(value))
+    return {
+        "type": setup,
+        "quality": quality,
+        "score": score,
+        "notes": notes,
+        "broken_level": broken_level,
+    }
 
 
 def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dict) -> dict:
@@ -637,46 +675,68 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
     support, resistance = structure["support"], structure["resistance"]
     is_long = direction["bull"] > direction["bear"]
     is_short = direction["bear"] > direction["bull"]
+    setup_type = setup.get("type", "NONE")
+    broken = setup.get("broken_level")
 
-    if not (is_long or is_short) or setup["type"] == "NONE":
+    if not (is_long or is_short) or setup_type == "NONE":
         return {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
 
     notes = []
 
     if is_long:
-        anchor = support if support < p else p - atr
+        if setup_type == "BREAKOUT" and broken is not None and broken < p:
+            anchor = broken
+            notes.append(f"SL anchored under broken swing high ({_fmt_price(broken)}).")
+        else:
+            anchor = support if support < p else p - atr
+
         sl_raw = min(anchor - 0.25 * atr, p - atr)
         sl_floor = p - MAX_SL_ATR_MULT * atr
         sl = max(sl_raw, sl_floor)
         if sl > sl_raw:
             notes.append(
                 f"SL distance capped at {MAX_SL_ATR_MULT}x ATR "
-                f"(structural support was farther away at {_fmt_price(sl_raw)})."
+                f"(structural level was farther away at {_fmt_price(sl_raw)})."
             )
-        lo = min(p, max(anchor, p - 0.45 * atr))
-        hi = max(p, lo + 0.15 * atr)
+
+        if setup_type == "BREAKOUT" and broken is not None and broken < p:
+            # Limit entry on retest of broken level — avoid chasing extension.
+            extension = (p - broken) / atr if atr > 0 else 0.0
+            lo = broken
+            hi = min(p, broken + max(0.35 * atr, (p - broken) * 0.35))
+            if hi <= lo:
+                hi = lo + 0.15 * atr
+            if extension >= 1.5:
+                notes.append(
+                    f"Price is {extension:.1f}x ATR above broken level — "
+                    f"entry is a limit retest zone, not a market chase."
+                )
+            else:
+                notes.append(
+                    f"Entry set as retest zone at broken level "
+                    f"({_fmt_price(lo)}-{_fmt_price(hi)})."
+                )
+        else:
+            lo = min(p, max(anchor, p - 0.45 * atr))
+            hi = max(p, lo + 0.15 * atr)
+
         risk = max(hi - sl, 0.25 * atr)
 
-        # TP1/TP2 anchor to the next real structural level (resistance) when
-        # it's a sensible target, instead of always being a fixed R:R off the
-        # entry. A resistance that isn't at least ~0.5x risk above entry is
-        # too close to be a meaningful first target (could even sit inside
-        # the entry band), so that case falls back to the old fixed-ratio
-        # projection rather than producing a TP1 barely above entry.
         if resistance > hi + 0.5 * risk:
             tp1 = resistance
-            # TP2 extends past resistance rather than stopping at the first
-            # level -- whichever is farther of "one more risk-multiple past
-            # TP1" or the old fixed-ratio projection, so TP2 never ends up
-            # closer than TP1.
             tp2 = max(tp1 + risk, hi + 1.8 * risk)
             notes.append(f"TP1 set at structural resistance ({_fmt_price(resistance)}).")
         else:
             tp1, tp2 = hi + risk, hi + 1.8 * risk
-        if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
+
+        if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0 or sl >= lo:
             return {
-                "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
-                "notes": ["Setup discarded: computed entry/SL/TP were not usable (non-positive price)."],
+                "direction": "NONE",
+                "entry": None,
+                "sl": None,
+                "tp1": None,
+                "tp2": None,
+                "notes": ["Setup discarded: computed entry/SL/TP were not usable."],
             }
         return {
             "direction": "LONG",
@@ -687,32 +747,58 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
             "notes": notes,
         }
 
-    anchor = resistance if resistance > p else p + atr
+    if setup_type == "BREAKDOWN" and broken is not None and broken > p:
+        anchor = broken
+        notes.append(f"SL anchored above broken swing low ({_fmt_price(broken)}).")
+    else:
+        anchor = resistance if resistance > p else p + atr
+
     sl_raw = max(anchor + 0.25 * atr, p + atr)
     sl_cap = p + MAX_SL_ATR_MULT * atr
     sl = min(sl_raw, sl_cap)
     if sl < sl_raw:
         notes.append(
             f"SL distance capped at {MAX_SL_ATR_MULT}x ATR "
-            f"(structural resistance was farther away at {_fmt_price(sl_raw)})."
+            f"(structural level was farther away at {_fmt_price(sl_raw)})."
         )
-    hi = max(p, min(anchor, p + 0.45 * atr))
-    lo = min(p, hi - 0.15 * atr)
+
+    if setup_type == "BREAKDOWN" and broken is not None and broken > p:
+        extension = (broken - p) / atr if atr > 0 else 0.0
+        hi = broken
+        lo = max(p, broken - max(0.35 * atr, (broken - p) * 0.35))
+        if lo >= hi:
+            lo = hi - 0.15 * atr
+        if extension >= 1.5:
+            notes.append(
+                f"Price is {extension:.1f}x ATR below broken level — "
+                f"entry is a limit retest zone, not a market chase."
+            )
+        else:
+            notes.append(
+                f"Entry set as retest zone at broken level "
+                f"({_fmt_price(lo)}-{_fmt_price(hi)})."
+            )
+    else:
+        hi = max(p, min(anchor, p + 0.45 * atr))
+        lo = min(p, hi - 0.15 * atr)
+
     risk = max(sl - lo, 0.25 * atr)
 
-    # Mirror of the LONG side above: prefer the next real structural level
-    # (support) as TP1 when it's a sensible target, rather than always being
-    # a fixed R:R off the entry.
     if support < lo - 0.5 * risk:
         tp1 = support
         tp2 = min(tp1 - risk, lo - 1.8 * risk)
         notes.append(f"TP1 set at structural support ({_fmt_price(support)}).")
     else:
         tp1, tp2 = lo - risk, lo - 1.8 * risk
-    if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
+
+    if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0 or sl <= hi:
         return {
-            "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
-            "notes": ["Setup discarded: computed entry/SL/TP were not usable (non-positive price)."],
+            "direction": "NONE",
+            "entry": None,
+            "sl": None,
+            "tp1": None,
+            "tp2": None,
+            "notes": ["Setup discarded: computed entry/SL/TP were not usable."],
         }
     return {
         "direction": "SHORT",
@@ -730,6 +816,7 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str, deriv: dict
         dbias = _derivatives_bias(deriv)
         direction["bull"] = round(direction["bull"] + dbias["bull"], 2)
         direction["bear"] = round(direction["bear"] + dbias["bear"], 2)
+        direction["bias"] = _bias_label(direction["bull"], direction["bear"])
         direction["notes"] = direction["notes"] + dbias["notes"]
         direction["derivatives"] = {
             "funding_rate_pct": deriv.get("funding_rate_pct"),
@@ -740,40 +827,72 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str, deriv: dict
     structure = _structure_analysis(df)
     setup = _detect_setup(df, structure, direction)
 
-    conf_bull_strong = direction["bull"] - direction["bear"] >= 1.5
-    conf_bear_strong = direction["bear"] - direction["bull"] >= 1.5
+    edge = direction["bull"] - direction["bear"]
+    bull_bias = edge > 0
+    bear_bias = edge < 0
+    conf_bull = edge >= 0.8
+    conf_bear = edge <= -0.8
+    conf_bull_strong = edge >= 1.5
+    conf_bear_strong = edge <= -1.5
+    setup_type = setup.get("type", "NONE")
+    setup_ok = setup_type != "NONE" and setup.get("score", 0) >= 2.0
     divergence_notes = []
 
+    # Hard block: intact structure opposing a strong opposite indicator signal.
     if structure["label"] == "BULLISH" and conf_bear_strong:
         final = "NONE"
         divergence_notes.append(
-            f"Divergence: structure is BULLISH (HH/HL intact) but indicator "
-            f"confluence is bearish-strong; not treated as an actionable SHORT."
+            "Divergence: structure is BULLISH (HH/HL intact) but indicator "
+            "confluence is bearish-strong; not treated as an actionable SHORT."
         )
     elif structure["label"] == "BEARISH" and conf_bull_strong:
         final = "NONE"
         divergence_notes.append(
-            f"Divergence: structure is BEARISH (LH/LL intact) but indicator "
-            f"confluence is bullish-strong; not treated as an actionable LONG."
+            "Divergence: structure is BEARISH (LH/LL intact) but indicator "
+            "confluence is bullish-strong; not treated as an actionable LONG."
         )
-    elif structure["label"] == "BULLISH" and direction["bull"] > direction["bear"]:
+    # High-quality breakout/breakdown only needs matching bias (edge > 0).
+    elif setup_type == "BREAKOUT" and bull_bias and setup_ok:
         final = "LONG"
-    elif structure["label"] == "BEARISH" and direction["bear"] > direction["bull"]:
+    elif setup_type == "BREAKDOWN" and bear_bias and setup_ok:
         final = "SHORT"
-    elif conf_bull_strong:
+    # Structure + indicator aligned.
+    elif structure["label"] == "BULLISH" and conf_bull:
         final = "LONG"
-    elif conf_bear_strong:
+    elif structure["label"] == "BEARISH" and conf_bear:
+        final = "SHORT"
+    # Strong indicator alone when structure is MIXED/NEUTRAL.
+    elif structure["label"] in ("MIXED", "NEUTRAL") and conf_bull_strong:
+        final = "LONG"
+    elif structure["label"] in ("MIXED", "NEUTRAL") and conf_bear_strong:
+        final = "SHORT"
+    # Other setups (pullback/rejection/continuation) with mild edge.
+    elif setup_ok and conf_bull:
+        final = "LONG"
+    elif setup_ok and conf_bear:
         final = "SHORT"
     else:
         final = "NONE"
 
-    levels = _build_levels(df, direction, structure, setup) if final != "NONE" else {
-        "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None
-    }
-    if levels["direction"] == "NONE" and final != "NONE":
-        # _build_levels discarded the setup (unrealistic SL/TP) — keep direction and
-        # levels in sync so downstream selection/rendering never sees a mismatched state.
+    if final == "LONG" and setup_type == "BREAKDOWN":
         final = "NONE"
+        divergence_notes.append("Setup BREAKDOWN conflicts with LONG direction; discarded.")
+    elif final == "SHORT" and setup_type == "BREAKOUT":
+        final = "NONE"
+        divergence_notes.append("Setup BREAKOUT conflicts with SHORT direction; discarded.")
+
+    levels = (
+        _build_levels(df, direction, structure, setup)
+        if final != "NONE"
+        else {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
+    )
+    if levels["direction"] == "NONE" and final != "NONE":
+        final = "NONE"
+    # Keep levels direction in sync with final.
+    if final != "NONE" and levels.get("direction") not in (final, "NONE"):
+        final = "NONE"
+        levels = {"direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None}
+        divergence_notes.append("Levels direction mismatched final bias; setup discarded.")
     divergence_notes += levels.get("notes", [])
 
     return {
@@ -789,28 +908,45 @@ def analyze_timeframe(df: pd.DataFrame, symbol: str, timeframe: str, deriv: dict
     }
 
 
-MTF_AGREE_BONUS = 0.5  # ranking-only bonus per other timeframe agreeing on direction; see _select_best_setup
-REGIME_CONFLICT_PENALTY = 0.4  # ranking-only penalty when setup direction fights BTC structure/market regime
-
-
 def _select_best_setup(per_tf: dict, market_regime: str = "NEUTRAL"):
-    # With continuous setup scoring (see _detect_setup), a weak CONTINUATION
-    # can genuinely score below 2.0 / land as LOW quality now, so this
-    # weak-pool fallback is an active filter, not dead code.
     candidates = []
     weak = []
     for tf, info in per_tf.items():
         if "error" in info or info.get("direction") == "NONE":
             continue
-        da, su = info["direction_analysis"], info["setup"]
+        da, su, lv, st = (
+            info["direction_analysis"],
+            info["setup"],
+            info.get("levels", {}),
+            info.get("structure", {}),
+        )
         if su.get("type", "NONE") == "NONE":
             continue
+        if not lv.get("entry") or lv.get("sl") is None:
+            continue
+
         strength = abs(da["bull"] - da["bear"])
         agree = len(info.get("mtf_agree_tfs", []))
         rank_score = su["score"] + MTF_AGREE_BONUS * agree
+
+        # Bonus when structure label agrees with trade direction.
+        st_label = st.get("label", "NEUTRAL")
+        direction = info["direction"]
+        if (direction == "LONG" and st_label == "BULLISH") or (
+            direction == "SHORT" and st_label == "BEARISH"
+        ):
+            rank_score += 0.3
+        elif st_label == "MIXED":
+            rank_score -= 0.15
+
         if info.get("btc_correlation", {}).get("conflict"):
             rank_score -= REGIME_CONFLICT_PENALTY
-        row = ((rank_score, strength), tf, info)
+        if market_regime == "BEAR" and direction == "LONG":
+            rank_score -= 0.2
+        elif market_regime == "BULL" and direction == "SHORT":
+            rank_score -= 0.2
+
+        row = ((rank_score, strength, su.get("score", 0)), tf, info)
         if su.get("quality") == "LOW" or su.get("score", 0) < 2.0:
             weak.append(row)
         else:
@@ -841,18 +977,6 @@ async def _fetch_tf(client: "BinanceFuturesClient", symbol: str, tf: str, klines
     return tf, None, str(last_err)
 
 
-# ---------------------------------------------------------------------------
-# Derivatives data (funding rate / open interest / long-short ratio).
-#
-# Endpoint publik Binance Futures ini TIDAK ada di scanner.py (BinanceFuturesClient
-# di sana cuma untuk klines + volume), jadi diambil langsung di sini pakai session
-# aiohttp milik client yang sudah terbuka (client._session) -- tanpa menambah
-# method baru ke class BinanceFuturesClient di scanner.py, biar scanner.py tidak
-# disentuh sama sekali. Semua endpoint ini best-effort: kalau gagal (rate limit,
-# symbol delisting dari data futures publik, dll) dikembalikan None dan dicatat
-# sbg error per-field, tidak pernah membatalkan analisa teknikal utama.
-# ---------------------------------------------------------------------------
-
 async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dict:
     session = client._session
     out: dict = {
@@ -865,12 +989,12 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
         "errors": [],
     }
 
-    # --- Funding rate (current, from premiumIndex -- includes predicted next rate) ---
     try:
         url = f"{BASE_URL}/fapi/v1/premiumIndex"
         async with session.get(url, params={"symbol": symbol}) as resp:
             data = await resp.json()
-        if resp.status == 200 and isinstance(data, dict) and "lastFundingRate" in data:
+            status = resp.status
+        if status == 200 and isinstance(data, dict) and "lastFundingRate" in data:
             rate = float(data["lastFundingRate"])
             out["funding_rate"] = rate
             out["funding_rate_pct"] = rate * 100
@@ -880,14 +1004,12 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
     except Exception as exc:
         out["errors"].append(f"funding rate: {exc}")
 
-    # --- Open interest: current snapshot + ~5h ago from openInterestHist for a
-    # cheap trend read (rising OI + rising price = new longs; rising OI + falling
-    # price = new shorts; falling OI = position unwinding / closing, either side).
     try:
         url = f"{BASE_URL}/fapi/v1/openInterest"
         async with session.get(url, params={"symbol": symbol}) as resp:
             data = await resp.json()
-        if resp.status == 200 and isinstance(data, dict) and "openInterest" in data:
+            status = resp.status
+        if status == 200 and isinstance(data, dict) and "openInterest" in data:
             out["open_interest"] = float(data["openInterest"])
         else:
             out["errors"].append(f"open interest: unexpected response ({data})")
@@ -901,7 +1023,8 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
                 hist_url, params={"symbol": symbol, "period": "1h", "limit": 6}
             ) as resp:
                 hist = await resp.json()
-            if resp.status == 200 and isinstance(hist, list) and len(hist) >= 2:
+                status = resp.status
+            if status == 200 and isinstance(hist, list) and len(hist) >= 2:
                 oi_then = float(hist[0]["sumOpenInterest"])
                 oi_now = float(hist[-1]["sumOpenInterest"])
                 if oi_then > 0:
@@ -909,16 +1032,14 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
         except Exception as exc:
             out["errors"].append(f"open interest history: {exc}")
 
-    # --- Global long/short account ratio (retail positioning; contrarian read at
-    # extremes -- very crowded retail longs/shorts often precede a squeeze the
-    # other way). Endpoint has ~30min data lag, treated as directional only. ---
     try:
         url = f"{BASE_URL}/futures/data/globalLongShortAccountRatio"
         async with session.get(
             url, params={"symbol": symbol, "period": "1h", "limit": 1}
         ) as resp:
             data = await resp.json()
-        if resp.status == 200 and isinstance(data, list) and data:
+            status = resp.status
+        if status == 200 and isinstance(data, list) and data:
             out["ls_account_ratio"] = float(data[-1]["longShortRatio"])
         else:
             out["errors"].append(f"long/short ratio: unexpected response ({data})")
@@ -929,11 +1050,6 @@ async def _fetch_derivatives(client: "BinanceFuturesClient", symbol: str) -> dic
 
 
 def _derivatives_bias(deriv: dict) -> dict:
-    """Convert raw derivatives numbers into a bull/bear score contribution
-    plus human-readable notes, mirroring the scoring style of _direction_analysis.
-    Every threshold here is a heuristic, not a law -- deliberately kept small
-    relative to the technical score (max ~1.8 total) since derivatives data is
-    a confirming/contrarian signal, not a primary directional one."""
     bull = bear = 0.0
     notes = []
 
@@ -953,13 +1069,11 @@ def _derivatives_bias(deriv: dict) -> dict:
             notes.append(f"Funding rate {rate:+.3f}% is mildly negative.")
 
     oi_chg = deriv.get("oi_change_pct")
-    if oi_chg is not None:
-        if abs(oi_chg) >= 3.0:
-            notes.append(f"Open interest {'up' if oi_chg > 0 else 'down'} {abs(oi_chg):.1f}% over the last ~5h.")
+    if oi_chg is not None and abs(oi_chg) >= 3.0:
+        notes.append(f"Open interest {'up' if oi_chg > 0 else 'down'} {abs(oi_chg):.1f}% over the last ~5h.")
 
     ratio = deriv.get("ls_account_ratio")
     if ratio is not None:
-        # ratio = longs/shorts among retail accounts; >1 means more long accounts.
         if ratio >= 2.2:
             bear += 0.4
             notes.append(f"Retail long/short ratio {ratio:.2f} is crowded-long (contrarian bearish tilt).")
@@ -974,12 +1088,6 @@ def _derivatives_bias(deriv: dict) -> dict:
 
 
 def _btc_correlation_note(symbol: str, deriv_regime: str, btc_dfs: dict, per_tf: dict) -> dict:
-    """Soft correlation check against BTC, not a hard block. Altcoins that
-    want to go LONG while BTC's own structure/regime on the same timeframe is
-    BEARISH (or vice versa) get a cautionary note and a small score penalty in
-    ranking (via _select_best_setup reading this field) rather than being
-    filtered out outright -- alts do decouple from BTC sometimes, so this is
-    a risk flag for the trader to weigh, not an automatic disqualifier."""
     notes_by_tf: dict = {}
     if symbol.upper().startswith("BTC"):
         return notes_by_tf
@@ -992,7 +1100,6 @@ def _btc_correlation_note(symbol: str, deriv_regime: str, btc_dfs: dict, per_tf:
             continue
         try:
             btc_direction = _direction_analysis(btc_df)
-            btc_structure = _structure_analysis(btc_df)
         except Exception:
             continue
         btc_bull = btc_direction["bull"] > btc_direction["bear"]
@@ -1074,7 +1181,11 @@ async def analyze_symbol(symbol: str, cfg: dict) -> dict:
         except Exception as exc:
             per_tf[tf] = {"error": str(exc)}
 
-    directions = {tf: x["direction"] for tf, x in per_tf.items() if "direction" in x and x["direction"] != "NONE"}
+    directions = {
+        tf: x["direction"]
+        for tf, x in per_tf.items()
+        if "direction" in x and x["direction"] != "NONE"
+    }
     for tf, info in per_tf.items():
         if "direction" in info and info["direction"] != "NONE":
             info["mtf_agree_tfs"] = [t for t, d in directions.items() if t != tf and d == info["direction"]]
@@ -1108,7 +1219,7 @@ def compose_analysis_text(result: dict) -> str:
     ]
 
     best_tf, best_info = result.get("best_tf"), result.get("best")
-    lines.append("## 🎯 Best Setup")
+    lines.append("## Best Setup")
     if best_info is None:
         lines.append("No actionable setup was found on any analyzed timeframe.")
     else:
@@ -1134,7 +1245,7 @@ def compose_analysis_text(result: dict) -> str:
             lines += [f"Analysis error: {info['error']}", ""]
             continue
 
-        da, st, su, lv = info["direction_analysis"], info["structure"], info["setup"], info["levels"]
+        da, st, su = info["direction_analysis"], info["structure"], info["setup"]
         lines.append(f"Direction: {info['direction']}")
         lines.append(f"Technical bias: {info['bias']}")
         lines.append(f"Structure: {st['label']}")
@@ -1181,7 +1292,6 @@ def _render_charts_for_format(
     chart_type: str,
     chart_format: str,
 ) -> None:
-    """Render chart MTF dan/atau drill-down untuk satu rasio (wide/square)."""
     from mtfk import build_mtfk_chart, single_mtfk
 
     square = chart_format == "square"
@@ -1235,7 +1345,7 @@ def run_one(symbol_raw: str, cfg: dict, chart_format: str = "wide", chart_type: 
     try:
         result = asyncio.run(analyze_symbol(symbol, cfg))
     except Exception as exc:
-        print(f"[analyze] ✗ Gagal: {symbol} ({exc})")
+        print(f"[analyze] Gagal: {symbol} ({exc})")
         return False
 
     text = compose_analysis_text(result)
@@ -1257,7 +1367,7 @@ def run_one(symbol_raw: str, cfg: dict, chart_format: str = "wide", chart_type: 
         print(f"[analyze] All {len(per_tf)} timeframe(s) failed to fetch/analyze. Exiting non-zero.")
         return False
 
-    print(f"[analyze] ✓ Selesai: {symbol}")
+    print(f"[analyze] Selesai: {symbol}")
     return True
 
 
