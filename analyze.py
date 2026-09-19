@@ -364,11 +364,31 @@ def _direction_analysis(df: pd.DataFrame) -> dict:
         e200 = float(ema200.iloc[-1])
         trend += 1.3 if p > e200 else -1.3
         dist_atr = abs(p - e200) / atr_now if atr_now > 0 else 0.0
+        # Being some distance above/below EMA200 is a normal trend-confirmation
+        # signal (small bonus), but past a few ATRs it stops being "trend
+        # strength" and starts being "chasing an extended move" -- mean-
+        # reversion/pullback risk rises the farther price has run from its
+        # long-run average. So the bonus tapers off past 1x ATR and flips to
+        # a caution note (no bonus at all) once it's extreme, mirroring how
+        # RSI >=70/<=30 already gets a reduced bonus plus an extension warning
+        # elsewhere in this function instead of an ever-growing one.
         if dist_atr >= 1.0:
-            trend += 0.4 if p > e200 else -0.4
-            notes.append(
-                f"Price is {dist_atr:.1f}x ATR {'above' if p > e200 else 'below'} EMA200."
-            )
+            if dist_atr >= 4.0:
+                notes.append(
+                    f"Price is {dist_atr:.1f}x ATR {'above' if p > e200 else 'below'} EMA200 "
+                    f"— significantly extended from the long-run average; chasing risk is elevated."
+                )
+            elif dist_atr >= 2.0:
+                trend += 0.2 if p > e200 else -0.2
+                notes.append(
+                    f"Price is {dist_atr:.1f}x ATR {'above' if p > e200 else 'below'} EMA200 "
+                    f"(extended; some pullback risk)."
+                )
+            else:
+                trend += 0.4 if p > e200 else -0.4
+                notes.append(
+                    f"Price is {dist_atr:.1f}x ATR {'above' if p > e200 else 'below'} EMA200."
+                )
     else:
         notes.append(
             f"EMA200 not available (only {len(df)} candles of history); "
@@ -577,7 +597,7 @@ def _detect_setup(df: pd.DataFrame, structure: dict, direction: dict) -> dict:
             if momentum_ok and rsi_ok and atr_ok:
                 # Scale 1.6..2.4 by how much extra room RSI has and how firm
                 # the MACD histogram push is, instead of a flat 2.2.
-                rsi_room = (75 - r) / 75 if bull_bias else (r - 25) / 75
+                rsi_room = (75 - r) / 75
                 hist_strength = min(abs(h) / (atr * 0.05 if atr else 1.0), 1.0) if atr else 0.0
                 setup = "CONTINUATION"
                 score = 1.6 + 0.4 * min(rsi_room, 1.0) + 0.4 * hist_strength
@@ -636,7 +656,23 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
         lo = min(p, max(anchor, p - 0.45 * atr))
         hi = max(p, lo + 0.15 * atr)
         risk = max(hi - sl, 0.25 * atr)
-        tp1, tp2 = hi + risk, hi + 1.8 * risk
+
+        # TP1/TP2 anchor to the next real structural level (resistance) when
+        # it's a sensible target, instead of always being a fixed R:R off the
+        # entry. A resistance that isn't at least ~0.5x risk above entry is
+        # too close to be a meaningful first target (could even sit inside
+        # the entry band), so that case falls back to the old fixed-ratio
+        # projection rather than producing a TP1 barely above entry.
+        if resistance > hi + 0.5 * risk:
+            tp1 = resistance
+            # TP2 extends past resistance rather than stopping at the first
+            # level -- whichever is farther of "one more risk-multiple past
+            # TP1" or the old fixed-ratio projection, so TP2 never ends up
+            # closer than TP1.
+            tp2 = max(tp1 + risk, hi + 1.8 * risk)
+            notes.append(f"TP1 set at structural resistance ({_fmt_price(resistance)}).")
+        else:
+            tp1, tp2 = hi + risk, hi + 1.8 * risk
         if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
             return {
                 "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
@@ -663,7 +699,16 @@ def _build_levels(df: pd.DataFrame, direction: dict, structure: dict, setup: dic
     hi = max(p, min(anchor, p + 0.45 * atr))
     lo = min(p, hi - 0.15 * atr)
     risk = max(sl - lo, 0.25 * atr)
-    tp1, tp2 = lo - risk, lo - 1.8 * risk
+
+    # Mirror of the LONG side above: prefer the next real structural level
+    # (support) as TP1 when it's a sensible target, rather than always being
+    # a fixed R:R off the entry.
+    if support < lo - 0.5 * risk:
+        tp1 = support
+        tp2 = min(tp1 - risk, lo - 1.8 * risk)
+        notes.append(f"TP1 set at structural support ({_fmt_price(support)}).")
+    else:
+        tp1, tp2 = lo - risk, lo - 1.8 * risk
     if lo <= 0 or hi <= 0 or sl <= 0 or tp1 <= 0 or tp2 <= 0:
         return {
             "direction": "NONE", "entry": None, "sl": None, "tp1": None, "tp2": None,
