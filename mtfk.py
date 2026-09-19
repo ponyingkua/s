@@ -606,7 +606,7 @@ def build_single_mtfk_chart(
 
     gs = GridSpec(
         3, 1, figure=fig,
-        height_ratios=[4.4, 0.9, 1.3],
+        height_ratios=[4.4, 1.3, 1.3],
         hspace=0.10,
         left=0.07, right=0.96, top=0.87, bottom=0.11,
     )
@@ -618,7 +618,7 @@ def build_single_mtfk_chart(
         ax.set_facecolor(PANEL)
         ax.grid(True, linestyle="-", alpha=0.55, color=GRID, linewidth=0.5)
         ax.set_axisbelow(True)
-        ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=7.5)
+        ax.tick_params(colors=AXIS, labelcolor=AXIS, labelsize=9.5)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
         for side in ("left", "bottom"):
@@ -669,18 +669,18 @@ def build_single_mtfk_chart(
     _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
     ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
     ax_vol.yaxis.get_offset_text().set_visible(False)
-    ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
-    ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
+    ax_vol.set_ylabel("Vol", color=AXIS, fontsize=10, labelpad=5)
+    ax_price.set_ylabel("Price", color=AXIS, fontsize=10.5, labelpad=5)
 
     rsi_tail = _compute_rsi(df["close"]).tail(n_show).to_numpy()
-    _draw_rsi_panel(ax_rsi, rsi_tail)
-    ax_rsi.set_ylabel("RSI", color=AXIS, fontsize=8, labelpad=5)
+    _draw_rsi_panel(ax_rsi, rsi_tail, tick_fs=9.5)
+    ax_rsi.set_ylabel("RSI", color=AXIS, fontsize=10, labelpad=5)
 
     time_ticks = _time_axis_labels(df, n_show, timeframe)
     if time_ticks:
         positions, labels = time_ticks
         ax_rsi.set_xticks(positions)
-        ax_rsi.set_xticklabels(labels, fontsize=7.5, color=AXIS)
+        ax_rsi.set_xticklabels(labels, fontsize=9.5, color=AXIS)
 
     if not has_error:
         n_left = max(int(len(plot_df) * 0.15), 3)
@@ -691,7 +691,7 @@ def build_single_mtfk_chart(
         handles, labels = _ordered_legend_handles(ax_price)
         legend = ax_price.legend(
             handles, labels,
-            loc=_pick_legend_loc(level_fracs, left_candle_fracs), fontsize=(13.5 if square else 7.5), framealpha=0.95,
+            loc=_pick_legend_loc(level_fracs, left_candle_fracs), fontsize=(13.5 if square else 9.5), framealpha=0.95,
             facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
@@ -829,8 +829,8 @@ def build_mtfk_chart(
 
     header_fs = 20.0 if square else 16.0
     segment_fs = 12.0 if square else 9.0
-    tick_fs = 7.5
-    legend_fs = 13.5 if square else 7.5
+    tick_fs = 9.5
+    legend_fs = 13.5 if square else 9.5
 
     for idx, tf in enumerate(valid_tfs):
         df = dfs[tf]
@@ -843,7 +843,7 @@ def build_mtfk_chart(
         block = outer[idx, 0].subgridspec(2, 1, height_ratios=[header_frac, body_frac], hspace=0.0)
         header_ax = fig.add_subplot(block[0, 0])
         header_ax.axis("off")
-        body = block[1, 0].subgridspec(3, 1, height_ratios=[4.4, 0.9, 1.3], hspace=0.10)
+        body = block[1, 0].subgridspec(3, 1, height_ratios=[4.4, 1.3, 1.3], hspace=0.10)
         ax_price = fig.add_subplot(body[0, 0])
         ax_vol = fig.add_subplot(body[1, 0], sharex=ax_price)
         ax_rsi = fig.add_subplot(body[2, 0], sharex=ax_price)
@@ -903,18 +903,18 @@ def build_mtfk_chart(
         _draw_volume_bars_no_ma(ax_vol, plot_df, colors)
         ax_vol.yaxis.set_major_formatter(FuncFormatter(_fmt_volume))
         ax_vol.yaxis.get_offset_text().set_visible(False)
-        ax_vol.set_ylabel("Vol", color=AXIS, fontsize=8, labelpad=5)
-        ax_price.set_ylabel("Price", color=AXIS, fontsize=8.5, labelpad=5)
+        ax_vol.set_ylabel("Vol", color=AXIS, fontsize=10, labelpad=5)
+        ax_price.set_ylabel("Price", color=AXIS, fontsize=10.5, labelpad=5)
 
         rsi_tail = _compute_rsi(df["close"]).tail(n_show).to_numpy()
-        _draw_rsi_panel(ax_rsi, rsi_tail)
-        ax_rsi.set_ylabel("RSI", color=AXIS, fontsize=8, labelpad=5)
+        _draw_rsi_panel(ax_rsi, rsi_tail, tick_fs=tick_fs)
+        ax_rsi.set_ylabel("RSI", color=AXIS, fontsize=10, labelpad=5)
 
         time_ticks = _time_axis_labels(df, n_show, tf)
         if time_ticks:
             positions, labels = time_ticks
             ax_rsi.set_xticks(positions)
-            ax_rsi.set_xticklabels(labels, fontsize=7.5, color=AXIS)
+            ax_rsi.set_xticklabels(labels, fontsize=9.5, color=AXIS)
 
         if not has_error:
             n_left = max(int(len(plot_df) * 0.15), 3)
