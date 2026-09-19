@@ -3,17 +3,5 @@
     "regime": "BULL",
     "started_at": "2026-09-18T20:03:14.753203+00:00",
     "signal_count": 2
-  },
-  "EDENUSDT|4h": {
-    "symbol": "EDENUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T20:04:25.543917+00:00"
-  },
-  "EWYUSDT|4h": {
-    "symbol": "EWYUSDT",
-    "timeframe": "4h",
-    "direction": "LONG",
-    "timestamp": "2026-09-18T20:04:27.617712+00:00"
   }
 }
