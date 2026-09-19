@@ -145,7 +145,7 @@ def _label_structure(df: pd.DataFrame, swing_high, swing_low) -> list:
 def _draw_structure_labels(ax, labeled_points: list, offset: int, plot_len: int, y_span: float,
                              square: bool = False) -> None:
     pad = y_span * 0.022
-    fontsize = 12.5 if square else 6.0
+    fontsize = 12.5 if square else 7.5
     for pt in labeled_points:
         px = pt["index"] - offset
         if px < 0 or px >= plot_len:
@@ -345,6 +345,21 @@ def _ordered_legend_handles(ax):
     return zip(*pairs)
 
 
+def _pick_legend_loc(level_fracs: list, left_candle_fracs: list | None = None) -> str:
+    """Default legend spot is upper-left. If a support/resistance level sits
+    in the top ~30% of the visible candle range, its dashed line + label ends
+    up right where the legend box would be, so move the legend to lower-left
+    instead. But only if the candles on the left edge (where the legend
+    actually overlaps the plot) aren't themselves sitting low -- otherwise
+    lower-left just trades one collision (legend vs. S/R line) for another
+    (legend vs. candles), which a pure S/R check can't see coming."""
+    top_conflict = any(f >= 0.70 for f in level_fracs)
+    if not top_conflict:
+        return "upper left"
+    left_is_low = bool(left_candle_fracs) and (sum(left_candle_fracs) / len(left_candle_fracs)) <= 0.35
+    return "upper left" if left_is_low else "lower left"
+
+
 def _draw_colored_segments(
     fig,
     x0: float,
@@ -455,8 +470,8 @@ def _draw_indicators_single(
     structure = tf_info.get("structure") or {}
     support = structure.get("support")
     resistance = structure.get("resistance")
-    label_fs = 10.5 if square else 8.5
-    marker_size = 7.5 if square else 6.0
+    label_fs = 10.5 if square else 9.5
+    marker_size = 7.5 if square else 7.0
 
     s_val = float(support) if support else None
     r_val = float(resistance) if resistance else None
@@ -524,7 +539,19 @@ def _draw_indicators_single(
             zorder=6, alpha=0.95,
         )
 
-    return level_values + ema_values
+    # Report where support/resistance land within the visible candle range
+    # (as a 0..1 fraction, 1 = top) so the caller can steer the legend away
+    # from a level that would otherwise sit right underneath it.
+    candle_lo = float(df["low"].tail(n_show).min())
+    candle_hi = float(df["high"].tail(n_show).max())
+    candle_span = max(candle_hi - candle_lo, 1e-12)
+    level_fracs = []
+    if s_val is not None:
+        level_fracs.append((s_val - candle_lo) / candle_span)
+    if r_val is not None:
+        level_fracs.append((r_val - candle_lo) / candle_span)
+
+    return level_values + ema_values, level_fracs
 
 
 def _draw_trigger_highlight(ax, plot_df: pd.DataFrame, tf_info: dict, y_span: float) -> None:
@@ -614,11 +641,11 @@ def build_single_mtfk_chart(
     ax_rsi.set_xlim(-0.6, last_x + right_pad)
 
     range_values = []
+    level_fracs = []
     if not has_error:
-        range_values = _draw_indicators_single(
+        range_values, level_fracs = _draw_indicators_single(
             ax_price, df, n_show, timeframe, tf_info, right_pad, square=square,
         )
-
     all_vals = [float(plot_df["low"].min()), float(plot_df["high"].max())] + range_values
     y_low = min(all_vals)
     y_high = max(all_vals)
@@ -656,10 +683,15 @@ def build_single_mtfk_chart(
         ax_rsi.set_xticklabels(labels, fontsize=7.5, color=AXIS)
 
     if not has_error:
+        n_left = max(int(len(plot_df) * 0.15), 3)
+        left_candle_fracs = [
+            (float(v) - (y_low - y_padding)) / (y_high + y_padding - (y_low - y_padding))
+            for v in list(plot_df["high"].iloc[:n_left]) + list(plot_df["low"].iloc[:n_left])
+        ]
         handles, labels = _ordered_legend_handles(ax_price)
         legend = ax_price.legend(
             handles, labels,
-            loc="upper left", fontsize=(13.5 if square else 7.5), framealpha=0.95,
+            loc=_pick_legend_loc(level_fracs, left_candle_fracs), fontsize=(13.5 if square else 7.5), framealpha=0.95,
             facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
         )
         legend.get_frame().set_linewidth(0.7)
@@ -842,8 +874,9 @@ def build_mtfk_chart(
         ax_rsi.set_xlim(-0.6, last_x + right_pad)
 
         range_values = []
+        level_fracs = []
         if not has_error:
-            range_values = _draw_indicators_single(
+            range_values, level_fracs = _draw_indicators_single(
                 ax_price, df, n_show, tf, tf_info, right_pad, square=square,
             )
 
@@ -884,10 +917,15 @@ def build_mtfk_chart(
             ax_rsi.set_xticklabels(labels, fontsize=7.5, color=AXIS)
 
         if not has_error:
+            n_left = max(int(len(plot_df) * 0.15), 3)
+            left_candle_fracs = [
+                (float(v) - (y_low - y_padding)) / (y_high + y_padding - (y_low - y_padding))
+                for v in list(plot_df["high"].iloc[:n_left]) + list(plot_df["low"].iloc[:n_left])
+            ]
             handles, labels = _ordered_legend_handles(ax_price)
             legend = ax_price.legend(
                 handles, labels,
-                loc="upper left", fontsize=legend_fs, framealpha=0.95,
+                loc=_pick_legend_loc(level_fracs, left_candle_fracs), fontsize=legend_fs, framealpha=0.95,
                 facecolor=BG, edgecolor=SPINE, labelcolor=TEXT, borderpad=0.4,
             )
             legend.get_frame().set_linewidth(0.7)
