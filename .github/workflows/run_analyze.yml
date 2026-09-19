@@ -15,7 +15,7 @@ on:
           - wide
           - square
           - both
-        default: wide
+        default: square
       chart_type:
         description: "MTF/SINGLE"
         required: false
